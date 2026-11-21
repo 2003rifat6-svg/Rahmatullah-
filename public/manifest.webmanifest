@@ -1,0 +1,30 @@
+{
+  "name": "চিত্রপট — AI ক্রিয়েটিভ স্টুডিও",
+  "short_name": "চিত্রপট",
+  "description": "চরিত্র ঠিক রেখে AI দিয়ে ভিডিও, ছবি আর গল্প বানানোর স্টুডিও",
+  "lang": "bn",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#0a0718",
+  "theme_color": "#0a0718",
+  "icons": [
+    {
+      "src": "/api/brand/icon-192",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/api/brand/icon-512",
+      "sizes": "512x512",
+      "type": "image/png"
+    },
+    {
+      "src": "/api/brand/maskable",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}

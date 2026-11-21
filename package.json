@@ -1,0 +1,27 @@
+{
+  "name": "chitropot",
+  "version": "1.0.0",
+  "private": true,
+  "description": "চিত্রপট: চরিত্র ঠিক রেখে AI ভিডিও ও ছবি বানানোর স্টুডিও (Gemini API)",
+  "main": "server.js",
+  "scripts": {
+    "start": "node --disable-warning=ExperimentalWarning server.js",
+    "test": "node --disable-warning=ExperimentalWarning test/smoke.js",
+    "test:unit": "node --disable-warning=ExperimentalWarning --test test/unit.js",
+    "test:ui": "node --disable-warning=ExperimentalWarning test/ui.js",
+    "test:all": "npm run test:unit && npm test && npm run test:advanced && npm run test:doc",
+    "test:advanced": "node --disable-warning=ExperimentalWarning test/advanced.js",
+    "test:s3": "node --disable-warning=ExperimentalWarning test/s3.js",
+    "test:sigv4": "node test/sigv4-crosscheck.js",
+    "test:load": "node --disable-warning=ExperimentalWarning test/load.js",
+    "test:real": "node --disable-warning=ExperimentalWarning test/real-api.js",
+    "test:doc": "node --disable-warning=ExperimentalWarning test/doc.js",
+    "panel-hash": "node scripts/panel-hash.js"
+  },
+  "engines": {
+    "node": ">=22.13"
+  },
+  "optionalDependencies": {
+    "pg": "^8.23.1"
+  }
+}

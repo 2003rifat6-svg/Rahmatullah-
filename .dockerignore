@@ -1,0 +1,8 @@
+# গোপন চাবি আর ব্যবহারকারীর ডেটা কখনো আপলোড হবে না
+.env
+data/
+node_modules/
+test/
+*.db
+*.db-wal
+*.db-shm

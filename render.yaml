@@ -1,0 +1,29 @@
+# Render-এ এক চাপে চালু: Render → New → Blueprint → এই রিপো বাছো। বাকি সব এখানে লেখা আছে।
+# শুধু যে ঘরগুলো খালি দেখাবে (key, ইমেইল, পাসওয়ার্ড) সেগুলো নিজে বসাবে।
+services:
+  - type: web
+    name: rahmatullah
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    # Disk (স্থায়ী ডেটা) পেইড প্ল্যানে পাওয়া যায়; ফ্রি প্ল্যানে প্রতিবার আপডেটে সব ডেটা মুছে যায়
+    plan: starter
+    healthCheckPath: /healthz
+    autoDeploy: true
+    disk:
+      name: chitropot-data
+      mountPath: /data
+      sizeGB: 1
+    envVars:
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: GOOGLE_CLIENT_ID
+        sync: false
+      - key: OWNER_EMAIL
+        sync: false
+      - key: OWNER_PANEL_PASSWORD
+        sync: false
+      - key: OPEN_SIGNUP
+        value: "0"
+      - key: SESSION_SECRET
+        generateValue: true

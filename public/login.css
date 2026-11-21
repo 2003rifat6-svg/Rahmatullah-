@@ -1,0 +1,48 @@
+:root{--bg:#0a0718;--surface:rgba(22,16,48,.84);--line:rgba(167,139,250,.28);--ink:#f5f1ff;--muted:#b9aedd;--bad:#ff6b8f;--teal:#56dcff;
+  --grad:linear-gradient(95deg,#8b5cf6,#6366f1 50%,#3b9cff);--grad-gold:linear-gradient(95deg,#ffe28a,#ffbe3d 60%,#ff9f2e);
+  --font:"Hind Siliguri","Noto Sans Bengali",system-ui,sans-serif;color-scheme:dark}
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%}
+body{color:var(--ink);font:400 16px/1.6 var(--font);min-height:100vh;
+  background:radial-gradient(1100px 700px at 88% -12%,rgba(168,85,247,.38),transparent 62%),radial-gradient(900px 640px at -12% 108%,rgba(59,130,246,.32),transparent 62%),
+  url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cg fill='%23fff'%3E%3Ccircle cx='12' cy='30' r='.9' opacity='.7'/%3E%3Ccircle cx='80' cy='12' r='.6' opacity='.5'/%3E%3Ccircle cx='150' cy='60' r='1.1' opacity='.8'/%3E%3Ccircle cx='210' cy='22' r='.7' opacity='.6'/%3E%3Ccircle cx='40' cy='120' r='.6' opacity='.5'/%3E%3Ccircle cx='120' cy='150' r='.8' opacity='.6'/%3E%3Ccircle cx='190' cy='130' r='.5' opacity='.5'/%3E%3Ccircle cx='70' cy='200' r='1' opacity='.7'/%3E%3Ccircle cx='170' cy='210' r='.6' opacity='.5'/%3E%3Ccircle cx='228' cy='180' r='.9' opacity='.6'/%3E%3C/g%3E%3C/svg%3E"),var(--bg);background-attachment:fixed}
+.wrap{min-height:100vh;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,440px);align-items:center;gap:28px;max-width:1040px;margin:0 auto;padding:24px 20px}
+/* মালিকের ছবি: ব্যাকগ্রাউন্ড ছাড়া, পেছনে সোনালি-বেগুনি আলোর বলয়; ছবিতে কোনো ঝাপসা ইফেক্ট নেই */
+.art{position:relative;display:grid;place-items:end center;align-self:end;height:min(78vh,640px)}
+.ring{position:absolute;left:50%;top:40%;width:min(92%,520px);aspect-ratio:1;transform:translate(-50%,-50%);border-radius:50%;
+  background:radial-gradient(circle,rgba(124,77,255,.55),rgba(59,130,246,.16) 56%,transparent 70%);
+  box-shadow:0 0 0 2px rgba(255,210,94,.55),0 0 50px rgba(255,190,61,.3),inset 0 0 50px rgba(167,139,250,.35)}
+.owner{position:relative;height:100%;max-width:100%;object-fit:contain;object-position:bottom}
+.card{display:flex;flex-direction:column;gap:16px;border-radius:24px;padding:28px 24px;background:var(--surface);border:1px solid var(--line);
+  box-shadow:0 0 0 1px rgba(167,139,250,.2),0 20px 60px rgba(8,3,30,.6)}
+.brand{display:flex;align-items:center;gap:14px}
+.brand img{width:64px;height:64px;filter:drop-shadow(0 0 14px rgba(139,92,246,.7))}
+.brand b{font-size:34px;line-height:1.15;font-weight:700;background:var(--grad-gold);-webkit-background-clip:text;background-clip:text;color:transparent}
+.brand small{display:block;color:#e2d8ff;font-size:15px;font-weight:600}
+.tag{margin:-4px 0 0;color:var(--muted);letter-spacing:1px}
+ul{margin:0;padding:0;list-style:none;display:grid;gap:8px;font-size:15px}
+li{display:flex;gap:10px;align-items:flex-start}
+li::before{content:"✦";color:#ffd25e;flex:none}
+#g{min-height:44px;display:flex;justify-content:center;margin-top:4px}
+.dev{display:flex;gap:8px}
+.dev input{flex:1;min-width:0;background:rgba(10,7,24,.6);border:1px solid var(--line);border-radius:12px;padding:12px;color:var(--ink);font:inherit}
+button{font:inherit;font-weight:600;border:0;border-radius:12px;padding:12px 18px;background:var(--grad);color:#fff;cursor:pointer;box-shadow:0 8px 24px rgba(99,102,241,.45)}
+button:focus-visible,input:focus-visible{outline:2px solid var(--teal);outline-offset:2px}
+.err{color:var(--bad);margin:0}
+small.note{color:var(--muted);font-size:13px;text-align:center}
+@media (max-width:820px){
+  .wrap{grid-template-columns:1fr;gap:0;padding:12px 16px 24px;align-content:start}
+  .art{height:min(46vh,380px)}
+  .card{margin-top:-24px;position:relative;padding:22px 18px}
+  .brand b{font-size:30px}
+}
+.contact{border-top:1px solid var(--line);padding-top:14px;text-align:center}
+.contact p{margin:0 0 8px;color:var(--muted);font-size:14px}
+.ctas{display:flex;flex-wrap:wrap;gap:8px;justify-content:center}
+.cta{display:inline-flex;align-items:center;gap:6px;padding:9px 14px;border-radius:999px;font-weight:600;text-decoration:none;color:#fff;border:1px solid rgba(255,255,255,.18)}
+.cta.wa{background:linear-gradient(135deg,#25d366,#128c7e)}.cta.call{background:linear-gradient(135deg,#6366f1,#3b82f6)}
+.cta.mail{background:linear-gradient(135deg,#a855f7,#7c3aed)}.cta.fb{background:linear-gradient(135deg,#3b82f6,#1d4ed8)}.cta.tg{background:linear-gradient(135deg,#38bdf8,#0284c7)}
+.line{margin:-6px 0 0;color:#e8defd;font-size:14.5px}
+/* ব্যাকগ্রাউন্ডসহ ছবি: গোল ফ্রেমে (মুখ কাটা পড়ে না, ওপরের দিক রাখা) */
+.owner.framed{height:auto;width:min(78%,420px);aspect-ratio:1;border-radius:50%;object-fit:cover;object-position:50% 18%;align-self:center;
+  border:4px solid transparent;background:linear-gradient(#0a0718,#0a0718) padding-box,linear-gradient(95deg,#ffe28a,#ffbe3d,#ff9f2e) border-box;box-shadow:0 0 40px rgba(255,190,61,.35)}

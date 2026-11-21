@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="bn">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content">
+<meta name="theme-color" content="#0a0718">
+<title>চিত্রপট</title>
+<link rel="icon" href="/api/brand/favicon" type="image/png">
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="apple-touch-icon" href="/api/brand/apple">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="চিত্রপট">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/app.css?v=__V__">
+</head>
+<body>
+<!-- শুরুর পর্দা: অ্যাপ লোড হওয়া পর্যন্ত -->
+<div id="splash" class="splash" aria-hidden="true">
+  <div class="sp-stage"><div class="sp-ring"></div><img class="sp-owner" src="/api/brand/owner-sm" alt="" fetchpriority="high"></div>
+  <div class="sp-brand"><img src="/api/brand/logo" alt=""><b>চিত্রপট</b><span>AI ক্রিয়েটিভ স্টুডিও</span><i id="spTag">কল্পনা • সৃষ্টি • অনুপ্রেরণা</i></div>
+  <div class="sp-bar"><span></span></div>
+</div>
+<div class="app" id="app">
+  <header class="top">
+    <button class="ghost" id="menuBtn" data-act="drawer" aria-label="মেনু">☰</button>
+    <div class="brand" data-act="home"><img src="/api/brand/logo" alt=""><span>চিত্রপট</span></div>
+    <div class="crumb grow" id="crumb"></div>
+    <button class="plus" data-act="plus" title="নতুন কিছু বানাও" aria-label="নতুন কিছু বানাও">＋</button>
+    <button class="ghost avbtn" data-act="account" aria-label="আমার অ্যাকাউন্ট"><span class="avatar" id="avatar">?</span></button>
+  </header>
+  <div class="announce" id="announce" role="status" hidden></div>
+  <aside class="side" id="side"></aside>
+  <main class="main" id="main"><p class="muted">লোড হচ্ছে...</p></main>
+</div>
+<div id="modal"></div>
+<div class="toasts" id="toasts"></div>
+<input type="file" id="fileIn" accept="image/png,image/jpeg,image/webp" hidden>
+
+<script src="/app.js?v=__V__" defer></script>
+<script src="/doc.js?v=__V__" defer></script>
+</body>
+</html>
