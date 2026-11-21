@@ -94,12 +94,11 @@ function renderDocLog() {
     return `<div class="docnote ${m.meta?.kind === 'error' ? 'err' : ''}">${esc(m.text)}</div>`;
   }).join('');
   el.innerHTML = html || `<div class="empty docempty"><div style="font-size:34px">🎞️</div>
-    <p><b>শুরু করতে যেকোনো একটা দাও:</b></p>
     <div class="docstart">
       <button data-act="doc-suggest" data-v="একটা নতুন টপিক দাও। ইউটিউবে খুঁজে প্রমাণ দেখাও যে গত ১২ মাসে এই টপিকে ১০ লাখের বেশি ভিউ হয়েছে।">🔎 নতুন টপিক খুঁজে দাও</button>
       <button data-act="doc-suggest" data-v="আমি একটা গল্প দিচ্ছি। স্ক্রিপ্ট বানাও, আর ভয়েসও এখানে বানাও।">📝 আমার গল্প থেকে শুরু</button>
       <button data-act="doc-attach">🎙️ আমার নিজের ভয়েস/অডিও দেব</button></div>
-    <p class="muted small">সে প্রতিটা ধাপ নিজে যাচাই করবে, আর শুধু তোমার সিদ্ধান্ত লাগলে জিজ্ঞেস করবে।</p></div>`;
+</div>`;
   if (atBottom || D.lastSeq !== (d.messages.at(-1)?.seq || 0)) el.scrollTop = el.scrollHeight;
   D.lastSeq = d.messages.at(-1)?.seq || 0;
 }
@@ -125,7 +124,7 @@ function renderDocFiles() {
         <span class="muted small tnum">${f.status === 'pending' ? '⏳' : f.status === 'failed' ? '✗' : fmtSize(f.size)}${f.source === 'user' ? ' · তোমার' : ''}</span>
         ${f.status === 'ready' ? `<a class="btn sm ghost" href="/api/doc/files/${f.id}?dl=1" download aria-label="নামাও">⬇</a>` : ''}
         <button class="sm ghost" data-act="doc-del-file" data-id="${f.id}" aria-label="মুছো">✕</button></div>`).join('')}`).join('')
-      : '<p class="muted small">এখনো কোনো ফাইল নেই। স্ক্রিপ্ট, ছবি, কণ্ঠ, ক্লিপ সব এখানে জমা হবে।</p>');
+      : '<p class="muted small">কোনো ফাইল নেই</p>');
 }
 function renderDocSteps() {
   const el = $('#docSteps');
@@ -142,13 +141,13 @@ function renderDocList() {
     <div class="row"><button class="pri" data-act="doc-new">+ নতুন ডকুমেন্টারি</button><span class="grow"></span><button data-act="doc-settings">⚙️ System Instruction ও শেখা নিয়ম</button></div>
     ${I ? `<div class="chips">${[['ffmpeg', I.ffmpeg, 'এডিট/মিক্স (ffmpeg)'], ['yt', I.youtube, 'YouTube ডেটা'], ['stt', false, 'শব্দ-ধরে সময় (Speech-to-Text)'], ['drive', false, 'Google Drive'], ['music', false, 'মিউজিক বানানো']]
       .map(([, ok, l]) => `<span class="chip cap ${ok ? 'on' : ''}">${ok ? '✓' : '✗'} ${l}</span>`).join('')}<span class="chip cap on">🧠 ${esc(I.model)}</span></div>
-      <p class="muted small" style="margin:0">✗ চিহ্নিতগুলো এখনো যুক্ত নয়; সহকারী সেটা খোলাখুলি বলবে, ভান করবে না।</p>` : ''}
+` : ''}
     ${!L ? '<p class="muted">লোড হচ্ছে...</p>' : L.length ? `<div class="grid">${L.map(p => `<div class="card pcard" data-act="doc-open" data-id="${p.id}"><div class="cover">🎞️</div>
       <div class="info"><b>${esc(p.name)}</b><div class="muted small tnum">$${p.spent_usd.toFixed(2)} / $${p.budget_usd.toFixed(2)} · ${bn(Object.values(p.steps).filter(s => s.status === 'done').length)}/১৬ ধাপ${p.busy ? ' · চলছে…' : ''}</div></div></div>`).join('')}</div>`
       : `<div class="onboard card"><h3>কীভাবে কাজ করে</h3><ol class="steps">
-        <li><b>নতুন ডকুমেন্টারি বানাও</b><span class="muted small">বাজেট ঠিক করে দাও। এর বেশি খরচ হওয়ার আগে সে তোমাকে জিজ্ঞেস করবে।</span></li>
-        <li><b>গল্প, স্ক্রিপ্ট, অডিও বা শুধু টপিক দাও</b><span class="muted small">📎 দিয়ে নিজের ভয়েস, ছবি, ক্লিপ, মিউজিকও দেওয়া যায়।</span></li>
-        <li><b>সিদ্ধান্তের জায়গায় বোতাম চাপো</b><span class="muted small">বাকি কাজ সে নিজে করে, ফাইল ডান পাশে জমা হয়, শেষে ZIP।</span></li></ol>
+        <li><b>নতুন ডকুমেন্টারি বানাও</b></li>
+        <li><b>গল্প, স্ক্রিপ্ট, অডিও বা শুধু টপিক দাও</b></li>
+        <li><b>সিদ্ধান্তের জায়গায় বোতাম চাপো</b></li></ol>
         <button class="pri" data-act="doc-new">+ প্রথম ডকুমেন্টারি</button></div>`}</div>`;
 }
 
@@ -166,15 +165,15 @@ async function docSend(text) {
 async function docUpload(files) {
   let n = 0;
   for (const f of files) {
-    const licence = prompt(`"${f.name}" কোথা থেকে এসেছে? (যেমন: নিজের তোলা / নিজের ভয়েস / কেনা লাইসেন্স / ফ্রি লাইসেন্স + লিংক)`, 'নিজের');
+    const licence = prompt(`"${f.name}" — কোথা থেকে এসেছে?`, 'নিজের');
     if (licence === null) continue;
     toast(`আপলোড হচ্ছে: ${f.name}`);
-    const r = await fetch(`/api/doc/projects/${D.pid}/upload?name=${encodeURIComponent(f.name)}&licence=${encodeURIComponent(licence)}`, { method: 'POST', headers: { 'x-cp': '1' }, body: f, credentials: 'same-origin' });
+    const r = await fetch(`/api/doc/projects/${D.pid}/upload?name=${encodeURIComponent(f.name)}&licence=${encodeURIComponent(licence)}`, { method: 'POST', headers: { 'x-cp': '1', 'x-lang': I18N.lang }, body: f, credentials: 'same-origin' });
     const j = await r.json().catch(() => ({}));
     if (!r.ok) { toast(`${f.name}: ${j.error || 'আপলোড হয়নি'}`, true); continue; }
     n++;
   }
-  if (n) { await loadDoc(); renderDocLive(); toast(`${bn(n)}টি ফাইল যোগ হয়েছে। এখন কী করতে হবে লিখে পাঠাও।`); }
+  if (n) { await loadDoc(); renderDocLive(); toast(`${bn(n)}টি ফাইল যোগ হয়েছে`); }
 }
 
 Object.assign(handlers, {
@@ -184,14 +183,14 @@ Object.assign(handlers, {
   'doc-new': () => act(async () => {
     const name = prompt('ডকুমেন্টারির নাম (যেমন কেসের নাম)', 'নতুন ডকুমেন্টারি');
     if (name === null) return;
-    const b = prompt('এই প্রজেক্টের বাজেট কত ডলার? এর বেশি খরচের আগে জিজ্ঞেস করবে।', '5');
+    const b = prompt('বাজেট (ডলার)', '5');
     if (b === null) return;
     const { id } = await api('POST', '/api/doc/projects', { name, budgetUsd: Number(b) || 0 });
     await openDoc(id);
   }),
   'doc-pane': t => { D.pane = t.dataset.v; renderDoc(); },
   'doc-send': () => docSend($('#docIn').value),
-  'doc-suggest': t => docSend(t.dataset.v),
+  'doc-suggest': t => docSend(tr(t.dataset.v)),
   'doc-answer': t => docSend(t.dataset.v),
   'doc-attach': () => { const i = $('#docFile'); if (!i) return; i.value = ''; i.onchange = () => act(() => docUpload([...i.files])); i.click(); },
   'doc-copy': t => {
@@ -239,17 +238,17 @@ Object.assign(handlers, {
 });
 function docVoices() {
   openModal(`<div style="padding:16px"><div class="row"><h3 class="grow" style="margin:0">🎙️ কণ্ঠের নমুনা</h3><button class="sm ghost" data-act="close" aria-label="বন্ধ">✕</button></div>
-    <p class="muted small">চাপলে শোনা যাবে। পছন্দেরটার নাম চ্যাটে লিখে দাও, যেমন "Charon দিয়ে বানাও"।</p><audio id="dvPrev" hidden></audio>
-    <div class="vgrid">${(S.voices || []).map(v => `<button class="sm" data-act="doc-voice-play" data-v="${esc(v.name)}">▶ ${esc(v.name)} <span class="muted">${v.gender === 'male' ? 'পুরুষ' : 'নারী'} · ${esc(v.bn)}</span></button>`).join('') || '<p class="muted">লোড হচ্ছে…</p>'}</div></div>`);
+    <audio id="dvPrev" hidden></audio>
+    <div class="vgrid">${(S.voices || []).map(v => `<button class="sm" data-act="doc-voice-play" data-v="${esc(v.name)}">▶ ${esc(v.name)} <span class="muted">${v.gender === 'male' ? tr('পুরুষ') : tr('নারী')} · ${esc(voiceDesc(v))}</span></button>`).join('') || '<p class="muted">লোড হচ্ছে…</p>'}</div></div>`);
 }
 Object.assign(handlers, {
   'doc-voice-play': t => { const au = $('#dvPrev'); au.onerror = () => toast('কণ্ঠ শোনা যায়নি', true); au.src = `/api/voices/${encodeURIComponent(t.dataset.v)}/preview`; au.play().catch(() => {}); toast(`${t.dataset.v}-এর কণ্ঠ আসছে…`); },
   'doc-settings': () => act(async () => {
     const s = await api('GET', '/api/doc/settings');
     openModal(`<div style="padding:16px"><div class="row"><h3 class="grow" style="margin:0">⚙️ ডকুমেন্টারি স্টুডিওর System Instruction</h3><button class="sm ghost" data-act="close" aria-label="বন্ধ">✕</button></div>
-      <p class="muted small">শুধু এই মডিউলের জন্য; অ্যাপের অন্য চ্যাটে যায় না। ${s.custom ? 'এখন তোমার নিজের লেখা চলছে।' : 'এখন মাস্টার কমান্ড (ডিফল্ট) চলছে।'}</p>
+      <p class="muted small">${s.custom ? 'নিজের লেখা চলছে' : 'ডিফল্ট চলছে'}</p>
       <textarea id="dsSys" rows="14" class="mono">${esc(s.system)}</textarea>
-      <label class="lab" for="dsLes">শেখা নিয়ম (LESSONS.md) — সব ডকুমেন্টারিতে মানা হয়</label><textarea id="dsLes" rows="5" class="mono">${esc(s.lessons)}</textarea>
+      <label class="lab" for="dsLes">শেখা নিয়ম (LESSONS.md)</label><textarea id="dsLes" rows="5" class="mono">${esc(s.lessons)}</textarea>
       <div class="row" style="margin-top:12px"><button class="pri" data-act="doc-settings-save">সেভ</button><button data-act="doc-settings-reset">মাস্টার কমান্ডে ফেরাও</button></div></div>`);
   }),
   'doc-settings-save': () => act(async () => { await api('PUT', '/api/doc/settings', { system: $('#dsSys').value, lessons: $('#dsLes').value }); closeModal(); }, 'সেভ হয়েছে'),

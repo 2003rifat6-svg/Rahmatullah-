@@ -3,7 +3,7 @@ if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').cat
   var err = document.getElementById('err');
   function show(t) { err.textContent = t; err.hidden = false; }
   function login(body) {
-    fetch('/api/login', { method: 'POST', headers: { 'content-type': 'application/json', 'x-cp': '1' }, body: JSON.stringify(body), credentials: 'same-origin' })
+    fetch('/api/login', { method: 'POST', headers: { 'content-type': 'application/json', 'x-cp': '1', 'x-lang': I.lang }, body: JSON.stringify(body), credentials: 'same-origin' })
       .then(function (r) { return r.json().then(function (j) { if (!r.ok) throw j; location.replace('/'); }); })
       .catch(function (j) { show((j && j.error) || 'লগইন হয়নি। আবার চেষ্টা করো।'); });
   }
@@ -26,6 +26,11 @@ if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').cat
     if (n) document.getElementById('contact').hidden = false;
   }
   var switching = /[?&]switch=1/.test(location.search);
+  var I = window.I18N || { lang: 'bn', t: function (b) { return b; } };
+  // ভাষা বদল (বাংলা ⇄ English)
+  var lb = document.getElementById('langBtn');
+  lb.textContent = '🌐 ' + (I.lang === 'en' ? 'বাংলা' : 'English');
+  lb.onclick = function () { I.set(I.lang === 'en' ? 'bn' : 'en'); };
   // ইনস্টল: ব্রাউজার সুযোগ দিলে এক চাপে, নইলে ধাপগুলো দেখানো
   var installEvt = null, standalone = window.matchMedia('(display-mode: standalone)').matches || navigator.standalone;
   var ib = document.getElementById('installBtn'), how = document.getElementById('howto');
@@ -39,8 +44,10 @@ if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').cat
     if (c.guest) document.getElementById('guestGo').hidden = false;
     // মালিকের দেওয়া লেখা আর ছবি (প্যানেল থেকে বদলানো)
     var t = c.texts || {}, b = c.brand || {}, v = b.v || {};
-    if (t.tagline) document.getElementById('tag').textContent = t.tagline;
-    if (t.loginLine) { var p = document.createElement('p'); p.className = 'line'; p.textContent = t.loginLine; document.getElementById('tag').after(p); }
+    var tg = I.lang === 'en' ? t.tagline_en : t.tagline;
+    document.getElementById('tag').textContent = tg || I.t('ভাবো। বানাও। অনুপ্রাণিত করো।', 'Imagine. Create. Inspire.');
+    var ll = I.lang === 'en' ? t.loginLine_en : t.loginLine;
+    if (ll) { var p = document.createElement('p'); p.className = 'line'; p.textContent = ll; document.getElementById('tag').after(p); }
     var ow = document.querySelector('.owner');
     if (ow) { ow.src = '/api/brand/owner?v=' + (v.owner || 0); if (b.framed) ow.classList.add('framed'); }
     var lg = document.querySelector('.brand img');

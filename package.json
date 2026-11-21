@@ -8,6 +8,7 @@
     "start": "node --disable-warning=ExperimentalWarning server.js",
     "test": "node --disable-warning=ExperimentalWarning test/smoke.js",
     "test:unit": "node --disable-warning=ExperimentalWarning --test test/unit.js",
+    "test:i18n": "node --disable-warning=ExperimentalWarning test/i18n.js",
     "test:ui": "node --disable-warning=ExperimentalWarning test/ui.js",
     "test:all": "npm run test:unit && npm test && npm run test:advanced && npm run test:doc",
     "test:advanced": "node --disable-warning=ExperimentalWarning test/advanced.js",

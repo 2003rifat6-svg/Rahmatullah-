@@ -207,6 +207,7 @@ async function main() {
     // CSRF: অন্য সাইট থেকে এই হেডার পাঠানো যায় না
     if (req.method !== 'GET' && req.headers['x-cp'] !== '1') return sendJson(req, res, 403, { error: 'অনুরোধ যাচাই হয়নি' });
     const user = await app.readSession(req);
+    if (user) user.lang = req.headers['x-lang'] === 'en' ? 'en' : 'bn'; // AI উত্তর কোন ভাষায় হবে
     if (!r.opts.public && !user) return sendJson(req, res, 401, { error: 'আগে লগইন করো' });
     if (r.opts.owner && !user.owner) return sendJson(req, res, 403, { error: 'শুধু মালিক এটা করতে পারবে' });
     if (r.opts.staff && !user.staff) return sendJson(req, res, 403, { error: 'শুধু মালিক বা অ্যাডমিন এটা করতে পারবে' });

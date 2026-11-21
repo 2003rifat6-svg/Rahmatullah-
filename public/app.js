@@ -3,7 +3,8 @@ const $ = s => document.querySelector(s);
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const media = id => `/media/${encodeURIComponent(id)}`;
 // বাংলা অঙ্ক: ইংরেজি 8 আর বাংলা ৪ দেখতে একরকম, তাই সব সংখ্যা বাংলায় দেখানো হয়
-const bn = x => String(x ?? '').replace(/\d/g, d => '০১২৩৪৫৬৭৮৯'[d]);
+const bn = x => (I18N.lang === 'en' ? String(x ?? '') : String(x ?? '').replace(/\d/g, d => '০১২৩৪৫৬৭৮৯'[d]));
+const tr = s => I18N.tr(s); // JS-এ জোড়া লাগানো লেখার টুকরো অনুবাদ
 
 const S = { me: null, lib: { folders: [], projects: [] }, pid: null, P: null, tab: 'studio', filter: 'all', q: '', open: {}, pollTimer: null, writing: false, trash: null, chat: null, chatBusy: false, chatPrompts: [], pickerOpen: false, view: null, pages: 1, cursor: null, admin: null, usage: null };
 const freshComposer = () => ({ mode: 'video', prompt: '', chars: [], ings: [], first: null, last: null, aspect: '16:9', imgAspect: '1:1', duration: 8, resolution: '720p', camera: '', style: '', avoid: '', singleShot: false, count: 1, busy: false, expanded: false, imageModel: '' });
@@ -31,7 +32,7 @@ const STYLES = ['cinematic realistic film look', 'Pixar-like 3D animation', 'ani
 async function api(method, url, body) {
   const res = await fetch(url, {
     method, credentials: 'same-origin',
-    headers: { 'content-type': 'application/json', 'x-cp': '1' },
+    headers: { 'content-type': 'application/json', 'x-cp': '1', 'x-lang': I18N.lang },
     body: body === undefined ? undefined : JSON.stringify(body),
   });
   if (res.status === 401) { location.href = '/login.html'; throw new Error('লগইন লাগবে'); }
@@ -137,7 +138,7 @@ function elapsed(since) {
 }
 setInterval(() => { document.querySelectorAll('[data-since]').forEach(el => { el.textContent = elapsed(el.dataset.since); }); }, 1000);
 const fmtBytes = b => { const mb = Number(b) / 1048576; return mb >= 1024 ? bn((mb / 1024).toFixed(1)) + ' GB' : bn(mb < 10 ? mb.toFixed(1) : Math.round(mb)) + ' MB'; };
-const fmtTime = t => new Date(Number(t)).toLocaleString('bn-BD', { day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit' });
+const fmtTime = t => new Date(Number(t)).toLocaleString(I18N.locale, { day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit' });
 const taka = usd => '৳' + bn(Math.round(Number(usd) * (S.me?.pricing?.usdToBdt || 124)));
 // অন্য ট্যাবে থাকলে কাজ শেষের খবর ব্রাউজার নোটিফিকেশনে
 function notify(body) {
@@ -160,17 +161,23 @@ function contactButtons(c, text = 'চিত্রপট অ্যাপ থে�
   if (c.youtube) b.push(`<a class="cta yt" href="${esc(c.youtube)}" target="_blank" rel="noopener">▶️ YouTube</a>`);
   return b.length ? `<div class="ctas">${b.join('')}</div>${c.note ? `<p class="muted small" style="margin:8px 0 0">🕘 ${esc(c.note)}</p>` : ''}` : '';
 }
+const voiceDesc = v => (I18N.lang === 'en' ? v.trait : v.bn);
 const ROLE_LABEL = { owner: '👑 মালিক', admin: '🛡️ অ্যাডমিন', user: 'সদস্য' };
 // মালিকের দেওয়া ছবি/লোগো/লেখা: এক জায়গা থেকে বদলালে সব জায়গায়
 const site = () => S.me?.site || {};
 const brandUrl = slot => `/api/brand/${slot}?v=${site().brand?.v?.[slot] || 0}`;
 const framed = () => (site().brand?.framed ? ' framed' : '');
 const TEXT_DEFAULT = {
-  tagline: 'কল্পনা • সৃষ্টি • অনুপ্রেরণা', heroTitle: 'আজ দারুণ কিছু বানাও!', heroButton: 'শুরু করো',
-  loginLine: '', aboutText: 'চরিত্র একবার বানাও, তারপর যত দৃশ্য, যত এপিসোড — সবখানে একই চেহারা। লেখা থেকে ছবি ও ভিডিও, ছবি এডিট, কণ্ঠ, গল্প আর পুরো ডকুমেন্টারি, সব এক জায়গায়।',
-  aboutTag: 'বড় স্বপ্ন দেখো… আরও বেশি বানাও…', creatorName: '', creatorTitle: '',
+  tagline: I18N.t('ভাবো। বানাও। অনুপ্রাণিত করো।', 'Imagine. Create. Inspire.'),
+  heroTitle: I18N.t('কল্পনাকে বাস্তবে রূপ দাও', 'Turn your imagination into reality'),
+  heroButton: I18N.t('শুরু করো', 'Start creating'),
+  loginLine: '',
+  aboutText: I18N.t('ছবি, ভিডিও, কণ্ঠ আর গল্প — এক স্টুডিওতে। প্রতিটা দৃশ্যে চরিত্র থাকে একই।', 'Images, video, voice and stories in one studio, with characters that stay consistent in every scene.'),
+  aboutTag: I18N.t('বড় স্বপ্ন দেখো, আরও বেশি বানাও', 'Dream big. Create more.'),
+  creatorName: '', creatorTitle: '',
 };
-const txt = k => site().texts?.[k] || TEXT_DEFAULT[k] || '';
+// মালিকের নিজের লেখা: বাংলায় লিখলে key, English-এ লিখলে key_en; না থাকলে ডিফল্ট
+const txt = k => (I18N.lang === 'en' ? site().texts?.[k + '_en'] : site().texts?.[k]) || TEXT_DEFAULT[k] || '';
 // হোমের সব বোতাম (মালিক সাজান): আইকন, নাম, রং
 const TOOL_DEF = {
   image: ['🖼️', 'লেখা থেকে ছবি', 't-violet'], video: ['🎥', 'লেখা থেকে ভিডিও', 't-blue'], edit: ['✨', 'ছবি এডিট', 't-pink'],
@@ -258,6 +265,8 @@ function render() {
 }
 // হেডার আর শুরুর পর্দার লোগো/ছবি/লেখা মালিকের দেওয়াটায়
 function applyBrand() {
+  const lb = $('#langBtn');
+  if (lb) lb.textContent = '🌐 ' + (I18N.lang === 'en' ? 'বাং' : 'EN');
   const logo = document.querySelector('.brand img');
   if (logo && S.me) logo.src = brandUrl('logo');
   const sp = $('#splash .sp-owner');
@@ -270,7 +279,7 @@ function renderGuestBar() {
   if (!el) return;
   const g = S.me?.user?.role === 'guest';
   el.hidden = !g;
-  el.innerHTML = g ? `<span aria-hidden="true">👀</span><span class="grow">তুমি <b>অতিথি</b>: সব ঘুরে দেখতে পারবে। ছবি-ভিডিও বানাতে বা ফাইল দিতে Gmail দিয়ে ঢুকতে হবে।</span><button class="sm gold" data-act="guest-upgrade">Gmail দিয়ে ঢোকো</button>` : '';
+  el.innerHTML = g ? `<span aria-hidden="true">👀</span><span class="grow">অতিথি হিসেবে ঘুরে দেখছ। বানাতে Gmail দিয়ে ঢোকো।</span><button class="sm gold" data-act="guest-upgrade">Gmail দিয়ে ঢোকো</button>` : '';
 }
 function renderTop() {
   applyBrand();
@@ -337,7 +346,7 @@ function installCard() {
   let hide = '';
   try { hide = localStorage.getItem('cp_inst_hide') || ''; } catch { /* কিছু না */ }
   if (hide || matchMedia('(display-mode: standalone)').matches || navigator.standalone) return '';
-  return `<div class="installcard"><img src="${brandUrl('icon-192')}" alt=""><div class="grow"><b>📲 ফোনে অ্যাপ হিসেবে ইনস্টল করো</b><div class="muted small">হোম স্ক্রিনে আইকন, ব্রাউজার ছাড়া সরাসরি খোলে।</div></div>
+  return `<div class="installcard"><img src="${brandUrl('icon-192')}" alt=""><div class="grow"><b>📲 ফোনে অ্যাপ ইনস্টল করো</b></div>
     <button class="gold sm" data-act="install">ইনস্টল</button><button class="sm ghost" data-act="inst-hide" aria-label="লুকাও">✕</button></div>`;
 }
 function heroHtml() {
@@ -346,7 +355,7 @@ function heroHtml() {
   // মালিক নিজের ছবি দেখেন; অন্যরা দেখেন লোগোর আভা
   const art = me.owner ? `<img class="h-owner${framed()}" src="${brandUrl('owner-sm')}" alt="" loading="eager">` : `<img class="h-logo" src="${brandUrl('logo')}" alt="">`;
   return `<section class="hero2">
-    <div class="h-text"><p class="hi">হ্যালো, ${first} 👋</p><h2>${esc(txt('heroTitle'))}</h2>
+    <div class="h-text"><p class="hi">${esc(I18N.greet(first))}</p><h2>${esc(txt('heroTitle'))}</h2>
       <button class="gold h-go" data-act="tool" data-v="video">${esc(txt('heroButton'))} ›</button></div>
     <div class="h-art" aria-hidden="true"><div class="h-ring"></div>${art}</div>
   </section>
@@ -372,9 +381,9 @@ function renderHome() {
   if (!projects.length) {
     html += `<div class="onboard card"><h3>তিন ধাপে প্রথম ভিডিও</h3>
       <ol class="steps">
-        <li><b>প্রজেক্ট বানাও</b><span class="muted small">একটা গল্প বা সিরিজের সব ভিডিও, ছবি আর চরিত্র এক জায়গায় থাকে।</span></li>
-        <li><b>চরিত্র যোগ করো</b><span class="muted small">নাম, চেহারার বর্ণনা আর ১-৩টি ছবি দিলে প্রতিটা ভিডিওতে চেহারা একই থাকে।</span></li>
-        <li><b>লিখে বানাও</b><span class="muted small">নিচের ঘরে বাংলায় দৃশ্য লেখো, @নাম দিয়ে চরিত্র ডাকো, তারপর "ভিডিও বানাও"।</span></li>
+        <li><b>প্রজেক্ট বানাও</b></li>
+        <li><b>চরিত্র যোগ করো</b></li>
+        <li><b>লিখে বানাও</b></li>
       </ol>
       <button class="pri" data-act="new-project">+ প্রথম প্রজেক্ট বানাও</button></div>`;
   }
@@ -382,7 +391,7 @@ function renderHome() {
     const inside = projects.filter(p => p.folder_id === f.id);
     html += `<div class="row" style="margin:18px 0 8px"><h3 class="grow" style="margin:0">📁 ${esc(f.name)}</h3>
       <button class="sm" data-act="rename-folder" data-id="${f.id}">নাম বদলাও</button><button class="sm bad" data-act="del-folder" data-id="${f.id}">মুছো</button></div>
-      <div class="grid">${inside.map(card).join('') || '<p class="muted small">এই ফোল্ডার খালি। প্রজেক্টের ⋯ মেনু থেকে এখানে সরাও।</p>'}</div>`;
+      <div class="grid">${inside.map(card).join('') || '<p class="muted small">খালি</p>'}</div>`;
   }
   const loose = projects.filter(p => !p.folder_id);
   if (loose.length) html += `<h3 style="margin:18px 0 8px">ফোল্ডার ছাড়া</h3><div class="grid">${loose.map(card).join('')}</div>`;
@@ -503,7 +512,7 @@ function openIngPicker() {
   const imgs = S.P.assets.filter(a => a.kind === 'image' && !a.character_id);
   openModal(`<div class="row" style="padding:14px 14px 0"><h3 class="grow" style="margin:0">উপকরণ বেছে নাও</h3>
       <button class="sm" data-act="upload-ing">⬆️ আপলোড</button><button class="sm pri" data-act="close-ings">হয়ে গেছে</button></div>
-    <p class="muted small" style="margin:6px 14px 0">${C.mode === 'image' ? 'ছবিতে ১৪টি পর্যন্ত রেফারেন্স (চরিত্রের ৪টি)।' : 'ভিডিওতে সব মিলিয়ে ৬টি রেফারেন্স ছবি যায়: চরিত্রপ্রতি ৩টি, ২ জন পর্যন্ত, বাকিগুলো বস্তু বা জায়গার ছবি।'} এখন: ${bn(refCount(C.chars, C.ings))}টি</p>
+    <p class="muted small" style="margin:6px 14px 0">${bn(refCount(C.chars, C.ings))}/${bn(C.mode === 'image' ? 14 : 6)}</p>
     <h4 style="margin:12px 14px 6px">চরিত্র</h4>
     <div class="chips" style="padding:0 14px">${S.P.characters.map(c => `<span class="chip ${C.chars.includes(c.id) ? 'on' : ''}" data-act="toggle-char" data-id="${c.id}"><span class="th">${c.images[0] ? `<img src="${media(c.images[0])}" alt="">` : '🧑'}</span>${esc(c.name)}</span>`).join('') || '<span class="muted small">চরিত্র নেই</span>'}</div>
     <h4 style="margin:12px 14px 0">ছবি</h4>
@@ -553,11 +562,10 @@ function renderGallery() {
   }
   const qq = S.q.trim().toLowerCase();
   if (qq) list = list.filter(a => `${a.title || ''} ${a.prompt || ''}`.toLowerCase().includes(qq));
-  const more = S.P.assetsMore ? `<div class="more-row"><button data-act="load-more">আরও পুরনো ফাইল দেখাও</button>${qq || S.filter !== 'all' ? '<span class="muted small">খোঁজ আর ফিল্টার শুধু দেখানো ফাইলের মধ্যে কাজ করে</span>' : ''}</div>` : '';
+  const more = S.P.assetsMore ? `<div class="more-row"><button data-act="load-more">আরও পুরনো ফাইল দেখাও</button></div>` : '';
   el.innerHTML = list.length ? `<div class="gal">${list.map(tileHtml).join('')}</div>${more}`
     : (qq || S.filter !== 'all') ? '<div class="empty">কিছু পাওয়া যায়নি।</div>' + more
-    : `<div class="empty"><div style="font-size:36px">✨</div><p>এখনো কিছু নেই। নিচের ঘরে দৃশ্যটা লিখে প্রথম ভিডিও বা ছবি বানাও।</p>
-        <p class="muted small">${S.P.characters.length ? 'চরিত্র ডাকতে @নাম লেখো, যেমন @' + esc(S.P.characters[0].name) : 'চেহারা এক রাখতে আগে "চরিত্র" ট্যাবে চরিত্র বানাও।'}</p></div>`;
+    : `<div class="empty"><div style="font-size:36px">✨</div><p>নিচের ঘরে লিখে শুরু করো</p></div>`;
 }
 async function loadTrash() {
   try { S.trash = await api('GET', `/api/projects/${S.pid}/trash`); } catch (e) { toast(e.message, true); S.trash = { days: 30, assets: [] }; }
@@ -648,7 +656,6 @@ function renderCharacters() {
   $('#tabBody').innerHTML = `
     <div class="card" style="margin-bottom:16px">
       <div class="row" style="margin-bottom:6px"><h3 class="grow" style="margin:0">নতুন চরিত্র</h3><button class="sm" data-act="avatar">🤳 আমার ছবি থেকে অবতার</button></div>
-      <p class="muted small" style="margin:0 0 8px">নাম আর চেহারা লেখো, বা নিচের নমুনা থেকে নাও। তারপর চরিত্রে চেপে কণ্ঠ, স্বভাব আর রেফারেন্স ছবি দাও।</p>
       <div class="chips" style="margin:0 0 10px">${CHAR_PRESETS.map(([n], i) => `<span class="chip" data-act="preset" data-v="${i}" style="padding:5px 12px">✨ ${esc(n)}</span>`).join('')}</div>
       <div class="row"><input id="ncName" placeholder="নাম, যেমন: রাজু" style="max-width:220px"><input id="ncDesc" class="grow" placeholder="চেহারা, যেমন: ২৫ বছরের ছেলে, কোঁকড়া চুল, নীল পাঞ্জাবি, হালকা দাড়ি"><button class="pri" data-act="new-char">যোগ করো</button></div>
     </div>
@@ -667,7 +674,7 @@ function renderCharGrid() {
       return `<div class="card ccard" data-act="edit-char" data-id="${c.id}">
         <div class="cimg">${c.images[0] ? `<img src="${media(c.images[0])}" alt="" loading="lazy">` : busy ? '<span class="spin"></span>' : '🧑'}
           <span class="badge">${bn(c.images.length)}/৩${busy ? ' ⏳' : ''}</span></div>
-        <div class="cinfo"><b>${esc(c.name)}</b><div class="muted small">${c.voice ? `🎙️ ${esc(c.voice)}${v ? ' · ' + esc(v.bn) : ''}` : 'কণ্ঠ বাছা হয়নি'}</div></div>
+        <div class="cinfo"><b>${esc(c.name)}</b><div class="muted small">${c.voice ? `🎙️ ${esc(c.voice)}${v ? ' · ' + esc(voiceDesc(v)) : ''}` : 'কণ্ঠ বাছা হয়নি'}</div></div>
       </div>`;
     }).join('')}</div>` : '<div class="empty">এখনো কোনো চরিত্র নেই।</div>';
   }
@@ -697,7 +704,7 @@ async function openCharEditor(id) {
   if (!c) return;
   S.charEdit = id;
   const voices = await loadVoices().catch(() => []);
-  const opt = g => voices.filter(v => v.gender === g).map(v => `<option value="${v.name}" ${c.voice === v.name ? 'selected' : ''}>${v.name} — ${v.bn}</option>`).join('');
+  const opt = g => voices.filter(v => v.gender === g).map(v => `<option value="${v.name}" ${c.voice === v.name ? 'selected' : ''}>${v.name} — ${voiceDesc(v)}</option>`).join('');
   openModal(`<div class="ced" style="padding:16px">
     <div class="row" style="flex-wrap:nowrap"><input id="ecName" class="title-input grow" value="${esc(c.name)}" aria-label="চরিত্রের নাম"><button class="sm ghost" data-act="close" aria-label="বন্ধ">✕</button></div>
     <label class="lab">রেফারেন্স ছবি (৩টি পর্যন্ত, ভিডিওতে এগুলো দেখে চেহারা এক থাকে)</label>
@@ -708,7 +715,6 @@ async function openCharEditor(id) {
     <div class="row" style="flex-wrap:nowrap"><select id="ecVoice" class="grow"><option value="">কোনো কণ্ঠ বাছা নেই</option><optgroup label="নারী">${opt('female')}</optgroup><optgroup label="পুরুষ">${opt('male')}</optgroup></select>
       <button class="sm" data-act="voice-play">▶ শোনো</button></div>
     <audio id="vPrev" preload="none"></audio>
-    <p class="muted small" style="margin:6px 0 0">ভিডিওতে চরিত্রটি এই ধরনের কণ্ঠে কথা বলবে। প্রথমবার শুনতে কয়েক সেকেন্ড লাগে।</p>
     <div class="row" style="margin-top:14px"><button class="pri" data-act="save-char" data-id="${c.id}">সেভ</button><span class="grow"></span><button class="sm bad" data-act="del-char" data-id="${c.id}">🗑 চরিত্র মুছো</button></div>
   </div>`);
   renderCharRefs();
@@ -738,7 +744,6 @@ function renderTimeline() {
           <button class="sm ghost" data-act="clip-move" data-id="${a.id}" data-v="1" ${i < clips.length - 1 ? '' : 'disabled'} aria-label="পরে">▶</button>
           <button class="sm ghost bad" data-act="clip-toggle" data-id="${a.id}" aria-label="সরাও">✕</button></div></div>`).join('')}</div>`
       : '<div class="empty">দৃশ্যক্রম খালি। নিচের ভিডিওগুলো থেকে যোগ করো।</div>'}
-    <p class="muted small">সব ক্লিপ জোড়া দিয়ে একটা ফাইল বানাতে প্রতিটা ক্লিপ ডাউনলোড করে CapCut বা অন্য এডিটরে এই ক্রমে বসাও।</p>
     <h3 style="margin-top:18px">যোগ করার মতো ভিডিও</h3>
     ${rest.length ? `<div class="gal">${rest.map(a => `<div class="tile" data-act="clip-toggle" data-id="${a.id}"><video src="${media(a.id)}#t=0.1" preload="metadata" muted playsinline></video><span class="badge">+ যোগ করো</span><div class="cap">${esc(a.prompt)}</div></div>`).join('')}</div>`
       : '<p class="muted small">আর কোনো ভিডিও নেই।</p>'}`;
@@ -772,7 +777,6 @@ function renderStory() {
     </div>
     <div class="card" style="margin-bottom:14px">
       <h3>নতুন এপিসোড</h3>
-      <p class="muted small" style="margin:0 0 6px">এই প্রজেক্টের চরিত্রগুলো নিয়ে AI এপিসোড লিখবে। আগের এপিসোডগুলো মনে রেখে গল্প এগোবে।</p>
       <textarea id="stDir" rows="2" placeholder="নির্দেশনা (ঐচ্ছিক): বড় টুইস্ট দাও, শেষে ক্লিফহ্যাঙ্গার"></textarea>
       <button class="pri" style="margin-top:8px" data-act="write-episode" ${S.writing ? 'disabled' : ''}>${S.writing ? 'লেখা হচ্ছে... (১ মিনিট পর্যন্ত)' : '📖 এপিসোড লেখো'}</button>
     </div>
@@ -821,7 +825,7 @@ function renderChatLog() {
   const msgs = S.chat || [];
   el.innerHTML = msgs.length
     ? msgs.map(m => `<div class="msg ${m.role === 'user' ? 'me' : 'ai'}">${mdLite(m.text)}</div>`).join('') + (S.chatBusy ? '<div class="msg ai"><span class="spin"></span></div>' : '')
-    : `<p class="muted">আইডিয়া, স্টোরিবোর্ড, শটের পরিকল্পনা বা প্রম্পট নিয়ে যা খুশি জিজ্ঞেস করো। এই প্রজেক্টের চরিত্র আর গল্প সহকারী জানে।</p>
+    : `<p class="muted">আইডিয়া, স্টোরিবোর্ড বা প্রম্পট নিয়ে জিজ্ঞেস করো</p>
        <div class="chips">${SUGGEST.map(x => `<span class="chip" data-act="chat-suggest" data-v="${esc(x)}" style="padding:5px 12px">${esc(x)}</span>`).join('')}</div>`;
   el.scrollTop = el.scrollHeight;
 }
@@ -859,7 +863,7 @@ function usageChart(daily) {
   const tot = d => d.videos + d.images;
   const max = Math.max(1, ...daily.map(tot));
   const top = max <= 4 ? max : Math.ceil(max / 2) * 2;
-  const label = d => new Date(d.day + 'T00:00:00').toLocaleDateString('bn-BD', { day: 'numeric', month: 'short' });
+  const label = d => new Date(d.day + 'T00:00:00').toLocaleDateString(I18N.locale, { day: 'numeric', month: 'short' });
   const bars = daily.map((d, i) => {
     const n = tot(d);
     const h = n ? Math.max(3, (n / top) * 100) : 0;
@@ -897,12 +901,13 @@ function renderAccount() {
     <section class="card"><h3>ব্যবহার ও খরচ</h3>${usage}</section>
     <section class="card"><h3>অ্যাপ</h3>
       <div class="setrow"><span class="grow">ফোনে বা কম্পিউটারে অ্যাপ হিসেবে</span><button data-act="install">📲 ইনস্টল</button></div>
+      <div class="setrow"><span class="grow">🌐 ভাষা · Language</span><div class="seg seg-sm notr" role="group" aria-label="Language">${[['bn', 'বাংলা'], ['en', 'English']].map(([v, l]) => `<button class="${I18N.lang === v ? 'on' : ''}" data-act="set-lang" data-v="${v}" aria-pressed="${I18N.lang === v}">${l}</button>`).join('')}</div></div>
       <div class="setrow"><span class="grow">থিম</span><div class="seg seg-sm" role="group" aria-label="থিম">${[['dark', 'ফ্যান্টাসি (গাঢ়)'], ['light', 'আলো'], ['auto', 'ডিভাইস']].map(([v, l]) => `<button class="${theme === v ? 'on' : ''}" data-act="set-theme" data-v="${v}" aria-pressed="${theme === v}">${l}</button>`).join('')}</div></div>
-      <div class="setrow"><span class="grow">ভিডিও তৈরি শেষ হলে নোটিফিকেশন<br><span class="muted small">অন্য ট্যাবে থাকলেও জানাবে</span></span>${notif ? `<span class="muted small">${notif}</span>` : '<button data-act="notify-on">চালু করো</button>'}</div>
+      <div class="setrow"><span class="grow">নোটিফিকেশন</span>${notif ? `<span class="muted small">${notif}</span>` : '<button data-act="notify-on">চালু করো</button>'}</div>
     </section>
     <section class="card"><h3>নিরাপত্তা</h3>
       <div class="setrow"><span class="grow">এই ডিভাইস থেকে বের হও</span><button data-act="logout">লগআউট</button></div>
-      <div class="setrow"><span class="grow">সব ডিভাইস থেকে বের হও<br><span class="muted small">ফোন হারালে বা অন্য কোথাও লগইন রয়ে গেলে</span></span><button data-act="logout-all">সব জায়গা থেকে লগআউট</button></div>
+      <div class="setrow"><span class="grow">সব ডিভাইস থেকে বের হও</span><button data-act="logout-all">সব জায়গা থেকে লগআউট</button></div>
     </section>
     <section class="card danger"><h3>অ্যাকাউন্ট মুছে ফেলা</h3>
       <p class="small">তোমার সব প্রজেক্ট, ভিডিও, ছবি, চরিত্র আর গল্প চিরতরে মুছে যাবে। ফেরত আনা যাবে না। আগে প্রজেক্টের ⬇️ ZIP দিয়ে ফাইল নামিয়ে রাখো।</p>
@@ -913,7 +918,7 @@ function renderAccount() {
 
 function profileCard() {
   const me = S.me.user, pf = S.profile;
-  const joined = pf?.joined ? new Date(pf.joined).toLocaleDateString('bn-BD', { day: 'numeric', month: 'long', year: 'numeric' }) : '—';
+  const joined = pf?.joined ? new Date(pf.joined).toLocaleDateString(I18N.locale, { day: 'numeric', month: 'long', year: 'numeric' }) : '—';
   const row = (icon, k, v) => `<div class="pf-row"><span aria-hidden="true">${icon}</span><span class="muted">${k}</span><b class="tnum">${v}</b></div>`;
   return `<section class="card profile ${me.owner ? 'own' : ''}">
     <div class="pf-cover" aria-hidden="true"></div>
@@ -931,7 +936,7 @@ function profileCard() {
       ${row('⭐', 'মোট তৈরি', pf ? bn(pf.stats.creations) : '…')}
       ${row('📁', 'প্রজেক্ট', pf ? bn(pf.stats.projects) + (pf.stats.documentaries ? ` · ডকুমেন্টারি ${bn(pf.stats.documentaries)}` : '') : '…')}
     </div>
-    ${me.role === 'guest' ? '<div class="pf-acts"><button class="gold" data-act="guest-upgrade">🔐 Gmail দিয়ে ঢোকো, সব সুবিধা পাও</button></div><p class="muted small" style="padding:8px 16px 0">অতিথির প্রজেক্ট ৭ দিন পর নিজে মুছে যায়।</p>' : ''}
+    ${me.role === 'guest' ? '<div class="pf-acts"><button class="gold" data-act="guest-upgrade">🔐 Gmail দিয়ে ঢোকো</button></div>' : ''}
     <div class="pf-acts"><button data-act="pf-name">✏️ নাম বদলাও</button>
       ${me.customPhoto ? '<button data-act="pf-photo-del">Gmail-এর ছবিতে ফেরো</button>' : ''}
       <button data-act="switch-account">🔁 অ্যাকাউন্ট বদলাও</button>
@@ -984,14 +989,13 @@ function renderHelp() {
   const list = S.myComplaints;
   $('#main').innerHTML = `<div class="page">${pageHead('💬 সাহায্য ও যোগাযোগ')}
     <section class="card helphero"><div class="hh-text"><h3>সরাসরি মালিকের সাথে যোগাযোগ</h3>
-      <p class="muted">কোনো সমস্যা, প্রশ্ন বা কাজের প্রস্তাব? এক চাপে যোগাযোগ করো।</p>
-      ${contactButtons(c) || '<p class="muted small">মালিক এখনো যোগাযোগের তথ্য বসাননি। নিচের ফর্মে লিখে পাঠাও, উত্তর এখানেই আসবে।</p>'}</div>
+      ${contactButtons(c) || ''}</div>
       <img class="hh-owner${framed()}" src="${brandUrl('owner-sm')}" alt="" aria-hidden="true"></section>
     <section class="card"><h3>অভিযোগ বা সমস্যা জানাও</h3>
       <div class="set2"><div><label class="lab" for="cpCat">ধরন</label><select id="cpCat">${Object.entries(CAT_LABEL).map(([k, l]) => `<option value="${k}">${l}</option>`).join('')}</select></div>
         <div><label class="lab" for="cpSub">বিষয়</label><input id="cpSub" maxlength="120" placeholder="যেমন: ভিডিও তৈরি আটকে আছে"></div></div>
       <label class="lab" for="cpText">বিস্তারিত</label><textarea id="cpText" rows="4" maxlength="4000" placeholder="কী হয়েছে, কখন হয়েছে, কোন প্রজেক্টে — যত পারো লেখো"></textarea>
-      <div class="row" style="margin-top:10px"><span class="muted small grow">মালিক বা অ্যাডমিন উত্তর দিলে এখানেই দেখতে পাবে।</span><button class="pri" data-act="c-new">পাঠাও</button></div></section>
+      <div class="row" style="margin-top:10px"><span class="grow"></span><button class="pri" data-act="c-new">পাঠাও</button></div></section>
     <section class="card"><h3>আমার অভিযোগ</h3>${!list ? '<p class="muted">লোড হচ্ছে...</p>' : list.length ? list.map(x => threadHtml(x, 'c-reply')).join('') : '<p class="muted small">এখনো কিছু পাঠাওনি।</p>'}</section>
   </div>`;
 }
@@ -1018,12 +1022,12 @@ function renderPanel() {
   if (!P) { $('#main').innerHTML = `<div class="page">${head}<p class="muted">লোড হচ্ছে...</p></div>`; return; }
   if (!P.status.unlocked) {
     $('#main').innerHTML = `<div class="page">${head}<section class="card lockcard"><div class="lockicon" aria-hidden="true">🔐</div>
-      ${P.status.configured ? `<h3>কন্ট্রোল প্যানেল তালাবদ্ধ</h3><p class="muted small">মালিকের Gmail দিয়ে লগইন করা আছে। এবার প্যানেলের পাসওয়ার্ড দাও।</p>
+      ${P.status.configured ? `<h3>কন্ট্রোল প্যানেল তালাবদ্ধ</h3>
         <form class="row" data-form="unlock" autocomplete="on"><input type="text" name="username" value="${esc(S.me.user.email)}" autocomplete="username" hidden>
           <input id="pnPass" type="password" class="grow" autocomplete="current-password" placeholder="পাসওয়ার্ড" aria-label="পাসওয়ার্ড" maxlength="200">
           <button class="gold" data-act="panel-unlock">খোলো</button></form>
-        <p class="muted small">১৫ মিনিটে ৫ বারের বেশি চেষ্টা করা যায় না। খোলার পর ৩০ মিনিট পর নিজে থেকে বন্ধ হয়। পাসওয়ার্ড শুধু সার্ভারের গোপন সেটিংয়ে থাকে, অ্যাপ থেকে বদলানো যায় না।</p>`
-      : `<h3>পাসওয়ার্ড বসানো নেই</h3><p class="muted small">সার্ভারের Variables-এ <code>OWNER_PANEL_PASSWORD</code> বসাও (Railway → Variables), তারপর অ্যাপ আবার চালু হলে এখানে ঢুকতে পারবে।</p>`}
+`
+      : `<h3>পাসওয়ার্ড বসানো নেই</h3><p class="muted small"><code>OWNER_PANEL_PASSWORD</code> বসাও</p>`}
       </section></div>`;
     setTimeout(() => $('#pnPass')?.focus(), 30);
     return;
@@ -1049,9 +1053,9 @@ function renderPanel() {
           <button class="sm" data-act="pn-kick" data-id="${u.id}" title="সব ডিভাইস থেকে বের করে দাও">👢 কিক</button>
           ${u.blocked ? `<button class="sm" data-act="pn-unblock" data-id="${u.id}">✅ আনব্লক</button>` : `<button class="sm bad" data-act="pn-block" data-id="${u.id}">⛔ ব্লক</button>`}</div>`}</td></tr>`).join('') || '<tr><td colspan="4" class="muted">কেউ নেই</td></tr>'}
       </tbody></table></div>
-      <p class="muted small">অ্যাডমিন: দেখাশোনা, অভিযোগের উত্তর, নতুন ইমেইলকে অনুমতি, আটকে থাকা কাজ বাতিল। ব্লক, কিক, অ্যাডমিন বানানো আর সেটিং শুধু তুমি পারো।</p></section>
+</section>
     <section class="card"><h3>🚪 কারা ঢুকতে পারবে</h3>
-      <div class="setrow"><span class="grow">👀 অতিথি প্রবেশ <span class="muted small">(Gmail ছাড়া ঘুরে দেখা; খরচের কাজ বন্ধ)</span></span><div class="seg seg-sm" role="group" aria-label="অতিথি প্রবেশ">${[['on', 'চালু'], ['off', 'বন্ধ']].map(([v, l]) => `<button class="${set.guest === v ? 'on' : ''}" data-act="pn-guest" data-v="${v}" aria-pressed="${set.guest === v}">${l}</button>`).join('')}</div></div>
+      <div class="setrow"><span class="grow">👀 অতিথি প্রবেশ</span><div class="seg seg-sm" role="group" aria-label="অতিথি প্রবেশ">${[['on', 'চালু'], ['off', 'বন্ধ']].map(([v, l]) => `<button class="${set.guest === v ? 'on' : ''}" data-act="pn-guest" data-v="${v}" aria-pressed="${set.guest === v}">${l}</button>`).join('')}</div></div>
       <div class="setrow"><span class="grow">নতুন সদস্য</span><div class="seg seg-sm" role="group" aria-label="নতুন সদস্য">${[['invite', 'শুধু অনুমতি পাওয়া'], ['open', 'যে কেউ (Gmail)']].map(([v, l]) => `<button class="${set.signup === v ? 'on' : ''}" data-act="pn-signup" data-v="${v}" aria-pressed="${set.signup === v}">${l}</button>`).join('')}</div></div>
       <div class="row" style="margin:8px 0"><input id="alEmail" class="grow" type="email" placeholder="gmail ঠিকানা" aria-label="নতুন ইমেইল"><button class="pri" data-act="allow-add">অনুমতি দাও</button></div>
       ${(al.allowed || []).map(x => `<div class="setrow"><span class="grow">${esc(x.email)}</span><button class="sm bad" data-act="allow-del" data-v="${esc(x.email)}">সরাও</button></div>`).join('') || '<p class="muted small">তালিকা খালি</p>'}</section>
@@ -1062,11 +1066,9 @@ function renderPanel() {
       ${field('note', 'ছোট নোট (যেমন কখন পাওয়া যাবে)', 'সকাল ১০টা – রাত ১০টা')}
       <div class="row" style="margin-top:10px"><span class="grow muted small">খালি ঘর দেখাবে না।</span><button class="pri" data-act="pn-contact">সেভ</button></div></section>
     <section class="card"><h3>📢 সবার জন্য বার্তা</h3>
-      <p class="muted small" style="margin:0 0 8px">কোনো সমস্যা বা খবর এখানে লেখো, সবার পর্দায় দেখাবে।</p>
       <textarea id="pnAnn" rows="3" maxlength="600" placeholder="যেমন: আজ রাত ১২টায় ১০ মিনিট রক্ষণাবেক্ষণ চলবে">${esc(set.announcement?.text || '')}</textarea>
       <div class="seg annmodes" role="group" aria-label="কীভাবে দেখাবে">${[['bar', '➖ ওপরে ফিতা'], ['popup', '🪟 পুরো পর্দায় বার্তা'], ['maintenance', '🛠️ রক্ষণাবেক্ষণ (কাজ বন্ধ)']]
         .map(([v, l]) => `<button class="${(set.announcement?.mode || 'bar') === v ? 'on' : ''}" data-act="pn-ann-mode" data-v="${v}" aria-pressed="${(set.announcement?.mode || 'bar') === v}">${l}</button>`).join('')}</div>
-      <p class="muted small" id="annHelp">${{ bar: 'ওপরে ছোট ফিতায় দেখাবে, চাইলে বন্ধ করা যায়।', popup: 'সবার সামনে বড় করে একবার খুলবে, "ঠিক আছে" চাপলে বন্ধ।', maintenance: 'সাধারণ ব্যবহারকারীর পুরো পর্দা ঢাকা থাকবে, নতুন কিছু বানাতে পারবে না। তুমি আর অ্যাডমিন কাজ করতে পারবে।' }[S.annMode || set.announcement?.mode || 'bar']}</p>
       <div class="row" style="margin-top:8px"><label class="row small"><input type="checkbox" id="pnWarn" style="width:auto" ${set.announcement?.level === 'warn' ? 'checked' : ''}> জরুরি (হলুদ)</label><span class="grow"></span>
         <button data-act="pn-ann-clear">মুছে দাও</button><button class="pri" data-act="pn-ann">দেখাও</button></div></section>
     ${brandSection(set)}
@@ -1079,20 +1081,19 @@ function renderPanel() {
 
 /* ---------- প্যানেল: ছবি ও লোগো ---------- */
 const BRAND_GROUPS = [
-  ['owner', '🧑 আমার ছবি', 'শুরুর পর্দা, লগইন, হোম, সাহায্য পাতা', 'owner-sm', 'ব্যাকগ্রাউন্ড ছাড়া (স্বচ্ছ PNG/WEBP) ছবি সবচেয়ে সুন্দর দেখায়। ব্যাকগ্রাউন্ডসহ দিলে গোল ফ্রেমে বসবে।'],
-  ['art', '🖼️ ডিজাইন করা ছবি', '"চিত্রপট সম্পর্কে" পাতা', 'art', 'পোস্টারের মতো লম্বা (৯:১৬) ছবি ভালো মানায়।'],
-  ['logo', '✨ লোগো', 'হেডার, শুরুর পর্দা, সম্পর্কে, ফোনের আইকন', 'logo', 'বর্গাকার ছবি দাও; না হলে মাঝখান থেকে বর্গ কাটা হবে।'],
+  ['owner', '🧑 আমার ছবি', 'শুরুর পর্দা, লগইন, হোম', 'owner-sm'],
+  ['art', '🖼️ ডিজাইন করা ছবি', 'সম্পর্কে পাতা', 'art'],
+  ['logo', '✨ লোগো', 'হেডার, ফোনের আইকন', 'logo'],
 ];
 function brandSection(set) {
   const b = set.brand || {};
   return `<section class="card"><h3>🖼️ ছবি ও লোগো</h3>
-    <p class="muted small" style="margin:0 0 10px">নতুন ছবি দিলে নিজে থেকেই সব জায়গায় বসে যাবে। ছবি শুধু মাপে ছোট করা হয়, মুখে কোনো ফিল্টার বা ঝাপসা যোগ হয় না।</p>
-    <div class="brandgrid">${BRAND_GROUPS.map(([k, title, where, prev, tip]) => `<div class="brandcard">
+    <div class="brandgrid">${BRAND_GROUPS.map(([k, title, where, prev]) => `<div class="brandcard">
       <div class="bc-prev ${k}"><img src="${brandUrl(prev)}" alt="" class="${k === 'owner' && b.framed ? 'framed' : ''}"></div>
-      <b>${title}</b><span class="muted small">কোথায়: ${where}</span><span class="muted small">${tip}</span>
+      <b>${title}</b><span class="muted small">${where}</span>
       <div class="row"><button class="pri sm" data-act="pn-brand" data-v="${k}">⬆️ বদলাও</button>${b[k === 'owner' ? 'owner' : k] ? `<button class="sm" data-act="pn-brand-reset" data-v="${k}">↺ আগেরটায় ফেরো</button>` : ''}</div>
       ${k === 'owner' ? `<label class="row small"><input type="checkbox" id="pnFramed" style="width:auto" data-act="pn-framed" ${b.framed ? 'checked' : ''}> গোল ফ্রেমে দেখাও</label>` : ''}</div>`).join('')}</div>
-    <p class="muted small">ফোনে আগে থেকে ইনস্টল করা অ্যাপের আইকন বদলাতে কখনো কখনো অ্যাপ একবার সরিয়ে আবার ইনস্টল করতে হয়।</p></section>`;
+</section>`;
 }
 const loadImg = file => new Promise((resolve, reject) => {
   const img = new Image();
@@ -1159,10 +1160,10 @@ const TEXT_LABEL = {
 };
 function textsSection(set) {
   const t = set.texts || {};
-  return `<section class="card"><h3>✍️ অ্যাপের লেখা</h3>
-    <p class="muted small" style="margin:0 0 8px">এক জায়গায় লিখলে সব জায়গায় বদলাবে। খালি রাখলে আগের লেখা থাকবে।</p>
+  const sfx = I18N.lang === 'en' ? '_en' : ''; // যে ভাষা চালু, সেই ভাষার লেখাই বদলানো হয়
+  return `<section class="card"><h3>✍️ অ্যাপের লেখা <span class="pill notr">${I18N.lang === 'en' ? 'English' : 'বাংলা'}</span></h3>
     <div class="set2">${Object.entries(TEXT_LABEL).map(([k, [l, max]]) => `<div ${k === 'aboutText' ? 'style="grid-column:1/-1"' : ''}><label class="lab" for="tx_${k}">${l}</label>
-      ${k === 'aboutText' ? `<textarea id="tx_${k}" rows="3" maxlength="${max}" placeholder="${esc(TEXT_DEFAULT[k])}">${esc(t[k] || '')}</textarea>` : `<input id="tx_${k}" maxlength="${max}" value="${esc(t[k] || '')}" placeholder="${esc(TEXT_DEFAULT[k] || S.me.app?.[k] || '')}">`}</div>`).join('')}</div>
+      ${k === 'aboutText' ? `<textarea id="tx_${k}" rows="3" maxlength="${max}" placeholder="${esc(TEXT_DEFAULT[k])}">${esc(t[k + sfx] || '')}</textarea>` : `<input id="tx_${k}" maxlength="${max}" value="${esc(t[k + sfx] || '')}" placeholder="${esc(TEXT_DEFAULT[k] || S.me.app?.[k] || '')}">`}</div>`).join('')}</div>
     <div class="row" style="margin-top:10px"><span class="grow"></span><button class="pri" data-act="pn-texts">সেভ</button></div></section>`;
 }
 
@@ -1171,7 +1172,7 @@ function layoutSection() {
   if (!S.arrange) S.arrange = currentLayout().map(t => ({ ...t }));
   const L = S.arrange;
   return `<section class="card"><h3>🏠 হোম সাজাও</h3>
-    <p class="muted small" style="margin:0 0 10px">বোতাম চেপে ধরে টেনে অন্য জায়গায় নাও (ফোনে একটু চেপে ধরে রাখো)। 👁 দিয়ে দেখাও/লুকাও, ✏️ দিয়ে নাম বদলাও। সেভ করলে সবার হোমে এভাবেই দেখাবে।</p>
+    <p class="muted small" style="margin:0 0 10px">চেপে ধরে টানো · 👁 দেখাও/লুকাও · ✏️ নাম</p>
     <div class="arrgrid" id="arrGrid">${L.map((t, i) => { const [ic, l, c] = TOOL_DEF[t.id]; return `<div class="arrtile toolbtn ${c} ${t.hidden ? 'off' : ''}" data-id="${t.id}" tabindex="0" aria-label="${esc(t.label || l)}${t.hidden ? ' (লুকানো)' : ''}, ${bn(i + 1)} নম্বর">
       <span class="ti">${ic}</span><span class="al">${esc(t.label || l)}</span>
       <div class="arracts"><button class="sm ghost" data-act="arr-move" data-id="${t.id}" data-v="-1" aria-label="আগে নাও">◀</button>
@@ -1275,10 +1276,8 @@ function renderAdmin() {
       <tbody>${A.users.map(u => `<tr><td><b>${esc(u.name || '')}</b><div class="muted small">${esc(u.email)}</div></td><td class="small">${u.last ? esc(fmtTime(u.last)) : '—'}</td>
         <td class="tnum">${bn(u.videos)}</td><td class="tnum">${bn(u.images)}</td><td class="tnum">${taka(u.cost)}</td><td class="tnum">${fmtBytes(u.bytes)}</td></tr>`).join('')}</tbody></table></div></section>
     <section class="card"><h3>কারা ঢুকতে পারবে</h3>
-      <p class="muted small">${al?.openSignup ? 'OPEN_SIGNUP চালু: যে কেউ Gmail দিয়ে ঢুকতে পারবে।' : 'শুধু তুমি আর নিচের ইমেইলগুলো ঢুকতে পারবে।'}</p>
       <div class="row"><input id="alEmail" class="grow" type="email" placeholder="gmail ঠিকানা" aria-label="নতুন ইমেইল"><button class="pri" data-act="allow-add">যোগ করো</button></div>
       ${(al?.allowed || []).map(x => `<div class="setrow"><span class="grow">${esc(x.email)}</span></div>`).join('') || '<p class="muted small">কেউ যোগ করা নেই</p>'}
-      <p class="muted small">কাউকে সরাতে, ব্লক বা কিক করতে মালিকের কন্ট্রোল প্যানেল লাগে।</p>
     </section>
     <section class="card"><h3>📨 অভিযোগ <span class="muted small">খোলা ${bn(S.staffC?.counts?.open || 0)} · দেখা হচ্ছে ${bn(S.staffC?.counts?.working || 0)} · সমাধান ${bn(S.staffC?.counts?.resolved || 0)}</span></h3>
       ${(S.staffC?.complaints || []).map(x => threadHtml(x, 'c-staff-reply')).join('') || '<p class="muted small">কোনো অভিযোগ নেই 🎉</p>'}</section>
@@ -1357,6 +1356,8 @@ function mentionIds(text) {
 }
 
 const handlers = {
+  'lang': () => I18N.set(I18N.lang === 'en' ? 'bn' : 'en'),
+  'set-lang': t => { if (t.dataset.v !== I18N.lang) I18N.set(t.dataset.v); },
   'help': () => openHelp(),
   'inst-hide': () => { try { localStorage.setItem('cp_inst_hide', '1'); } catch { /* কিছু না */ } renderMain(); },
   'guest-upgrade': () => act(async () => { await api('POST', '/api/logout'); location.href = '/login.html?switch=1'; }),
@@ -1371,7 +1372,7 @@ const handlers = {
   'c-new': () => act(async () => {
     await api('POST', '/api/complaints', { category: $('#cpCat').value, subject: $('#cpSub').value, text: $('#cpText').value });
     await openHelp();
-  }, 'পাঠানো হয়েছে। উত্তর এলে এখানেই দেখবে।'),
+  }, 'পাঠানো হয়েছে'),
   'c-reply': t => act(async () => { S.openThread = t.dataset.id; await api('POST', `/api/complaints/${t.dataset.id}/reply`, { text: $('#rp_' + t.dataset.id).value }); await openHelp(); }, 'পাঠানো হয়েছে'),
   'c-staff-reply': t => act(async () => { S.openThread = t.dataset.id; await api('POST', `/api/complaints/${t.dataset.id}/reply`, { text: $('#rp_' + t.dataset.id).value }); await openAdmin(); }, 'উত্তর পাঠানো হয়েছে'),
   'c-status': t => act(async () => { S.openThread = t.dataset.id; await api('PATCH', `/api/staff/complaints/${t.dataset.id}`, { status: t.dataset.v }); await openAdmin(); }, 'অবস্থা বদলেছে'),
@@ -1405,7 +1406,6 @@ const handlers = {
   'pn-ann-mode': t => {
     S.annMode = t.dataset.v;
     t.parentNode.querySelectorAll('button').forEach(b => { b.classList.toggle('on', b === t); b.setAttribute('aria-pressed', b === t); });
-    $('#annHelp').textContent = { bar: 'ওপরে ছোট ফিতায় দেখাবে, চাইলে বন্ধ করা যায়।', popup: 'সবার সামনে বড় করে একবার খুলবে, "ঠিক আছে" চাপলে বন্ধ।', maintenance: 'সাধারণ ব্যবহারকারীর পুরো পর্দা ঢাকা থাকবে, নতুন কিছু বানাতে পারবে না। তুমি আর অ্যাডমিন কাজ করতে পারবে।' }[t.dataset.v];
   },
   'pop-ok': t => { try { localStorage.setItem('cp_pop_seen', t.dataset.v); } catch { /* কিছু না */ } closeModal(); },
   'maint-retry': () => act(async () => { S.me = await api('GET', '/api/me'); renderTop(); }),
@@ -1429,8 +1429,9 @@ const handlers = {
   }, 'আগের ছবিতে ফেরানো হয়েছে'),
   'pn-framed': t => act(async () => { await api('PUT', '/api/owner/brand-options', { framed: t.checked }); S.me = await api('GET', '/api/me'); renderTop(); await openPanel(); }),
   'pn-texts': () => act(async () => {
-    const texts = {};
-    for (const k of Object.keys(TEXT_LABEL)) texts[k] = $('#tx_' + k).value.trim();
+    const texts = { ...(S.panel?.settings?.texts || {}) }; // অন্য ভাষার লেখা অক্ষত থাকে
+    const sfx = I18N.lang === 'en' ? '_en' : '';
+    for (const k of Object.keys(TEXT_LABEL)) { const v = $('#tx_' + k).value.trim(); if (v) texts[k + sfx] = v; else delete texts[k + sfx]; }
     await api('PUT', '/api/owner/settings', { texts });
     S.me = await api('GET', '/api/me'); renderTop(); await openPanel();
   }, 'লেখা সব জায়গায় বদলেছে'),
@@ -1453,7 +1454,7 @@ const handlers = {
   'arr-save': () => act(async () => {
     await api('PUT', '/api/owner/settings', { layout: S.arrange.map(({ id, hidden, label }) => ({ id, hidden, label })) });
     S.me = await api('GET', '/api/me'); S.arrange = null; await openPanel();
-  }, 'হোম সাজানো সেভ হয়েছে, সবার হোমে এভাবেই দেখাবে'),
+  }, 'হোম সেভ হয়েছে'),
   'pn-ann': () => act(async () => {
     await api('PUT', '/api/owner/settings', { announcement: { text: $('#pnAnn').value, level: $('#pnWarn').checked ? 'warn' : 'info', mode: S.annMode || S.panel?.settings?.announcement?.mode || 'bar' } });
     try { localStorage.removeItem('cp_ann_hide'); localStorage.removeItem('cp_pop_seen'); } catch { /* কিছু না */ }
@@ -1474,9 +1475,9 @@ const handlers = {
     if (k === 'edit') {
       S.tab = 'studio'; renderMain();
       const r = await uploadImage(null);
-      if (!r) return toast('ছবি বেছে নিলে এডিট শুরু হবে');
+      if (!r) return toast('একটা ছবি বাছো');
       await loadProject(); renderLive(); viewAsset(r.id);
-      toast('এখন ✏️ বদলাও, কাটা বা বড় করা বেছে নাও');
+      toast('✏️ বদলাও, কাটা বা বড় করা বেছে নাও');
     }
   }),
   'about': () => { S.view = 'about'; S.pid = null; S.P = null; clearTimeout(S.pollTimer); $('#app').classList.remove('drawer'); render(); },
@@ -1517,7 +1518,7 @@ const handlers = {
   'account-delete': () => act(async () => {
     const email = $('#delConfirm').value.trim();
     if (email.toLowerCase() !== S.me.user.email) throw new Error('নিজের ইমেইল ঠিকঠাক লেখো');
-    if (!confirm('শেষবার জিজ্ঞেস করছি: সব কিছু চিরতরে মুছে যাবে। মুছবে?')) return;
+    if (!confirm('সব কিছু চিরতরে মুছে যাবে। মুছবে?')) return;
     await api('POST', '/api/account/delete', { confirm: email });
     location.href = '/login.html';
   }),
@@ -1538,7 +1539,7 @@ const handlers = {
     S.pages++;
     renderGallery();
   }),
-  'export': () => { location.href = `/api/projects/${S.pid}/export`; toast('ZIP তৈরি হয়ে নামতে শুরু করবে'); },
+  'export': () => { location.href = `/api/projects/${S.pid}/export`; toast('ZIP নামছে'); },
   'close': closeModal,
   'modal-bg': (t, e) => { if (e.target === t) closeModal(); },
   'logout': () => act(async () => { await api('POST', '/api/logout'); location.href = '/login.html'; }),
@@ -1685,7 +1686,7 @@ const handlers = {
     C.prompt = S.chatPrompts[+t.dataset.id] || '';
     C.mode = t.dataset.v === 'image' ? 'image' : 'video';
     S.tab = 'studio'; renderMain();
-    toast('প্রম্পট বসানো হয়েছে। দেখে নিয়ে বানাও চাপো।');
+    toast('প্রম্পট বসানো হয়েছে');
   },
 
   'mode': t => {
@@ -1698,7 +1699,7 @@ const handlers = {
     const max = C.mode === 'image' ? 4 : 2;
     if (C.chars.includes(id)) C.chars = C.chars.filter(x => x !== id);
     else if (C.chars.length >= max) return toast(`সর্বোচ্চ ${bn(max)} জন চরিত্র বাছা যায়`, true);
-    else if (refCount([...C.chars, id], C.ings) > (C.mode === 'image' ? 14 : 6)) return toast('রেফারেন্স ছবির জায়গা নেই। আগে কিছু উপকরণ সরাও।', true);
+    else if (refCount([...C.chars, id], C.ings) > (C.mode === 'image' ? 14 : 6)) return toast('রেফারেন্সের জায়গা নেই', true);
     else C.chars.push(id);
     if (S.pickerOpen) openIngPicker(); else renderComposerChars();
   },
@@ -1764,7 +1765,7 @@ const handlers = {
       try { await navigator.share({ files: [file], title: a.title || 'চিত্রপট' }); } catch (e) { if (e.name !== 'AbortError') throw e; }
     } else {
       location.href = media(a.id) + '?dl=1';
-      toast('এই ব্রাউজারে সরাসরি শেয়ার হয় না, তাই ডাউনলোড হচ্ছে');
+      toast('ডাউনলোড হচ্ছে');
     }
   }),
   'crop': t => act(async () => {
@@ -1815,10 +1816,10 @@ const handlers = {
       S.installEvt.prompt();
       const r = await S.installEvt.userChoice.catch(() => ({}));
       S.installEvt = null;
-      if (r.outcome === 'accepted') toast('চিত্রপট ফোনে অ্যাপ হিসেবে ইনস্টল হচ্ছে');
+      if (r.outcome === 'accepted') toast('ইনস্টল হচ্ছে');
       return;
     }
-    if (matchMedia('(display-mode: standalone)').matches) return toast('চিত্রপট ইতিমধ্যে অ্যাপ হিসেবে খোলা আছে');
+    if (matchMedia('(display-mode: standalone)').matches) return toast('অ্যাপ হিসেবেই খোলা আছে');
     const ios = /iphone|ipad|ipod/i.test(navigator.userAgent);
     openModal(`<div style="padding:18px"><div class="row"><h3 class="grow" style="margin:0">📲 অ্যাপ হিসেবে ইনস্টল</h3><button class="sm ghost" data-act="close" aria-label="বন্ধ">✕</button></div>
       ${ios ? '<p>Safari-তে নিচের <b>শেয়ার ⬆️</b> বোতাম চাপো, তারপর <b>Add to Home Screen</b>।</p>'
@@ -1914,7 +1915,7 @@ const handlers = {
     const v = $('#ecVoice').value;
     if (!v) return toast('আগে একটা কণ্ঠ বাছো', true);
     const au = $('#vPrev');
-    au.onerror = () => toast('কণ্ঠ শোনা যায়নি। পরে আবার চেষ্টা করো।', true);
+    au.onerror = () => toast('কণ্ঠ শোনা যায়নি', true);
     au.src = `/api/voices/${encodeURIComponent(v)}/preview`;
     au.play().catch(() => {});
     toast(`${v}-এর কণ্ঠ আসছে...`);
@@ -1969,7 +1970,7 @@ const handlers = {
     const norm = s => s.replace(/\s+/g, '').toLowerCase();
     C.chars = S.P.characters.filter(c => (sc.characters || []).some(n => norm(n) === norm(c.name))).map(c => c.id).slice(0, 2);
     S.tab = 'studio'; renderMain();
-    toast('দৃশ্যের প্রম্পট বসানো হয়েছে। দেখে নিয়ে "ভিডিও বানাও" চাপো।');
+    toast('দৃশ্যের প্রম্পট বসানো হয়েছে');
   },
 };
 
@@ -1999,7 +2000,7 @@ function hideSplash() {
   if (!el) return;
   let first = true;
   try { first = !sessionStorage.getItem('cp_splash'); sessionStorage.setItem('cp_splash', '1'); } catch { /* স্টোরেজ বন্ধ */ }
-  const wait = first ? Math.max(0, 1300 - (Date.now() - splashStart)) : 0;
+  const wait = first ? Math.max(0, 2000 - (Date.now() - splashStart)) : 0;
   setTimeout(() => { el.classList.add('gone'); setTimeout(() => el.remove(), 450); }, wait);
 }
 (async function init() {

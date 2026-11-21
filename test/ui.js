@@ -11,6 +11,9 @@ const { chromium } = require('playwright');
 const { docScenario, wav } = require('./mock-gemini');
 
 const APP = path.join(__dirname, '..');
+// COLLECT=ফাইল দিলে পর্দায় আসা সব বাংলা লেখা সেই ফাইলে জমা হয় (ইংরেজি অভিধান বানানোর জন্য)
+const SEEN = new Set();
+const hook = async page => { if (process.env.COLLECT) { await page.exposeFunction('__seen', keys => keys.forEach(k => SEEN.add(k))); await page.addInitScript(l => { window.__CP_COLLECT = true; if (l) try { localStorage.setItem('cp_lang', 'en'); } catch (e) {} }, process.env.COLLECT_LANG || ''); } };
 const OUT = path.join(__dirname, 'screens');
 fs.mkdirSync(OUT, { recursive: true });
 
@@ -79,16 +82,16 @@ const mock = http.createServer((req, res) => {
         const bad = [...document.querySelectorAll('body *')].filter(el => {
           const r = el.getBoundingClientRect();
           if (!r.width || getComputedStyle(el).position === 'fixed') return false;
-          if (el.closest('.tscroll,.tabs,.vers,.tl,.filters,.chips')) return false; // এগুলো ইচ্ছে করে পাশে স্ক্রল হয়
+          if (el.closest('.tscroll,.tabs,.vers,.tl,.filters,.chips,#splash')) return false; // এগুলো ইচ্ছে করে পাশে স্ক্রল হয়
           return r.right > w + 1;
-        }).slice(0, 3).map(el => el.tagName + '.' + el.className);
+        }).slice(0, 3).map(el => el.tagName + '.' + el.className + '[' + (el.textContent || '').trim().slice(0, 30) + ' < ' + el.parentElement.className + ']');
         return { doc: document.documentElement.scrollWidth > w + 1, bad };
       });
       if (o.doc || o.bad.length) errors.push(`[${label}] horizontal overflow ${o.bad.join(', ')}`);
     };
     for (const vp of [{ name: 'desktop', width: 1440, height: 900 }, { name: 'mobile', width: 390, height: 844 }]) {
       const ctx = await browser.newContext({ viewport: { width: vp.width, height: vp.height }, deviceScaleFactor: 1 });
-      page = await ctx.newPage();
+      page = await ctx.newPage(); await hook(page);
       let expect403 = false; // ভুল পাসওয়ার্ডের পরীক্ষায় 403 প্রত্যাশিত
       page.on('console', m => { if (m.type() === 'error' && !(expect403 && /status of 403/.test(m.text()))) errors.push(`[${vp.name}] ${m.text()}`); });
       page.on('pageerror', e => errors.push(`[${vp.name}] pageerror ${e.message} @ ${String(e.stack).split('\n').slice(1, 4).join(' / ')}`));
@@ -266,6 +269,13 @@ const mock = http.createServer((req, res) => {
       await page.waitForSelector('.pcard');
       await page.screenshot({ path: `${OUT}/${vp.name}-6-home.png`, fullPage: true });
       await overflow(vp.name + ' home');
+      if (process.env.COLLECT) { // শুধু সংগ্রহের সময়: আরও পর্দা খুলে দেখা
+        await page.click('.pcard >> nth=0'); await page.waitForSelector('#composer');
+        await page.click('[data-act="project-menu"]'); await page.waitForSelector('#pmName'); await page.click('.modal [data-act="close"]');
+        await page.click('[data-act="plus"]'); await page.waitForSelector('.sheet'); await page.click('.sheet [data-act="close"]');
+        await page.click('[data-act="tab"][data-v="characters"]'); await page.waitForTimeout(300);
+        await page.click('.brand'); await page.waitForSelector('.pcard');
+      }
       // ডকুমেন্টারি স্টুডিও: প্রশ্নের বোতাম, কপি-ব্লক, ফাইল, আপলোড
       await page.click('[data-act="plus"]');
       await page.click('.sheet [data-act="doc"]');
@@ -434,7 +444,7 @@ const mock = http.createServer((req, res) => {
       if (await page.locator('#arrGrid [data-id="story"].off').count()) await page.click('#arrGrid [data-id="story"] [data-act="arr-hide"]');
       await page.screenshot({ path: `${OUT}/${vp.name}-11c-arrange.png`, fullPage: true });
       await page.click('[data-act="arr-save"]');
-      await page.waitForSelector('text=হোম সাজানো সেভ হয়েছে');
+      await page.waitForSelector('text=হোম সেভ হয়েছে');
       const saved = (await page.$$eval('#arrGrid .arrtile:not(.off)', els => els.map(e => e.dataset.id)));
       // পুরো পর্দার বার্তা
       await page.fill('#pnAnn', 'আজ নতুন ফিচার এসেছে ' + vp.name);
@@ -466,13 +476,14 @@ const mock = http.createServer((req, res) => {
     // বাকি মাপ: ছোট ফোন থেকে বড় ডেস্কটপ, প্রতিটা পাতায় পাশে বেরিয়ে যাওয়া কিছু নেই তো
     for (const [w, h] of [[360, 740], [430, 932], [768, 1024], [1024, 768]]) {
       const ctx = await browser.newContext({ viewport: { width: w, height: h }, deviceScaleFactor: 1, hasTouch: w < 1024, isMobile: w < 768 });
-      page = await ctx.newPage();
+      page = await ctx.newPage(); await hook(page);
       const tag = `w${w}`;
       page.on('console', m => { if (m.type() === 'error') errors.push(`[${tag}] ${m.text()}`); });
       page.on('pageerror', e => errors.push(`[${tag}] pageerror ${e.message}`));
       await page.goto(B + '/login.html');
       await page.fill('#devName', 'Owner desktop');
       await page.click('#devGo');
+      await page.waitForSelector('#splash', { state: 'detached', timeout: 6000 });
       await page.waitForSelector('.pcard');
       if (await page.isVisible('.popmsg')) await page.click('[data-act="pop-ok"]');
       await overflow(tag + ' home');
@@ -510,7 +521,7 @@ const mock = http.createServer((req, res) => {
     // অতিথি: Gmail ছাড়া ঢোকা, সব ঘুরে দেখা, খরচের কাজে সুন্দর বার্তা
     for (const [w, h, nm] of [[390, 844, 'guest-mobile'], [1440, 900, 'guest-desktop']]) {
       const ctx = await browser.newContext({ viewport: { width: w, height: h }, deviceScaleFactor: 1 });
-      page = await ctx.newPage();
+      page = await ctx.newPage(); await hook(page);
       page.on('console', m => { if (m.type() === 'error' && !/status of 403/.test(m.text())) errors.push(`[${nm}] ${m.text()}`); });
       page.on('pageerror', e => errors.push(`[${nm}] pageerror ${e.message}`));
       await page.goto(B + '/login.html');
@@ -546,6 +557,7 @@ const mock = http.createServer((req, res) => {
   } catch (e) {
     errors.push("FAIL " + e.message); try { await page.screenshot({ path: OUT + "/fail.png", fullPage: true }); errors.push(await page.evaluate(() => document.querySelector("#jobs")?.innerText + " / toasts: " + document.querySelector("#toasts").innerText)); } catch (x) { errors.push(String(x)); }
   } finally {
+    if (process.env.COLLECT) { fs.writeFileSync(process.env.COLLECT, JSON.stringify([...SEEN].sort(), null, 1)); console.log('সংগ্রহ:', SEEN.size, 'টি লেখা'); }
     await browser.close();
     srv.kill(); mock.close();
     fs.rmSync(dataDir, { recursive: true, force: true });

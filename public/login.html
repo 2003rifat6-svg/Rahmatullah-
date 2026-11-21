@@ -17,34 +17,36 @@
 </head>
 <body>
 <main class="wrap">
+  <button type="button" id="langBtn" class="langtop notr" aria-label="Language">🌐</button>
   <section class="art" aria-hidden="true">
     <div class="ring"></div>
     <img class="owner" src="/api/brand/owner" alt="" fetchpriority="high">
   </section>
   <section class="card">
     <div class="brand"><img src="/api/brand/logo" alt=""><div><b>চিত্রপট</b><small>AI ক্রিয়েটিভ স্টুডিও</small></div></div>
-    <p class="tag" id="tag">কল্পনা • সৃষ্টি • অনুপ্রেরণা</p>
+    <p class="tag" id="tag">ভাবো। বানাও। অনুপ্রাণিত করো।</p>
     <ul>
-      <li>লেখা থেকে ছবি আর ভিডিও, চরিত্রের চেহারা সবখানে এক</li>
-      <li>ছবি এডিট, কণ্ঠ, গল্প আর পুরো ডকুমেন্টারি</li>
-      <li>ফোনেই সব — অ্যাপ হিসেবে ইনস্টল করা যায়</li>
+      <li>ছবি · ভিডিও · কণ্ঠ · গল্প</li>
+      <li>প্রতিটা দৃশ্যে একই চরিত্র</li>
+      <li>ফোনে অ্যাপের মতো</li>
     </ul>
     <div id="g"></div>
-    <button id="guestGo" type="button" class="guest" hidden>👀 অতিথি হিসেবে ঢোকো <small>Gmail ছাড়া, সব ঘুরে দেখো</small></button>
+    <button id="guestGo" type="button" class="guest" hidden>👀 অতিথি হিসেবে ঢোকো <small>Gmail ছাড়া ঘুরে দেখো</small></button>
     <button id="installBtn" type="button" class="install" hidden>📲 ফোনে অ্যাপ হিসেবে ইনস্টল করো</button>
-    <details id="howto" class="howto"><summary>📲 কীভাবে ইনস্টল করব?</summary>
-      <p><b>Android (Chrome):</b> ওপরে ডানে <b>⋮</b> চাপো → <b>Install app</b> বা <b>Add to Home screen</b> → <b>Install</b>।</p>
-      <p><b>iPhone (Safari):</b> নিচের <b>শেয়ার ⬆️</b> চাপো → <b>Add to Home Screen</b> → <b>Add</b>।</p>
-      <p class="small">অ্যাপটা অবশ্যই <b>Chrome</b> (iPhone-এ <b>Safari</b>) ব্রাউজারে খুলতে হবে। Facebook, Messenger বা অন্য অ্যাপের ভেতরের ব্রাউজারে ইনস্টল হয় না।</p></details>
+    <details id="howto" class="howto"><summary>📲 ইনস্টল করার নিয়ম</summary>
+      <p><b>Android (Chrome):</b> ⋮ → Install app</p>
+      <p><b>iPhone (Safari):</b> Share ⬆️ → Add to Home Screen</p></details>
     <div class="dev" id="dev" hidden>
       <input id="devName" placeholder="পরীক্ষার নাম" aria-label="পরীক্ষার নাম">
       <button id="devGo" type="button">ঢোকো</button>
     </div>
     <p class="err" id="err" role="alert" hidden></p>
-    <small class="note">শুধু অনুমতি পাওয়া Gmail দিয়ে ঢোকা যাবে। প্রত্যেকের নিজের আলাদা প্রোফাইল থাকে।</small>
-    <div class="contact" id="contact" hidden><p>ঢুকতে সমস্যা? সরাসরি মালিকের সাথে যোগাযোগ করো</p><div class="ctas" id="ctas"></div></div>
+    <small class="note">অনুমতি পাওয়া Gmail দিয়ে ঢোকো</small>
+    <div class="contact" id="contact" hidden><p>সাহায্য দরকার?</p><div class="ctas" id="ctas"></div></div>
   </section>
 </main>
+<script src="/i18n.js?v=__V__" defer></script>
+<script src="/i18n-en.js?v=__V__" defer></script>
 <script src="/login.js?v=__V__" defer></script>
 </body>
 </html>
