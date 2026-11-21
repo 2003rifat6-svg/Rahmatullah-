@@ -1,0 +1,9 @@
+# গোপন চাবি আর ব্যবহারকারীর ডেটা কখনো GitHub-এ যাবে না
+.env
+data/
+node_modules/
+*.db
+*.db-wal
+*.db-shm
+# পরীক্ষার স্ক্রিনশট
+test/screens/
