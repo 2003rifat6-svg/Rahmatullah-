@@ -26,8 +26,17 @@ if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').cat
     if (n) document.getElementById('contact').hidden = false;
   }
   var switching = /[?&]switch=1/.test(location.search);
+  // ইনস্টল: ব্রাউজার সুযোগ দিলে এক চাপে, নইলে ধাপগুলো দেখানো
+  var installEvt = null, standalone = window.matchMedia('(display-mode: standalone)').matches || navigator.standalone;
+  var ib = document.getElementById('installBtn'), how = document.getElementById('howto');
+  if (standalone) how.hidden = true;
+  window.addEventListener('beforeinstallprompt', function (e) { e.preventDefault(); installEvt = e; if (!standalone) { ib.hidden = false; how.hidden = true; } });
+  ib.onclick = function () { if (installEvt) { installEvt.prompt(); installEvt.userChoice.then(function () { installEvt = null; ib.hidden = true; }); } };
+  window.addEventListener('appinstalled', function () { ib.hidden = true; how.hidden = true; });
+  document.getElementById('guestGo').onclick = function () { login({ guest: true }); };
   fetch('/api/config').then(function (r) { return r.json(); }).then(function (c) {
     contact(c.contact);
+    if (c.guest) document.getElementById('guestGo').hidden = false;
     // মালিকের দেওয়া লেখা আর ছবি (প্যানেল থেকে বদলানো)
     var t = c.texts || {}, b = c.brand || {}, v = b.v || {};
     if (t.tagline) document.getElementById('tag').textContent = t.tagline;
@@ -43,7 +52,7 @@ if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').cat
         if (n) login({ dev: n });
       };
     }
-    if (!c.googleClientId) { if (!c.devLogin) show('Gmail লগইন এখনো চালু হয়নি। অ্যাপের মালিককে জানাও।'); return; }
+    if (!c.googleClientId) { if (!c.devLogin && !c.guest) show('Gmail লগইন এখনো চালু হয়নি। অ্যাপের মালিককে জানাও।'); return; }
     var s = document.createElement('script');
     s.src = 'https://accounts.google.com/gsi/client';
     s.async = true;

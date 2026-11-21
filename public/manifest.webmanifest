@@ -26,5 +26,30 @@
       "type": "image/png",
       "purpose": "maskable"
     }
+  ],
+  "id": "/",
+  "categories": [
+    "productivity",
+    "entertainment",
+    "photo"
+  ],
+  "prefer_related_applications": false,
+  "display_override": [
+    "standalone",
+    "minimal-ui"
+  ],
+  "shortcuts": [
+    {
+      "name": "নতুন প্রজেক্ট",
+      "short_name": "প্রজেক্ট",
+      "url": "/",
+      "icons": [
+        {
+          "src": "/api/brand/icon-192",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
+    }
   ]
 }

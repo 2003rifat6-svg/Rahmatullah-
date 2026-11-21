@@ -46,3 +46,11 @@ small.note{color:var(--muted);font-size:13px;text-align:center}
 /* ব্যাকগ্রাউন্ডসহ ছবি: গোল ফ্রেমে (মুখ কাটা পড়ে না, ওপরের দিক রাখা) */
 .owner.framed{height:auto;width:min(78%,420px);aspect-ratio:1;border-radius:50%;object-fit:cover;object-position:50% 18%;align-self:center;
   border:4px solid transparent;background:linear-gradient(#0a0718,#0a0718) padding-box,linear-gradient(95deg,#ffe28a,#ffbe3d,#ff9f2e) border-box;box-shadow:0 0 40px rgba(255,190,61,.35)}
+button.guest{width:100%;background:linear-gradient(95deg,#ffe28a,#ffbe3d 60%,#ff9f2e);color:#2a1800;box-shadow:0 8px 24px rgba(255,190,61,.3);display:grid;gap:0;padding:12px 16px;font-size:17px}
+button.guest small{font-weight:500;font-size:13px;opacity:.8}
+button.install{width:100%;background:transparent;border:1px solid var(--line);box-shadow:none;color:var(--ink)}
+.howto{border:1px solid var(--line);border-radius:12px;padding:8px 12px;font-size:14px;background:rgba(10,7,24,.4)}
+.howto summary{cursor:pointer;font-weight:600}
+.howto p{margin:8px 0 0}
+.howto .small{font-size:13px;color:var(--muted)}
+button[hidden],details[hidden]{display:none}

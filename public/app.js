@@ -265,8 +265,16 @@ function applyBrand() {
   const tag = $('#spTag');
   if (tag && S.me) tag.textContent = txt('tagline');
 }
+function renderGuestBar() {
+  const el = $('#guestbar');
+  if (!el) return;
+  const g = S.me?.user?.role === 'guest';
+  el.hidden = !g;
+  el.innerHTML = g ? `<span aria-hidden="true">👀</span><span class="grow">তুমি <b>অতিথি</b>: সব ঘুরে দেখতে পারবে। ছবি-ভিডিও বানাতে বা ফাইল দিতে Gmail দিয়ে ঢুকতে হবে।</span><button class="sm gold" data-act="guest-upgrade">Gmail দিয়ে ঢোকো</button>` : '';
+}
 function renderTop() {
   applyBrand();
+  renderGuestBar();
   renderAnnounce();
   const me = S.me?.user;
   $('#avatar').innerHTML = me?.picture ? `<img src="${esc(me.picture)}" alt="" referrerpolicy="no-referrer">` : esc((me?.name || '?').slice(0, 1));
@@ -325,6 +333,13 @@ function renderLive() {
 }
 
 /* ---------- হোম ---------- */
+function installCard() {
+  let hide = '';
+  try { hide = localStorage.getItem('cp_inst_hide') || ''; } catch { /* কিছু না */ }
+  if (hide || matchMedia('(display-mode: standalone)').matches || navigator.standalone) return '';
+  return `<div class="installcard"><img src="${brandUrl('icon-192')}" alt=""><div class="grow"><b>📲 ফোনে অ্যাপ হিসেবে ইনস্টল করো</b><div class="muted small">হোম স্ক্রিনে আইকন, ব্রাউজার ছাড়া সরাসরি খোলে।</div></div>
+    <button class="gold sm" data-act="install">ইনস্টল</button><button class="sm ghost" data-act="inst-hide" aria-label="লুকাও">✕</button></div>`;
+}
 function heroHtml() {
   const me = S.me.user;
   const first = esc(String(me.name || '').split(/\s+/)[0] || 'বন্ধু');
@@ -335,6 +350,7 @@ function heroHtml() {
       <button class="gold h-go" data-act="tool" data-v="video">${esc(txt('heroButton'))} ›</button></div>
     <div class="h-art" aria-hidden="true"><div class="h-ring"></div>${art}</div>
   </section>
+  ${installCard()}
   <div class="tools">${currentLayout().filter(t => !t.hidden).map(t => { const [i, l, c] = TOOL_DEF[t.id]; return `<button class="toolbtn ${c}" data-act="tool" data-v="${t.id}"><span class="ti">${i}</span>${esc(t.label || l)}</button>`; }).join('')}</div>`;
 }
 // টুলে চাপলে: সর্বশেষ প্রজেক্ট খোলে (না থাকলে একটা বানায়), তারপর সেই কাজের জায়গায় নিয়ে যায়
@@ -904,7 +920,7 @@ function profileCard() {
     <div class="pf-head">
       <div class="pf-avatar">${me.owner ? '<span class="pf-crown" aria-hidden="true">👑</span>' : ''}
         ${me.picture ? `<img src="${esc(me.picture)}" alt="" referrerpolicy="no-referrer">` : `<span class="pf-init">${esc((me.name || '?').slice(0, 1))}</span>`}
-        <button class="pf-cam" data-act="pf-photo" aria-label="প্রোফাইল ছবি বদলাও" title="প্রোফাইল ছবি বদলাও">📷</button></div>
+        ${me.role === 'guest' ? '' : '<button class="pf-cam" data-act="pf-photo" aria-label="প্রোফাইল ছবি বদলাও" title="প্রোফাইল ছবি বদলাও">📷</button>'}</div>
       <h2 class="pf-name">${esc(me.name)}</h2>
       <span class="pill ${me.owner ? 'gold' : me.role === 'admin' ? 'adm' : ''}">${ROLE_LABEL[me.role] || 'সদস্য'}</span>
       <p class="muted small" style="margin:4px 0 0">${esc(me.email)}</p>
@@ -915,6 +931,7 @@ function profileCard() {
       ${row('⭐', 'মোট তৈরি', pf ? bn(pf.stats.creations) : '…')}
       ${row('📁', 'প্রজেক্ট', pf ? bn(pf.stats.projects) + (pf.stats.documentaries ? ` · ডকুমেন্টারি ${bn(pf.stats.documentaries)}` : '') : '…')}
     </div>
+    ${me.role === 'guest' ? '<div class="pf-acts"><button class="gold" data-act="guest-upgrade">🔐 Gmail দিয়ে ঢোকো, সব সুবিধা পাও</button></div><p class="muted small" style="padding:8px 16px 0">অতিথির প্রজেক্ট ৭ দিন পর নিজে মুছে যায়।</p>' : ''}
     <div class="pf-acts"><button data-act="pf-name">✏️ নাম বদলাও</button>
       ${me.customPhoto ? '<button data-act="pf-photo-del">Gmail-এর ছবিতে ফেরো</button>' : ''}
       <button data-act="switch-account">🔁 অ্যাকাউন্ট বদলাও</button>
@@ -1034,6 +1051,7 @@ function renderPanel() {
       </tbody></table></div>
       <p class="muted small">অ্যাডমিন: দেখাশোনা, অভিযোগের উত্তর, নতুন ইমেইলকে অনুমতি, আটকে থাকা কাজ বাতিল। ব্লক, কিক, অ্যাডমিন বানানো আর সেটিং শুধু তুমি পারো।</p></section>
     <section class="card"><h3>🚪 কারা ঢুকতে পারবে</h3>
+      <div class="setrow"><span class="grow">👀 অতিথি প্রবেশ <span class="muted small">(Gmail ছাড়া ঘুরে দেখা; খরচের কাজ বন্ধ)</span></span><div class="seg seg-sm" role="group" aria-label="অতিথি প্রবেশ">${[['on', 'চালু'], ['off', 'বন্ধ']].map(([v, l]) => `<button class="${set.guest === v ? 'on' : ''}" data-act="pn-guest" data-v="${v}" aria-pressed="${set.guest === v}">${l}</button>`).join('')}</div></div>
       <div class="setrow"><span class="grow">নতুন সদস্য</span><div class="seg seg-sm" role="group" aria-label="নতুন সদস্য">${[['invite', 'শুধু অনুমতি পাওয়া'], ['open', 'যে কেউ (Gmail)']].map(([v, l]) => `<button class="${set.signup === v ? 'on' : ''}" data-act="pn-signup" data-v="${v}" aria-pressed="${set.signup === v}">${l}</button>`).join('')}</div></div>
       <div class="row" style="margin:8px 0"><input id="alEmail" class="grow" type="email" placeholder="gmail ঠিকানা" aria-label="নতুন ইমেইল"><button class="pri" data-act="allow-add">অনুমতি দাও</button></div>
       ${(al.allowed || []).map(x => `<div class="setrow"><span class="grow">${esc(x.email)}</span><button class="sm bad" data-act="allow-del" data-v="${esc(x.email)}">সরাও</button></div>`).join('') || '<p class="muted small">তালিকা খালি</p>'}</section>
@@ -1246,7 +1264,7 @@ function renderAdmin() {
   $('#main').innerHTML = `<div class="page wide">${pageHead('অ্যাডমিন', `সংস্করণ ${esc(sys.version)} · ডেটাবেস ${esc(sys.database)} · স্টোরেজ ${esc(sys.storage)}`)}
     ${diskWarn}
     <section class="card"><h3>সিস্টেম (গত ৩০ দিন)</h3><div class="tiles">
-      ${k('ব্যবহারকারী', bn(sys.users))}
+      ${k('ব্যবহারকারী', bn(sys.users), sys.guests ? `আর অতিথি ${bn(sys.guests)}` : '')}
       ${k('সারিতে / চলছে', `${bn(q.queued || 0)} / ${bn(q.running || 0)}`, 'এখনকার কাজ')}
       ${k('সফল', bn(q.done || 0))}
       ${k('ব্যর্থ / বাতিল', `${bn(q.failed || 0)} / ${bn(q.cancelled || 0)}`)}
@@ -1340,6 +1358,9 @@ function mentionIds(text) {
 
 const handlers = {
   'help': () => openHelp(),
+  'inst-hide': () => { try { localStorage.setItem('cp_inst_hide', '1'); } catch { /* কিছু না */ } renderMain(); },
+  'guest-upgrade': () => act(async () => { await api('POST', '/api/logout'); location.href = '/login.html?switch=1'; }),
+  'pn-guest': t => act(async () => { await api('PUT', '/api/owner/settings', { guest: t.dataset.v }); await openPanel(); }, 'সেভ হয়েছে'),
   'owner-panel': () => openPanel(),
   'ann-hide': t => { try { localStorage.setItem('cp_ann_hide', t.dataset.v); } catch { /* কিছু না */ } renderAnnounce(); },
   'switch-account': () => act(async () => {

@@ -492,6 +492,70 @@ const dataUrl = buf => 'data:image/png;base64,' + buf.toString('base64');
       } finally { C.proc.kill('SIGKILL'); }
     });
 
+    await step('অতিথি প্রবেশ: Gmail ছাড়া ঘুরে দেখা, খরচের কাজ বন্ধ, অ্যাডমিন/মালিক এলাকায় নয়, মালিক চালু-বন্ধ করেন', async () => {
+      const G = startServer({ ...baseEnv, DATA_DIR: fs.mkdtempSync(path.join(os.tmpdir(), 'cp-guest-')), DATABASE_URL: '' });
+      await G.ready();
+      try {
+        const anon = client(G.base), g = client(G.base), boss = client(G.base);
+        assert.equal((await anon('GET', '/api/config')).data.guest, true); // শুরুতে চালু
+        assert.equal((await g('POST', '/api/login', { guest: true })).status, 200);
+        const me = (await g('GET', '/api/me')).data;
+        assert.equal(me.user.role, 'guest');
+        assert.equal(me.user.staff, false);
+        assert.equal(me.user.owner, false);
+        // ঘুরে দেখা চলে
+        assert.equal((await g('GET', '/api/library')).status, 200);
+        assert.equal((await g('GET', '/api/usage')).status, 200);
+        assert.equal((await g('GET', '/api/voices')).status, 200);
+        const p1 = await g('POST', '/api/projects', { name: 'আমার প্রথম' });
+        assert.equal(p1.status, 200);
+        assert.equal((await g('GET', `/api/projects/${p1.data.id}`)).status, 200);
+        assert.equal((await g('POST', `/api/projects/${p1.data.id}/characters`, { name: 'রাজু', description: 'x' })).status, 200);
+        assert.equal((await g('POST', '/api/complaints', { category: 'idea', subject: 'পরামর্শ', text: 'ভালো' })).status, 200);
+        // খরচ বা ফাইল জমা হয় এমন কাজ বন্ধ
+        const blocked = [
+          ['POST', `/api/projects/${p1.data.id}/generate`, { mode: 'image', prompt: 'নদী' }],
+          ['POST', '/api/enhance', { prompt: 'নদী' }],
+          ['POST', `/api/projects/${p1.data.id}/upload`, { dataUrl: dataUrl(Buffer.from(PNG, 'base64')) }],
+          ['POST', '/api/profile/photo', { dataUrl: dataUrl(Buffer.from(PNG, 'base64')) }],
+          ['GET', '/api/voices/Kore/preview'],
+          ['POST', '/api/doc/projects', { name: 'd' }, 200], // শুধু প্রজেক্ট তৈরি (খরচ নেই)
+        ];
+        for (const [m, u, b, ok] of blocked) assert.equal((await g(m, u, b)).status, ok || 403, `${m} ${u}`);
+        const dp = (await g('POST', '/api/doc/projects', { name: 'd2' })).data.id;
+        assert.equal((await g('POST', `/api/doc/projects/${dp}/chat`, { text: 'হাই' })).status, 403);
+        // অ্যাডমিন বা মালিকের এলাকায় নয়
+        for (const [m, u] of [['GET', '/api/admin/overview'], ['GET', '/api/staff/complaints'], ['GET', '/api/owner/users'], ['POST', '/api/owner/unlock']]) assert.equal((await g(m, u, m === 'GET' ? undefined : {})).status, 403, u);
+        // ৩টার বেশি প্রজেক্ট নয়
+        await g('POST', '/api/projects', { name: '২' }); await g('POST', '/api/projects', { name: '৩' });
+        assert.equal((await g('POST', '/api/projects', { name: '৪' })).status, 403);
+        // অন্য অতিথি আরেকজনের কিছু দেখে না
+        const g2 = client(G.base);
+        await g2('POST', '/api/login', { guest: true });
+        assert.equal((await g2('GET', `/api/projects/${p1.data.id}`)).status, 404);
+        // মালিকের তালিকায় অতিথির ভিড় নয়, কিন্তু গণনা আছে
+        await boss('POST', '/api/login', { dev: 'owner' });
+        await boss('POST', '/api/owner/unlock', { password: 'test-panel-pass-only-for-tests' });
+        assert.ok(!(await boss('GET', '/api/owner/users')).data.users.some(u => u.email.endsWith('@guest.local')));
+        const ov = (await boss('GET', '/api/admin/overview')).data;
+        assert.equal(ov.system.guests, 2);
+        assert.ok(!ov.users.some(u => u.email.endsWith('@guest.local')));
+        // একই ডিভাইস থেকে অনেক অতিথি আটকায় (ঘণ্টায় ১২)
+        const codes = [];
+        for (let i = 0; i < 12; i++) codes.push((await client(G.base)('POST', '/api/login', { guest: true })).status);
+        assert.ok(codes.includes(429), codes.join(','));
+        // মালিক বন্ধ করলে: নতুন অতিথি ঢুকতে পারে না, চালু থাকাও বের হয়ে যায়; Gmail-ওয়ালারা ঠিক থাকে
+        assert.equal((await boss('PUT', '/api/owner/settings', { guest: 'off' })).status, 200);
+        assert.equal((await anon('GET', '/api/config')).data.guest, false);
+        assert.equal((await client(G.base)('POST', '/api/login', { guest: true })).status, 403);
+        await sleep(100);
+        assert.equal((await g('GET', '/api/me')).status, 401);
+        assert.equal((await boss('GET', '/api/me')).status, 200);
+        assert.equal((await boss('PUT', '/api/owner/settings', { guest: 'on' })).status, 200);
+        assert.ok([200, 429].includes((await client(G.base)('POST', '/api/login', { guest: true })).status)); // চালু হয়েছে (সীমা পার হলে 429)
+      } finally { G.proc.kill('SIGKILL'); }
+    });
+
     await step('আসল সার্ভারে (production) DEV_LOGIN চালু করলে সার্ভার চালু হয় না', async () => {
       const bad = startServer({ ...baseEnv, NODE_ENV: 'production', DEV_LOGIN: '1', DATA_DIR: fs.mkdtempSync(path.join(os.tmpdir(), 'cp-bad-')), DATABASE_URL: '' });
       const code = await Promise.race([bad.exited, sleep(8000).then(() => 'running')]);

@@ -507,6 +507,42 @@ const mock = http.createServer((req, res) => {
       await page.screenshot({ path: `${OUT}/${tag}-account.png`, fullPage: true });
       await ctx.close();
     }
+    // অতিথি: Gmail ছাড়া ঢোকা, সব ঘুরে দেখা, খরচের কাজে সুন্দর বার্তা
+    for (const [w, h, nm] of [[390, 844, 'guest-mobile'], [1440, 900, 'guest-desktop']]) {
+      const ctx = await browser.newContext({ viewport: { width: w, height: h }, deviceScaleFactor: 1 });
+      page = await ctx.newPage();
+      page.on('console', m => { if (m.type() === 'error' && !/status of 403/.test(m.text())) errors.push(`[${nm}] ${m.text()}`); });
+      page.on('pageerror', e => errors.push(`[${nm}] pageerror ${e.message}`));
+      await page.goto(B + '/login.html');
+      await page.waitForSelector('#guestGo:not([hidden])');
+      await page.waitForSelector('#howto'); // ইনস্টলের ধাপ দেখানো আছে
+      await page.screenshot({ path: `${OUT}/${nm}-0-login.png` });
+      await page.click('#guestGo');
+      await page.waitForURL(B + '/');
+      await page.waitForSelector('.tools .toolbtn');
+      await page.waitForSelector('#splash', { state: 'detached', timeout: 5000 });
+      await page.waitForSelector('#guestbar:not([hidden]) >> text=অতিথি');
+      if (await page.isVisible('.popmsg')) await page.click('[data-act="pop-ok"]'); // মালিকের পুরো পর্দার বার্তা অতিথিও একবার দেখে
+      if (await page.isVisible('[data-act="admin"], [data-act="owner-panel"]')) errors.push(`[${nm}] guest sees admin/owner links`);
+      await page.screenshot({ path: `${OUT}/${nm}-1-home.png` });
+      // ঘুরে দেখা: প্রজেক্ট খোলা, সব ট্যাব
+      await page.click('.tools [data-v="image"]');
+      await page.waitForSelector('#composer');
+      for (const t of ['characters', 'timeline', 'story', 'assistant']) { await page.click(`[data-act="tab"][data-v="${t}"]`); await page.waitForTimeout(150); }
+      await page.click('[data-act="tab"][data-v="studio"]');
+      // খরচের কাজ: পরিষ্কার বার্তা
+      await page.fill('#cPrompt', 'নদীর ঘাট');
+      await page.click('[data-act="generate"]');
+      await page.waitForSelector('.toast.err >> text=Gmail দিয়ে ঢুকতে হবে');
+      await page.screenshot({ path: `${OUT}/${nm}-2-blocked.png` });
+      await overflow(nm + ' studio');
+      // প্রোফাইল: Gmail দিয়ে ঢোকার বোতাম আছে, ছবি-বদল নেই
+      await page.click('header [data-act="account"]');
+      await page.waitForSelector('.profile [data-act="guest-upgrade"]');
+      if (await page.isVisible('[data-act="pf-photo"]')) errors.push(`[${nm}] guest can see photo change`);
+      await page.screenshot({ path: `${OUT}/${nm}-3-profile.png`, fullPage: true });
+      await ctx.close();
+    }
   } catch (e) {
     errors.push("FAIL " + e.message); try { await page.screenshot({ path: OUT + "/fail.png", fullPage: true }); errors.push(await page.evaluate(() => document.querySelector("#jobs")?.innerText + " / toasts: " + document.querySelector("#toasts").innerText)); } catch (x) { errors.push(String(x)); }
   } finally {
