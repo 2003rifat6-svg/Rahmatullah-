@@ -5,7 +5,7 @@ const crypto = require('node:crypto');
 
 async function tempDatabase(adminUrl) {
   const { Client } = require('pg');
-  const name = 'chitropot_t_' + crypto.randomBytes(4).toString('hex');
+  const name = 'ruvo_t_' + crypto.randomBytes(4).toString('hex');
   const admin = new Client({ connectionString: adminUrl });
   await admin.connect();
   await admin.query(`CREATE DATABASE ${name}`);

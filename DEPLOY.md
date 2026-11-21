@@ -1,16 +1,16 @@
-# চিত্রপট অনলাইনে তোলা — সবচেয়ে সহজ পথ (Render, ১০ মিনিট)
+# Ruvo অনলাইনে তোলা — সবচেয়ে সহজ পথ (Render, ১০ মিনিট)
 
 ## ০. আগে একবার (এক মিনিট)
 এই ফোল্ডারের **সব ফাইল** একটা **নতুন, খালি GitHub রিপোতে** তোলো, যাতে `Dockerfile` আর `render.yaml` রিপোর একদম ওপরে থাকে।
 (আগের রিপোতে অন্য অ্যাপও আছে, তাই আলাদা রিপো লাগে। এতে Root Directory বা Build/Start Command-এর কোনো সেটিং লাগে না, আর আটকানোর সবচেয়ে বড় কারণটা চলে যায়।)
 
-GitHub → **New repository** → নাম `chitropot` → তৈরি হলে **uploading an existing file** চেপে ZIP-এর ভেতরের সব ফাইল টেনে দাও → **Commit**।
+GitHub → **New repository** → নাম `ruvo` → তৈরি হলে **uploading an existing file** চেপে ZIP-এর ভেতরের সব ফাইল টেনে দাও → **Commit**।
 
 ## ১. Gemini key (নতুন)
 aistudio.google.com → **Get API key**। ছবি/ভিডিওর জন্য ওই প্রজেক্টে বিলিং চালু করো।
 
 ## ২. Google লগইন (Client ID)
-console.cloud.google.com → **APIs & Services → OAuth consent screen** (External, নাম "চিত্রপট", তোমার ইমেইল, **Publish app**) → **Credentials → Create credentials → OAuth client ID → Web application** → Client ID কপি করো। (ঠিকানা পরে ধাপ ৫-এ বসবে।)
+console.cloud.google.com → **APIs & Services → OAuth consent screen** (External, নাম "Ruvo", তোমার ইমেইল, **Publish app**) → **Credentials → Create credentials → OAuth client ID → Web application** → Client ID কপি করো। (ঠিকানা পরে ধাপ ৫-এ বসবে।)
 
 ## ৩. Render-এ এক চাপে
 render.com → **New → Blueprint** → নতুন রিপোটা বাছো → **Apply**।
@@ -32,7 +32,7 @@ Render `render.yaml` পড়ে নিজেই সব বানাবে: স
 ## ৪. চালু হয়েছে কি না দেখো
 Render → সার্ভিস → **Logs**। এই চেকলিস্ট দেখলে হয়েছে:
 ```
-চিত্রপট চালু: http://localhost:10000
+Ruvo চালু: http://localhost:10000
 ── চালুর চেকলিস্ট ──
 ✓ Gemini key আছে
 ✓ Gmail লগইন চালু
@@ -44,7 +44,7 @@ Render → সার্ভিস → **Logs**। এই চেকলিস্ট
 কোনো ✗ থাকলে ওই লাইনেই লেখা আছে কী বাকি।
 
 ## ৫. Google-কে ঠিকানা জানাও (এটা না করলে লগইন বোতাম কাজ করে না)
-Render-এ সার্ভিসের ঠিকানা (`https://চিত্রপট-xxxx.onrender.com`) কপি করো → Google Cloud → OAuth client → **Authorized JavaScript origins** → যোগ করো → Save। (এক-দুই মিনিট লাগতে পারে।)
+Render-এ সার্ভিসের ঠিকানা (`https://Ruvo-xxxx.onrender.com`) কপি করো → Google Cloud → OAuth client → **Authorized JavaScript origins** → যোগ করো → Save। (এক-দুই মিনিট লাগতে পারে।)
 
 ## ৫খ. ফোনে অ্যাপ হিসেবে ইনস্টল
 - **Android:** অবশ্যই **Chrome** ব্রাউজারে ঠিকানা খোলো (Facebook বা Messenger-এর ভেতরের ব্রাউজারে হয় না)। ২০-৩০ সেকেন্ড অ্যাপ ঘেঁটে দেখো, তারপর ⋮ → **Install app**। লগইন পাতা ও হোমে "📲 ইনস্টল" বোতামও আসে।

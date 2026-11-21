@@ -16,11 +16,11 @@ try { S3rver = require(process.env.S3RVER_PATH || 's3rver'); } catch { console.l
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 (async () => {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'cp-s3-'));
-  const s3 = new S3rver({ port: 0, address: '127.0.0.1', silent: true, directory: path.join(dir, 's3'), configureBuckets: [{ name: 'chitropot' }] });
+  const s3 = new S3rver({ port: 0, address: '127.0.0.1', silent: true, directory: path.join(dir, 's3'), configureBuckets: [{ name: 'ruvo' }] });
   const { port: s3port } = await s3.run();
   const endpoint = `http://127.0.0.1:${s3port}`;
   const head = async key => {
-    const url = `${endpoint}/chitropot/${key}`;
+    const url = `${endpoint}/ruvo/${key}`;
     const { headers } = signRequest({ method: 'HEAD', url, payloadHash: sha256(''), region: 'us-east-1', accessKey: 'S3RVER', secretKey: 'S3RVER' });
     delete headers.host;
     return (await fetch(url, { method: 'HEAD', headers })).status;
@@ -33,7 +33,7 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
     env: {
       ...process.env, PORT: String(port), DATA_DIR: path.join(dir, 'data'), DEV_LOGIN: '1', OWNER_EMAIL: '', GEMINI_API_KEY: 'k', GEMINI_API_BASE: mock.base,
       POLL_MS: '100', WORKER_POLL_MS: '200', AUTO_TITLES: '0', GOOGLE_CLIENT_ID: '', DATABASE_URL: '',
-      STORAGE: 's3', S3_ENDPOINT: endpoint, S3_BUCKET: 'chitropot', S3_REGION: 'us-east-1', S3_ACCESS_KEY: 'S3RVER', S3_SECRET_KEY: 'S3RVER',
+      STORAGE: 's3', S3_ENDPOINT: endpoint, S3_BUCKET: 'ruvo', S3_REGION: 'us-east-1', S3_ACCESS_KEY: 'S3RVER', S3_SECRET_KEY: 'S3RVER',
     },
     stdio: ['ignore', 'pipe', 'pipe'],
   });

@@ -143,19 +143,19 @@ const taka = usd => '৳' + bn(Math.round(Number(usd) * (S.me?.pricing?.usdToBdt
 // অন্য ট্যাবে থাকলে কাজ শেষের খবর ব্রাউজার নোটিফিকেশনে
 function notify(body) {
   if (!document.hidden || !('Notification' in window) || Notification.permission !== 'granted') return;
-  const opts = { body, icon: '/icon-192.png', tag: 'chitropot-job' };
-  try { new Notification('চিত্রপট', opts); } catch {
-    navigator.serviceWorker?.ready.then(r => r.showNotification('চিত্রপট', opts)).catch(() => {});
+  const opts = { body, icon: '/icon-192.png', tag: 'ruvo-job' };
+  try { new Notification('Ruvo', opts); } catch {
+    navigator.serviceWorker?.ready.then(r => r.showNotification('Ruvo', opts)).catch(() => {});
   }
 }
 
 // মালিকের সাথে সরাসরি যোগাযোগ (কল টু অ্যাকশন): মালিক কন্ট্রোল প্যানেল থেকে যা বসান
-function contactButtons(c, text = 'চিত্রপট অ্যাপ থেকে যোগাযোগ করছি') {
+function contactButtons(c, text = 'Ruvo অ্যাপ থেকে যোগাযোগ করছি') {
   if (!c) return '';
   const b = [];
   if (c.whatsapp) b.push(`<a class="cta wa" href="https://wa.me/${esc(c.whatsapp.replace(/\D/g, ''))}?text=${encodeURIComponent(text)}" target="_blank" rel="noopener">💬 WhatsApp</a>`);
   if (c.phone) b.push(`<a class="cta call" href="tel:${esc(c.phone)}">📞 কল করো</a>`);
-  if (c.email) b.push(`<a class="cta mail" href="mailto:${esc(c.email)}?subject=${encodeURIComponent('চিত্রপট')}">✉️ ইমেইল</a>`);
+  if (c.email) b.push(`<a class="cta mail" href="mailto:${esc(c.email)}?subject=${encodeURIComponent('Ruvo')}">✉️ ইমেইল</a>`);
   if (c.facebook) b.push(`<a class="cta fb" href="${esc(c.facebook)}" target="_blank" rel="noopener">📘 Facebook</a>`);
   if (c.telegram) b.push(`<a class="cta tg" href="${esc(c.telegram)}" target="_blank" rel="noopener">✈️ Telegram</a>`);
   if (c.youtube) b.push(`<a class="cta yt" href="${esc(c.youtube)}" target="_blank" rel="noopener">▶️ YouTube</a>`);
@@ -299,7 +299,7 @@ function renderSide() {
     <button class="navitem ${S.view === 'account' ? 'on' : ''}" data-act="account">👤 অ্যাকাউন্ট ও ব্যবহার</button>
     <button class="navitem ${S.view === 'doc' ? 'on' : ''}" data-act="doc">🎞️ ডকুমেন্টারি স্টুডিও</button>
     <button class="navitem ${S.view === 'help' ? 'on' : ''}" data-act="help">💬 সাহায্য ও যোগাযোগ</button>
-    <button class="navitem ${S.view === 'about' ? 'on' : ''}" data-act="about">ℹ️ চিত্রপট সম্পর্কে</button>
+    <button class="navitem ${S.view === 'about' ? 'on' : ''}" data-act="about">ℹ️ Ruvo সম্পর্কে</button>
     ${S.me?.user?.staff ? `<button class="navitem ${S.view === 'admin' ? 'on' : ''}" data-act="admin">🛡️ অ্যাডমিন</button>` : ''}
     ${S.me?.user?.owner ? `<button class="navitem ${S.view === 'panel' ? 'on' : ''}" data-act="owner-panel">🔐 মালিকের কন্ট্রোল</button>` : ''}<h4>ফোল্ডার</h4>`;
   if (!folders.length) html += '<p class="muted small" style="margin:0 8px">কোনো ফোল্ডার নেই</p>';
@@ -941,19 +941,19 @@ function profileCard() {
       ${me.customPhoto ? '<button data-act="pf-photo-del">Gmail-এর ছবিতে ফেরো</button>' : ''}
       <button data-act="switch-account">🔁 অ্যাকাউন্ট বদলাও</button>
       <button data-act="help">💬 সাহায্য ও যোগাযোগ</button>
-      <button data-act="about">ℹ️ চিত্রপট সম্পর্কে</button>
+      <button data-act="about">ℹ️ Ruvo সম্পর্কে</button>
       ${me.staff ? '<button data-act="admin">🛡️ অ্যাডমিন</button>' : ''}
       ${me.owner ? '<button class="gold" data-act="owner-panel">🔐 মালিকের কন্ট্রোল</button>' : ''}</div>
     <p class="muted small" style="margin:10px 0 0">মডেল: ভিডিও ${esc(S.me.models.video)} · ছবি ${esc(S.me.models.image)} · লেখা ${esc(S.me.models.text)}</p>
   </section>`;
 }
 
-/* ---------- চিত্রপট সম্পর্কে ---------- */
+/* ---------- Ruvo সম্পর্কে ---------- */
 function renderAbout() {
   const a = { creatorName: txt('creatorName') || S.me.app?.creatorName, creatorTitle: txt('creatorTitle') || S.me.app?.creatorTitle };
-  $('#main').innerHTML = `<div class="page about">${pageHead('চিত্রপট সম্পর্কে')}
-    <section class="card ab-hero"><img class="ab-logo" src="${brandUrl('logo')}" alt="চিত্রপট লোগো">
-      <h1 class="ab-title">চিত্রপট</h1><p class="ab-sub">AI ক্রিয়েটিভ স্টুডিও</p>
+  $('#main').innerHTML = `<div class="page about">${pageHead('Ruvo সম্পর্কে')}
+    <section class="card ab-hero"><img class="ab-logo" src="${brandUrl('logo')}" alt="Ruvo লোগো">
+      <h1 class="ab-title">Ruvo</h1><p class="ab-sub">AI ক্রিয়েটিভ স্টুডিও</p>
       <p>${esc(txt('aboutText'))}</p></section>
     <section class="card ab-creator">
       <div class="ab-photo"><img src="${brandUrl('art')}" alt="${esc(a.creatorName || '')}" loading="lazy"></div>
@@ -963,7 +963,7 @@ function renderAbout() {
         <p class="ab-tag">${esc(txt('aboutTag'))}</p>
         ${contactButtons(S.me.site?.contact) ? `<p class="ab-by" style="margin-top:10px">সরাসরি যোগাযোগ</p>${contactButtons(S.me.site.contact)}` : ''}</div>
     </section>
-    <p class="muted small" style="text-align:center">সংস্করণ ${esc(S.me.version || '')} · © ${bn(new Date().getFullYear())} চিত্রপট</p>
+    <p class="muted small" style="text-align:center">সংস্করণ ${esc(S.me.version || '')} · © ${bn(new Date().getFullYear())} Ruvo</p>
   </div>`;
 }
 
@@ -979,7 +979,7 @@ async function openHelp() {
 function threadHtml(c, replyAct) {
   return `<details class="cthread" ${S.openThread === c.id ? 'open' : ''}><summary><span class="grow"><b>${esc(c.subject)}</b><span class="muted small"> · ${CAT_LABEL[c.category] || ''}${c.email ? ' · ' + esc(c.name || '') + ' &lt;' + esc(c.email) + '&gt;' : ''}</span></span>
       <span class="st st-${c.status}">${STATUS_LABEL[c.status]}</span>${c.waiting ? '<span class="pill gold">উত্তর দরকার</span>' : ''}</summary>
-    <div class="cmsgs">${c.messages.map(m => `<div class="msg ${m.staff ? 'ai' : 'me'}"><div class="small muted">${m.staff ? '🛡️ চিত্রপট টিম' : c.email ? '👤 ব্যবহারকারী' : 'তুমি'} · ${esc(fmtTime(m.created))}</div>${esc(m.text).replace(/\n/g, '<br>')}</div>`).join('')}</div>
+    <div class="cmsgs">${c.messages.map(m => `<div class="msg ${m.staff ? 'ai' : 'me'}"><div class="small muted">${m.staff ? '🛡️ Ruvo টিম' : c.email ? '👤 ব্যবহারকারী' : 'তুমি'} · ${esc(fmtTime(m.created))}</div>${esc(m.text).replace(/\n/g, '<br>')}</div>`).join('')}</div>
     <div class="row creply"><textarea class="grow" rows="2" id="rp_${c.id}" placeholder="উত্তর লেখো…" aria-label="উত্তর"></textarea><button class="pri" data-act="${replyAct}" data-id="${c.id}">পাঠাও</button></div>
     ${c.email ? `<div class="row" style="margin-top:8px"><span class="muted small grow">অবস্থা বদলাও:</span>${Object.entries(STATUS_LABEL).map(([k, l]) => `<button class="sm ${c.status === k ? 'on' : ''}" data-act="c-status" data-id="${c.id}" data-v="${k}">${l}</button>`).join('')}</div>` : ''}
   </details>`;
@@ -1760,9 +1760,9 @@ const handlers = {
     const a = S.P.assets.find(x => x.id === t.dataset.id);
     const blob = await (await fetch(media(a.id), { credentials: 'same-origin' })).blob();
     const ext = a.kind === 'video' ? 'mp4' : (blob.type.split('/')[1] || 'png').replace('jpeg', 'jpg');
-    const file = new File([blob], `chitropot-${a.id}.${ext}`, { type: blob.type });
+    const file = new File([blob], `ruvo-${a.id}.${ext}`, { type: blob.type });
     if (navigator.canShare && navigator.canShare({ files: [file] })) {
-      try { await navigator.share({ files: [file], title: a.title || 'চিত্রপট' }); } catch (e) { if (e.name !== 'AbortError') throw e; }
+      try { await navigator.share({ files: [file], title: a.title || 'Ruvo' }); } catch (e) { if (e.name !== 'AbortError') throw e; }
     } else {
       location.href = media(a.id) + '?dl=1';
       toast('ডাউনলোড হচ্ছে');
@@ -1824,7 +1824,7 @@ const handlers = {
     openModal(`<div style="padding:18px"><div class="row"><h3 class="grow" style="margin:0">📲 অ্যাপ হিসেবে ইনস্টল</h3><button class="sm ghost" data-act="close" aria-label="বন্ধ">✕</button></div>
       ${ios ? '<p>Safari-তে নিচের <b>শেয়ার ⬆️</b> বোতাম চাপো, তারপর <b>Add to Home Screen</b>।</p>'
             : '<p>Chrome-এর উপরে ডানে <b>⋮</b> মেনু চাপো, তারপর <b>Install app</b> বা <b>Add to Home screen</b>।</p>'}
-      <p class="muted small">ইনস্টলের পর চিত্রপট আলাদা অ্যাপের মতো খোলে, ব্রাউজারের ঠিকানার ঘর থাকে না, আর ডেস্কটপ মোড লাগে না।</p></div>`);
+      <p class="muted small">ইনস্টলের পর Ruvo আলাদা অ্যাপের মতো খোলে, ব্রাউজারের ঠিকানার ঘর থাকে না, আর ডেস্কটপ মোড লাগে না।</p></div>`);
   },
   'panel': t => viewAsset(t.dataset.id, t.dataset.v),
   'fav': t => act(async () => {

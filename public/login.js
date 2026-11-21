@@ -18,9 +18,9 @@ if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').cat
       if (href.indexOf('https:') === 0) { a.target = '_blank'; a.rel = 'noopener'; }
       box.appendChild(a); n++;
     }
-    if (c.whatsapp) add('https://wa.me/' + c.whatsapp.replace(/\D/g, '') + '?text=' + encodeURIComponent('চিত্রপটে ঢুকতে সাহায্য দরকার'), '💬 WhatsApp', 'wa');
+    if (c.whatsapp) add('https://wa.me/' + c.whatsapp.replace(/\D/g, '') + '?text=' + encodeURIComponent('Ruvoে ঢুকতে সাহায্য দরকার'), '💬 WhatsApp', 'wa');
     if (c.phone) add('tel:' + c.phone, '📞 কল', 'call');
-    if (c.email) add('mailto:' + c.email + '?subject=' + encodeURIComponent('চিত্রপট'), '✉️ ইমেইল', 'mail');
+    if (c.email) add('mailto:' + c.email + '?subject=' + encodeURIComponent('Ruvo'), '✉️ ইমেইল', 'mail');
     if (c.facebook) add(c.facebook, '📘 Facebook', 'fb');
     if (c.telegram) add(c.telegram, '✈️ Telegram', 'tg');
     if (n) document.getElementById('contact').hidden = false;

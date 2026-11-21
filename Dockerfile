@@ -1,4 +1,4 @@
-# চিত্রপট: Railway, Cloud Run বা যেকোনো Docker হোস্টে চালানোর জন্য
+# Ruvo: Railway, Cloud Run বা যেকোনো Docker হোস্টে চালানোর জন্য
 # একটা সার্ভার: ডেটা /data-তে (স্থায়ী ডিস্ক/Volume লাগবে)।
 # অনেক সার্ভার: DATABASE_URL (PostgreSQL) আর STORAGE=s3 দাও, তখন /data লাগে না।
 FROM node:22-slim

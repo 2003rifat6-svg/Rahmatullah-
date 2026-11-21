@@ -400,9 +400,9 @@ const dataUrl = buf => 'data:image/png;base64,' + buf.toString('base64');
         assert.equal((await u('GET', '/api/complaints')).data.complaints[0].status, 'open'); // আবার খুলল
         // যোগাযোগের তথ্য: ভুল লিংক আটকায়, ঠিকটা সবাই (লগইন পাতাও) দেখে
         assert.equal((await boss('PUT', '/api/owner/settings', { contact: { whatsapp: '+8801711000000', facebook: 'javascript:alert(1)' } })).status, 400);
-        assert.equal((await boss('PUT', '/api/owner/settings', { contact: { whatsapp: '+880 1711-000000', email: 'boss@example.com', facebook: 'https://facebook.com/chitropot', note: 'সকাল ১০টা-রাত ১০টা' } })).status, 200);
+        assert.equal((await boss('PUT', '/api/owner/settings', { contact: { whatsapp: '+880 1711-000000', email: 'boss@example.com', facebook: 'https://facebook.com/ruvo', note: 'সকাল ১০টা-রাত ১০টা' } })).status, 200);
         const pub = (await client(B.base)('GET', '/api/config')).data.contact;
-        assert.deepEqual(pub, { whatsapp: '+8801711000000', email: 'boss@example.com', facebook: 'https://facebook.com/chitropot', note: 'সকাল ১০টা-রাত ১০টা' });
+        assert.deepEqual(pub, { whatsapp: '+8801711000000', email: 'boss@example.com', facebook: 'https://facebook.com/ruvo', note: 'সকাল ১০টা-রাত ১০টা' });
         await boss('PUT', '/api/owner/settings', { announcement: { text: 'আজ রাতে রক্ষণাবেক্ষণ', level: 'warn' } });
         assert.equal((await u('GET', '/api/me')).data.site.announcement.text, 'আজ রাতে রক্ষণাবেক্ষণ');
         // কিক: পুরনো সেশন অচল, আবার লগইন করা যায়

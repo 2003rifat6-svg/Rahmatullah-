@@ -1,4 +1,4 @@
-# চিত্রপট (Chitropot) — অ্যাপ প্রোফাইল / App Profile
+# Ruvo (Ruvo) — অ্যাপ প্রোফাইল / App Profile
 
 > **বাংলা:** এই ফাইলটা অন্য কোডিং টুল বা রিভিউয়ারের জন্য। এখানে লেখা আছে অ্যাপটা কী করে, কোড কোথায় কী আছে, কীভাবে পরীক্ষা করতে হয়, আর কোন অংশগুলো এখনো আসল API-তে যাচাই হয়নি (সেগুলোতে ভুল থাকার সম্ভাবনা বেশি)।
 >
@@ -28,11 +28,11 @@ A Bengali-language, mobile-first web app (installable PWA) for making AI videos 
 | `public/login.*`, `sw.js`, `manifest.webmanifest`, `offline.*`, icons | | Sign-in, PWA install, offline page |
 | `test/*.js` | ~1500 | See §3 |
 | `ARCHITECTURE.md` | | Architecture, measured results, scaling path (Bengali) |
-| `Dockerfile`, `../.github/workflows/chitropot.yml` | | Container; CI (SQLite + PostgreSQL tests) then `railway up` |
+| `Dockerfile`, `../.github/workflows/ruvo.yml` | | Container; CI (SQLite + PostgreSQL tests) then `railway up` |
 
 ## 3. How to run and test
 ```bash
-cd chitropot && npm ci
+cd ruvo && npm ci
 npm run test:unit        # SigV4 against AWS's published vectors, DB layer
 npm test                 # 22 API end-to-end groups, mock Gemini
 npm run test:advanced    # 20 security/concurrency/failure checks (+5 multi-instance checks on PostgreSQL)

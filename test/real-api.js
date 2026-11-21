@@ -16,7 +16,7 @@ const { createGemini, isFinished } = require('../lib/gemini');
     try { out.push(['✓', name, await fn(), Date.now() - t]); } catch (e) { out.push(['✗', name, `${e.apiStatus || ''} ${e.message}`.trim().slice(0, 200), Date.now() - t]); }
   };
   await step('লেখা (textGen)', async () => (await g.textGen('Reply in one short sentence.', 'Say hello in Bengali.')).slice(0, 80));
-  await step('কণ্ঠ (TTS)', async () => { const r = await g.tts('Kore', 'নমস্কার, চিত্রপটে স্বাগতম।', 'warm'); return `${r.length || r.data?.length || 0} বাইট`; });
+  await step('কণ্ঠ (TTS)', async () => { const r = await g.tts('Kore', 'নমস্কার, Ruvoে স্বাগতম।', 'warm'); return `${r.length || r.data?.length || 0} বাইট`; });
   await step('ছবি', async () => {
     const it = await g.createInteraction({ model: cfg.imageModel, input: 'A small red boat on a calm river, watercolor', store: false, response_format: { type: 'image', image_size: '1K', aspect_ratio: '1:1' } }, false);
     const b = g.outputBlocks(it).find(x => x.type === 'image');

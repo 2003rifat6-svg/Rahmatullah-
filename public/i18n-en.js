@@ -674,20 +674,20 @@ I18N.load([
 "On"
 ],
 [
-"চিত্রপট",
-"Chitropot"
+"Ruvo",
+"Ruvo"
 ],
 [
-"চিত্রপট লোগো",
-"Chitropot logo"
+"Ruvo লোগো",
+"Ruvo logo"
 ],
 [
-"চিত্রপট সম্পর্কে",
-"About Chitropot"
+"Ruvo সম্পর্কে",
+"About Ruvo"
 ],
 [
-"চিত্রপট — লগইন",
-"Chitropot — Sign in"
+"Ruvo — লগইন",
+"Ruvo — Sign in"
 ],
 [
 "চিরতরে মুছে ফেলো",
@@ -1434,8 +1434,8 @@ I18N.load([
 "Last seen"
 ],
 [
-"সংস্করণ {n}d{n}e{n} · © {n} চিত্রপট",
-"Version {0}d{1}e{2} · © {3} Chitropot"
+"সংস্করণ {n}d{n}e{n} · © {n} Ruvo",
+"Version {0}d{1}e{2} · © {3} Ruvo"
 ],
 [
 "সকাল {n}টা – রাত {n}টা",
@@ -1634,8 +1634,8 @@ I18N.load([
 "— safety check"
 ],
 [
-"ℹ️ চিত্রপট সম্পর্কে",
-"ℹ️ About Chitropot"
+"ℹ️ Ruvo সম্পর্কে",
+"ℹ️ About Ruvo"
 ],
 [
 "↺ আগের মতো",
@@ -2914,8 +2914,8 @@ I18N.load([
 "{0}: {1} ({2} videos, {3} images)"
 ],
 [
-"সংস্করণ {*} · © {n} চিত্রপট",
-"Version {0} · © {1} Chitropot"
+"সংস্করণ {*} · © {n} Ruvo",
+"Version {0} · © {1} Ruvo"
 ],
 [
 "কী হয়েছে, কখন হয়েছে, কোন প্রজেক্টে — যত পারো লেখো",

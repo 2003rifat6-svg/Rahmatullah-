@@ -1,4 +1,4 @@
-// চিত্রপট — চরিত্র ঠিক রেখে AI ভিডিও আর ছবি বানানোর স্টুডিও
+// Ruvo — চরিত্র ঠিক রেখে AI ভিডিও আর ছবি বানানোর স্টুডিও
 // এই ফাইল শুধু সার্ভার চালু করে: সেটিং, ডেটাবেস, স্টোরেজ, কাজের সারি, HTTP, নিরাপত্তা হেডার, বন্ধ করা।
 // আসল কাজ lib/ ফোল্ডারে: app.js (রুট), jobs.js (সারি), gemini.js, db.js, storage.js, assets.js।
 'use strict';
@@ -236,7 +236,7 @@ async function main() {
   server.keepAliveTimeout = 65e3;
 
   server.listen(cfg.port, () => {
-    console.log(`চিত্রপট চালু: http://localhost:${cfg.port}`);
+    console.log(`Ruvo চালু: http://localhost:${cfg.port}`);
     console.log(`মডেল — ভিডিও: ${cfg.videoModel}, ছবি: ${cfg.imageModel}, লেখা: ${cfg.textModel} | ডেটাবেস: ${db.kind} | স্টোরেজ: ${storage.kind} | কর্মী: ${cfg.runWorker ? worker.workerId : 'বন্ধ'}`);
     // শুরুর চেকলিস্ট: ডিপ্লয়ের লগ দেখেই বোঝা যায় কী বাকি
     const ok = (v, yes, no) => (v ? `✓ ${yes}` : `✗ ${no}`);

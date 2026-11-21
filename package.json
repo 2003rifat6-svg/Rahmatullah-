@@ -1,8 +1,8 @@
 {
-  "name": "chitropot",
+  "name": "ruvo",
   "version": "1.0.0",
   "private": true,
-  "description": "চিত্রপট: চরিত্র ঠিক রেখে AI ভিডিও ও ছবি বানানোর স্টুডিও (Gemini API)",
+  "description": "Ruvo: চরিত্র ঠিক রেখে AI ভিডিও ও ছবি বানানোর স্টুডিও (Gemini API)",
   "main": "server.js",
   "scripts": {
     "start": "node --disable-warning=ExperimentalWarning server.js",

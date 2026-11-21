@@ -1,4 +1,4 @@
-// চিত্রপট স্মোক টেস্ট: নকল Gemini সার্ভার দিয়ে পুরো প্রবাহ যাচাই করে।
+// Ruvo স্মোক টেস্ট: নকল Gemini সার্ভার দিয়ে পুরো প্রবাহ যাচাই করে।
 // চালাও: npm test   (আসল API key লাগে না, কোনো খরচ হয় না)
 'use strict';
 const http = require('node:http');
@@ -94,7 +94,7 @@ async function waitJobs(call, pid) {
 (async () => {
   await new Promise(r => mock.listen(0, r));
   const mockBase = `http://127.0.0.1:${mock.address().port}/v1beta`;
-  const dataDir = fs.mkdtempSync(path.join(os.tmpdir(), 'chitropot-test-'));
+  const dataDir = fs.mkdtempSync(path.join(os.tmpdir(), 'ruvo-test-'));
   const port = 3900 + Math.floor(Math.random() * 90);
   BASE = `http://127.0.0.1:${port}`;
   // TEST_PG_ADMIN_URL থাকলে PostgreSQL-এ (প্রতিবার নতুন খালি ডেটাবেস), নইলে SQLite-এ

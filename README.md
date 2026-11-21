@@ -1,4 +1,4 @@
-# চিত্রপট — AI ভিডিও স্টুডিও
+# Ruvo — AI ভিডিও স্টুডিও
 
 চরিত্র একবার বানাও, তারপর যত দৃশ্য, যত এপিসোড বানাও, সবখানে চেহারা এক থাকবে। ভিডিও আর ছবি বানায় Google-এর Gemini API (AI Studio key)।
 
@@ -45,7 +45,7 @@
 | **অ্যাডমিন (মালিক)** | সারির অবস্থা, প্রতিজনের ব্যবহার, খরচ ও জায়গা, কারা ঢুকতে পারবে, কাজকর্মের লগ |
 | **এক্সপোর্ট** | প্রজেক্টের সব ফাইল এক ZIP-এ (⬇️ ZIP বোতাম) |
 | **অনেক ফাইল** | গ্যালারি পাতায় পাতায় আসে ("আরও পুরনো ফাইল দেখাও"), তাই হাজার ফাইলেও দ্রুত |
-| **ডিজাইন** | গাঢ় ফ্যান্টাসি রং (বেগুনি-নীল নীহারিকা, তারা, সোনালি ছোঁয়া), নতুন লোগো (`public/logo.svg`, যেকোনো মাপে ঝকঝকে)। শুরুর পর্দা, লগইন আর "চিত্রপট সম্পর্কে" পাতায় মালিকের ছবি (`public/brand/`) |
+| **ডিজাইন** | গাঢ় ফ্যান্টাসি রং (বেগুনি-নীল নীহারিকা, তারা, সোনালি ছোঁয়া), নতুন লোগো (`public/logo.svg`, যেকোনো মাপে ঝকঝকে)। শুরুর পর্দা, লগইন আর "Ruvo সম্পর্কে" পাতায় মালিকের ছবি (`public/brand/`) |
 | **ভূমিকা** | 👑 মালিক (`OWNER_EMAIL`), 🛡️ অ্যাডমিন (মালিক নিযুক্ত করেন), সদস্য। অ্যাডমিন শুধু দেখাশোনা আর ছোট কাজ: অভিযোগের উত্তর, নতুন ইমেইলকে অনুমতি, আটকে থাকা কাজ বাতিল |
 | **🔐 মালিকের কন্ট্রোল** | শুধু মালিক, ঢুকতে Gmail + প্যানেলের পাসওয়ার্ড দুটোই লাগে। অ্যাডমিন বানানো/বাদ, কিক (সব ডিভাইস থেকে বের), ব্লক/আনব্লক (কারণসহ), কারা ঢুকতে পারবে, যোগাযোগের তথ্য, সবার জন্য ঘোষণা, সব কাজকর্মের লগ। ৩০ মিনিট পর নিজে বন্ধ |
 | **🖼️ ছবি ও লোগো বদলানো** | মালিকের প্যানেল থেকে নিজের ছবি, ডিজাইন করা ছবি আর লোগো দিলে নিজে থেকে সব জায়গায় যায়: শুরুর পর্দা, লগইন, হোম, সাহায্য, সম্পর্কে, ফোনের আইকন। মাপ বদল ব্রাউজারেই, কোনো ফিল্টার নয়। ব্যাকগ্রাউন্ডসহ ছবি গোল ফ্রেমে বসে। যেকোনো সময় আগেরটায় ফেরা যায় |
@@ -109,14 +109,14 @@
 3. Cloud Console → **Billing → Budgets & alerts**-এ একটি বাজেট সতর্কতা বসাও।
 
 ### ২. Gmail লগইন
-1. console.cloud.google.com → **APIs & Services → OAuth consent screen** → External → অ্যাপের নাম "চিত্রপট" আর তোমার ইমেইল দিয়ে সেভ করো, তারপর **Publish app** চাপো।
+1. console.cloud.google.com → **APIs & Services → OAuth consent screen** → External → অ্যাপের নাম "Ruvo" আর তোমার ইমেইল দিয়ে সেভ করো, তারপর **Publish app** চাপো।
 2. **Credentials → Create credentials → OAuth client ID → Web application**।
-3. **Authorized JavaScript origins**-এ অ্যাপের ঠিকানা দাও, যেমন `https://chitropot.up.railway.app`। নিজের কম্পিউটারে পরীক্ষার জন্য `http://localhost:3200`।
+3. **Authorized JavaScript origins**-এ অ্যাপের ঠিকানা দাও, যেমন `https://ruvo.up.railway.app`। নিজের কম্পিউটারে পরীক্ষার জন্য `http://localhost:3200`।
 4. যে Client ID পাবে, সেটা `GOOGLE_CLIENT_ID`-এ বসাও।
 
 ### ৩. নিজের কম্পিউটারে চালানো
 ```
-cd chitropot
+cd ruvo
 cp .env.example .env      # GEMINI_API_KEY, GOOGLE_CLIENT_ID, OWNER_EMAIL বসাও
 npm start                 # http://localhost:3200
 ```
@@ -124,7 +124,7 @@ Gmail ছাড়া পরীক্ষা করতে `.env`-এ `DEV_LOGIN=1
 
 ### ৪. অনলাইনে তোলা (Railway)
 1. railway.com → **New Project → Deploy from GitHub repo** → এই রিপো।
-2. **Settings → Root Directory**: `chitropot`।
+2. **Settings → Root Directory**: `ruvo`।
 3. **Volume** যোগ করো, Mount path `/data`। ভিডিও আর ডেটা এখানে থাকে। Volume না দিলে প্রতিটি আপডেটে সব মুছে যাবে।
 4. **Variables**: `GEMINI_API_KEY`, `GOOGLE_CLIENT_ID`, `OWNER_EMAIL`, `PUBLIC_URL`, `DATA_DIR=/data`।
 5. **Networking → Generate Domain**। সেই ঠিকানা OAuth-এর Authorized JavaScript origins-এ যোগ করো।
@@ -132,7 +132,7 @@ Gmail ছাড়া পরীক্ষা করতে `.env`-এ `DEV_LOGIN=1
 Google Cloud Run-এও চালানো যায়, তবে Cloud Run-এর ডিস্ক স্থায়ী নয়। তখন ভিডিও রাখার জন্য Cloud Storage যোগ করতে হবে।
 
 ### ৪খ. GitHub Actions দিয়ে নিজে থেকে চালু (প্রস্তাবিত)
-রিপোতে `.github/workflows/chitropot.yml` আছে। প্রতিবার কোড পুশ করলে আগে সব পরীক্ষা চলে, পাস করলে Railway-তে নতুন ভার্সন চালু হয়। পরীক্ষা ফেল করলে চালু হয় না, তাই ভাঙা কোড অনলাইনে যায় না।
+রিপোতে `.github/workflows/ruvo.yml` আছে। প্রতিবার কোড পুশ করলে আগে সব পরীক্ষা চলে, পাস করলে Railway-তে নতুন ভার্সন চালু হয়। পরীক্ষা ফেল করলে চালু হয় না, তাই ভাঙা কোড অনলাইনে যায় না।
 
 একবার সেটআপ:
 1. railway.com → **New Project → Empty Project** → **+ Create → Empty Service**। (GitHub রিপো জোড়া লাগবে না, Actions নিজেই কোড পাঠাবে। Root Directory-ও লাগবে না।)
@@ -144,9 +144,9 @@ Google Cloud Run-এও চালানো যায়, তবে Cloud Run-এ
 7. GitHub-এ রিপো → **Settings → Secrets and variables → Actions**:
    - **Secrets** ট্যাবে `RAILWAY_TOKEN` = ধাপ ৫-এর টোকেন
    - **Variables** ট্যাবে `RAILWAY_SERVICE_ID` = ধাপ ৬-এর আইডি
-8. রিপোর **Actions → চিত্রপট — পরীক্ষা ও চালু → Run workflow**। সবুজ ✓ হলে অ্যাপ চালু।
+8. রিপোর **Actions → Ruvo — পরীক্ষা ও চালু → Run workflow**। সবুজ ✓ হলে অ্যাপ চালু।
 
-এরপর থেকে `chitropot/` ফোল্ডারে কিছু বদলে পুশ করলেই নিজে থেকে নতুন ভার্সন চালু হবে।
+এরপর থেকে `ruvo/` ফোল্ডারে কিছু বদলে পুশ করলেই নিজে থেকে নতুন ভার্সন চালু হবে।
 
 ### ৫. মালিকের কন্ট্রোল প্যানেল চালু করা
 1. সার্ভারের **Variables**-এ (Railway → সার্ভিস → Variables) `OWNER_PANEL_PASSWORD` = তোমার পাসওয়ার্ড বসাও। বেশি নিরাপদ চাইলে `npm run panel-hash` চালিয়ে যে হ্যাশ পাবে সেটা `OWNER_PANEL_PASSWORD_HASH`-এ বসাও।

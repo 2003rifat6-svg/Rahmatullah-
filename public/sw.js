@@ -1,6 +1,6 @@
-// চিত্রপট সার্ভিস ওয়ার্কার: অ্যাপ হিসেবে ইনস্টল করা যায়, নেট না থাকলে অফলাইন পাতা দেখায়।
+// Ruvo সার্ভিস ওয়ার্কার: অ্যাপ হিসেবে ইনস্টল করা যায়, নেট না থাকলে অফলাইন পাতা দেখায়।
 // API আর ভিডিও/ছবি কখনো জমা রাখে না, সবসময় সার্ভার থেকে আসে।
-const CACHE = 'chitropot-v7';
+const CACHE = 'ruvo-v7';
 const STATIC = ['/offline.html', '/offline.js', '/logo.png', '/icon-192.png', '/icon-512.png', '/manifest.webmanifest', '/apple-touch-icon.png'];
 
 self.addEventListener('install', e => {
