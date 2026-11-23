@@ -1,0 +1,8 @@
+{
+  "name": "AI Movie Maker Studio",
+  "description": "Mobile-first AI film studio: 8 project-material sections with Save/Lock/Unlock, unlimited characters with Face/Front/Side/Back references, one-button materials bundle to Main Chat, step-by-step Gemini image and Veo image-to-video generation via the included backend, ZIP export and FFmpeg movie assembly.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
