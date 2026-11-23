@@ -36,6 +36,7 @@ import { JobStore, publicJob } from './jobStore';
 import { JobQueue } from './queue';
 import { advanceJob, cancelJob, startVideoJob, VideoJobDeps } from './videoJobs';
 import { logError, safeErrorMessage } from './redact';
+import { corsMiddleware, originGuard, securityHeaders } from './security';
 import { checkDeclared, checkFile, UPLOAD_KINDS, UPLOAD_RULES, UploadKind, MIME_FAMILIES } from './uploads';
 import { limitsFor, QuotaConfig, quotaConfigFromEnv, QuotaError, QuotaGroup, UsageStore } from './usage';
 import * as v from './validators';
@@ -77,7 +78,10 @@ export interface AppOptions {
   ffmpegPath?: string;
   /** Redirect /api/media to short-lived V4 signed GCS URLs (needs signBlob permission). */
   signedUrls?: boolean;
-  crossSiteCookies?: boolean;
+  /** Exact origins allowed to call the API from another website (default: none, same-origin only). */
+  corsOrigins?: string[];
+  /** Production hardening: session cookie is always Secure, HSTS and upgrade-insecure-requests are sent. */
+  production?: boolean;
   warnings?: string[];
 }
 
@@ -159,17 +163,16 @@ export function createApp(opts: AppOptions) {
   app.disable('x-powered-by');
   app.set('trust proxy', true);
 
-  const corsOrigin = process.env.CORS_ORIGIN;
-  if (corsOrigin) {
-    app.use((req, res, next) => {
-      res.setHeader('Access-Control-Allow-Origin', corsOrigin);
-      res.setHeader('Access-Control-Allow-Credentials', 'true');
-      res.setHeader('Access-Control-Allow-Headers', 'Content-Type, x-studio-token, x-requested-with');
-      res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-      if (req.method === 'OPTIONS') return res.sendStatus(204);
-      next();
-    });
-  }
+  const corsOrigins = opts.corsOrigins ?? [];
+  const production = opts.production ?? false;
+  app.use(securityHeaders({ production, corsOrigins }));
+  app.use(corsMiddleware(corsOrigins));
+  app.use('/api', originGuard(corsOrigins));
+  // API answers are never cached (the media route below sets its own private cache header).
+  app.use('/api', (_req, res, next) => {
+    res.setHeader('Cache-Control', 'no-store');
+    next();
+  });
 
   // ---------- identity ----------
   const attachUser = (req: Request, _res: Response, next: NextFunction) => {
@@ -223,8 +226,8 @@ export function createApp(opts: AppOptions) {
     if (err instanceof ValidationError) return res.status(400).json({ error: err.message, code: 'bad_request' });
     if (err instanceof IntegrityError) return res.status(500).json({ error: err.message, code: 'integrity_error' });
     if (err instanceof NotFoundError) return res.status(404).json({ error: err.message, code: 'not_found' });
-    console.error(fallback, err);
-    return res.status(500).json({ error: `${fallback}: ${err instanceof Error ? err.message : 'unknown error'}` });
+    logError(fallback, err);
+    return res.status(500).json({ error: `${fallback}: ${safeErrorMessage(err)}` });
   };
 
   // ---------- health ----------
@@ -305,8 +308,8 @@ export function createApp(opts: AppOptions) {
       if (!auth.allowedEmails.includes(user.email)) {
         return res.status(403).json({ error: `${user.email} is not allowed on this studio server.` });
       }
-      const secure = req.secure || req.header('x-forwarded-proto') === 'https';
-      res.setHeader('Set-Cookie', sessionCookie(signSession(user, auth.sessionSecret), { secure, crossSite: Boolean(opts.crossSiteCookies) }));
+      const secure = production || req.secure || req.header('x-forwarded-proto') === 'https';
+      res.setHeader('Set-Cookie', sessionCookie(signSession(user, auth.sessionSecret), { secure, crossSite: corsOrigins.length > 0 }));
       res.json({ user });
     } catch (err) {
       res.status(401).json({ error: `Google sign-in failed: ${err instanceof Error ? err.message : 'invalid token'}` });
@@ -320,7 +323,7 @@ export function createApp(opts: AppOptions) {
   });
 
   app.post('/api/auth/logout', (req, res) => {
-    res.setHeader('Set-Cookie', sessionCookie('', { secure: req.secure, crossSite: Boolean(opts.crossSiteCookies), clear: true }));
+    res.setHeader('Set-Cookie', sessionCookie('', { secure: production || req.secure, crossSite: corsOrigins.length > 0, clear: true }));
     res.json({ ok: true });
   });
 

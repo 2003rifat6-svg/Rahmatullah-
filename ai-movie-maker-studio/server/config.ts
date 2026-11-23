@@ -13,6 +13,7 @@ import { InlineJobQueue, SUPPORTED_QUEUES } from './queue';
 import { BlobUsageStore, FirestoreUsageStore, quotaConfigFromEnv, UsageStore } from './usage';
 import { createGeminiProvider } from './provider';
 import { parseAllowedEmails, validateOAuthClientId } from './shared/config-rules.mjs';
+import { parseCorsOrigins } from './security';
 
 export class ConfigError extends Error {}
 
@@ -88,6 +89,9 @@ export function buildOptionsFromEnv(env: NodeJS.ProcessEnv = process.env): AppOp
     throw new ConfigError(`JOB_QUEUE="${queueName}" is not implemented. Supported: ${SUPPORTED_QUEUES.join(', ')}. See server/queue.ts to add a Cloud Tasks / Pub/Sub adapter.`);
   }
 
+  const cors = parseCorsOrigins(env.CORS_ORIGINS ?? env.CORS_ORIGIN);
+  if (cors.errors.length) throw new ConfigError(cors.errors.join(' '));
+
   const provider = createGeminiProvider(env);
   if (auth.mode === 'none' && provider && !auth.accessToken) {
     // A paid API key must never sit behind an open endpoint, not even in development.
@@ -106,7 +110,8 @@ export function buildOptionsFromEnv(env: NodeJS.ProcessEnv = process.env): AppOp
     staticDir: path.resolve('dist'),
     ffmpegPath: env.FFMPEG_PATH || 'ffmpeg',
     signedUrls: env.GCS_SIGNED_URLS === 'true' && blobStore.kind === 'gcs',
-    crossSiteCookies: Boolean(env.CORS_ORIGIN),
+    corsOrigins: cors.origins,
+    production: onCloudRun || env.NODE_ENV === 'production',
     warnings,
   };
 }
