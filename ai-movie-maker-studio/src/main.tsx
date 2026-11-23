@@ -3,3 +3,12 @@ import App from './App.tsx';
 import './index.css';
 
 createRoot(document.getElementById('root')!).render(<App />);
+
+// Installable app + offline start. Production builds only (a service worker would confuse development).
+if (import.meta.env.PROD && 'serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js').catch(() => {
+      /* not available in this browser context: the app works normally without it */
+    });
+  });
+}

@@ -829,7 +829,17 @@ export function createApp(opts: AppOptions) {
   });
 
   if (opts.staticDir && fs.existsSync(path.join(opts.staticDir, 'index.html'))) {
-    app.use(express.static(opts.staticDir));
+    app.use(
+      express.static(opts.staticDir, {
+        setHeaders: (res, filePath) => {
+          if (filePath.endsWith('.webmanifest')) res.setHeader('Content-Type', 'application/manifest+json');
+          // the service worker and the app shell must always be re-checked; hashed /assets files are immutable
+          if (filePath.endsWith('sw.js') || filePath.endsWith('index.html') || filePath.endsWith('offline.html')) res.setHeader('Cache-Control', 'no-cache');
+          else if (filePath.includes(`${path.sep}assets${path.sep}`)) res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+          if (filePath.endsWith('sw.js')) res.setHeader('Service-Worker-Allowed', '/');
+        },
+      })
+    );
     app.get(/^(?!\/(api|health)).*/, (_req, res) => res.sendFile(path.join(opts.staticDir!, 'index.html')));
   }
 

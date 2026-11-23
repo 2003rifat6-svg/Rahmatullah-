@@ -118,6 +118,8 @@ describe('security headers and CSP', () => {
     assert.equal(dir('object-src'), "object-src 'none'");
     assert.equal(dir('frame-ancestors'), "frame-ancestors 'none'");
     assert.equal(dir('base-uri'), "base-uri 'self'");
+    assert.match(dir('connect-src'), /blob: data:/, 'the app must be able to read its own stored files');
+    assert.ok(!dir('connect-src').includes('http:') && !/\*/.test(dir('connect-src')), 'no plain-http or wildcard connections');
     assert.ok(csp.includes('upgrade-insecure-requests'));
     assert.ok(!contentSecurityPolicy({ production: false }).includes('upgrade-insecure-requests'));
     assert.ok(!/(^|\s)\*(\s|;|$)/.test(csp), 'no bare wildcard source');

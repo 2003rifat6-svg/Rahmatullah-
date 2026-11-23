@@ -24,7 +24,8 @@ export function parseCorsOrigins(raw: string | undefined): { origins: string[]; 
 }
 
 export function contentSecurityPolicy(opts: { production: boolean; extraConnect?: string[] }): string {
-  const connect = ["'self'", 'https://accounts.google.com', 'https://storage.googleapis.com', ...(opts.extraConnect ?? [])];
+  // blob:/data: let the app read its OWN stored images/videos (upload, ZIP, download); they cannot reach another server.
+  const connect = ["'self'", 'blob:', 'data:', 'https://accounts.google.com', 'https://storage.googleapis.com', ...(opts.extraConnect ?? [])];
   const directives: Record<string, string[]> = {
     'default-src': ["'self'"],
     // Google Identity Services (sign-in) is the only external script.

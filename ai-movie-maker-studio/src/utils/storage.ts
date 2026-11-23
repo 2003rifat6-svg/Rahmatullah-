@@ -374,7 +374,20 @@ export async function readAndOptimizeImageFile(
   });
 }
 
+/** iPhone/iPad app opened from the Home Screen: a plain download link does not work there, the share sheet does. */
+function isIosStandalone(): boolean {
+  const nav = navigator as Navigator & { standalone?: boolean };
+  return /iPad|iPhone|iPod/.test(navigator.userAgent) && Boolean(nav.standalone);
+}
+
 export function triggerDownload(blob: Blob, filename: string): void {
+  if (isIosStandalone() && typeof navigator.canShare === 'function') {
+    const file = new File([blob], filename, { type: blob.type || 'application/octet-stream' });
+    if (navigator.canShare({ files: [file] })) {
+      void navigator.share({ files: [file], title: filename }).catch(() => undefined);
+      return;
+    }
+  }
   const url = URL.createObjectURL(blob);
   const link = document.createElement('a');
   link.href = url;

@@ -54,8 +54,9 @@ async function device(credential) {
 
 const panel = (page) => page.getByRole('region', { name: 'Cloud Sync' });
 
+let A;
 try {
-  let A;
+  const page0 = null;
   await step('Device A: connect + sign in', async () => {
     A = await device('test:alice1:alice@x.com');
     assert.match(await A.page.getByTestId('cloud-user').innerText(), /alice@x\.com/);
@@ -164,6 +165,10 @@ try {
 
   console.log(`\nCLOUD E2E PASSED. Screenshots: ${shotsDir}`);
 } catch (err) {
+  try {
+    const live = await A.page.locator('[aria-label="Cloud Sync"]').first().innerText({ timeout: 3000 });
+    console.error('\nCloud Sync panel text at failure:\n' + live.slice(0, 700));
+  } catch {}
   console.error('\nCLOUD E2E FAILED:', err);
   process.exitCode = 1;
 } finally {

@@ -740,7 +740,7 @@ export default function App() {
   });
 
   return (
-    <div className="min-h-screen bg-[#07080B] text-slate-100">
+    <div className="min-h-screen bg-[#07080B] text-slate-100 pt-[env(safe-area-inset-top,0px)] pb-[env(safe-area-inset-bottom,0px)] pl-[env(safe-area-inset-left,0px)] pr-[env(safe-area-inset-right,0px)]">
       {storageAlert && !storageAlertDismissed && (
         <div
           role="alert"

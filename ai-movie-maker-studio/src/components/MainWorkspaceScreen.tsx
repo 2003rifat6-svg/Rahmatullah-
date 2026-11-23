@@ -157,7 +157,7 @@ export function MainWorkspaceScreen({
   }, 0);
 
   return (
-    <div className="flex flex-col h-[100dvh] max-w-5xl mx-auto px-3 sm:px-5 py-3 gap-3">
+    <div className="flex flex-col h-[calc(100dvh-env(safe-area-inset-top,0px)-env(safe-area-inset-bottom,0px))] max-w-5xl mx-auto px-3 sm:px-5 py-3 gap-3">
       {/* Top Studio Header */}
       <header className="flex items-center justify-between gap-2 shrink-0">
         <div className="flex items-center gap-2 min-w-0">

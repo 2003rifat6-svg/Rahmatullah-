@@ -22,6 +22,9 @@ await new Promise((resolve, reject) => {
 const browser = await chromium.launch();
 const page = await browser.newPage({ viewport: { width: 390, height: 844 } });
 const dialogs = [];
+const cspViolations = [];
+const watchCsp = (pg) => pg.on('console', (m) => /content security policy/i.test(m.text()) && cspViolations.push(m.text()));
+watchCsp(page);
 page.on('dialog', (d) => {
   dialogs.push(d.message());
   void d.accept();
@@ -197,6 +200,9 @@ try {
     const loaded = await page.locator('[data-testid^="version-S01-SH01-"] img').evaluateAll((imgs) => imgs.map((i) => i.complete && i.naturalWidth > 0));
     assert.equal(loaded.length, 10);
     assert.ok(loaded.every(Boolean), 'all 10 versions load their image after reload');
+    // after a reload the files are blob: URLs from the media store: downloading one must work (Content-Security-Policy allows reading them)
+    const [versionDownload] = await Promise.all([page.waitForEvent('download'), page.getByRole('button', { name: /Download version 3 of S01-SH01/ }).click()]);
+    assert.match(versionDownload.suggestedFilename(), /_S01_SH01_v3\.(jpg|png|webp)$/);
     // select the very first version again
     const v1 = page.getByTestId('version-S01-SH01-1');
     await v1.getByRole('button', { name: 'Use this' }).click();
@@ -243,6 +249,7 @@ try {
   const STORY = 'Rahim is a poor boatman who rows the river every dawn. One night a storm sinks his boat and he saves a young woman named Nila from the water.';
   const ctx2 = await browser.newContext({ viewport: { width: 390, height: 844 } });
   const p2 = await ctx2.newPage();
+  watchCsp(p2);
   p2.on('dialog', (d) => void d.accept());
   const hub2 = async () => {
     await p2.getByLabel('Attach files or open project materials').click();
@@ -304,6 +311,7 @@ try {
   });
   await ctx2.close();
 
+  assert.deepEqual(cspViolations, [], 'the browser reported Content-Security-Policy violations');
   console.log(`\nE2E PASSED. Screenshots: ${shotsDir}`);
 } catch (err) {
   await shot('zz-failure').catch(() => {});
