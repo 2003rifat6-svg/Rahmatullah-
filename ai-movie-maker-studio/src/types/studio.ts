@@ -158,6 +158,13 @@ export interface CloudBackendSettings {
   status: 'not_configured' | 'connected' | 'unreachable';
   geminiConfigured?: boolean;
   ffmpegAvailable?: boolean;
+  /** From /health: 'google' when the server requires Google sign-in. */
+  authMode?: 'google' | 'none';
+  googleClientId?: string | null;
+  /** Firestore project sync available (server side). */
+  cloudSync?: boolean;
+  storage?: 'gcs' | 'local-disk';
+  serverWarnings?: string[];
   lastError?: string;
   lastCheckedAt?: string;
 }
@@ -245,6 +252,9 @@ export interface MovieProject {
   generatedImagesSection: OutputSectionState;
   generatedVideosSection: OutputSectionState;
   lastBundleSentAt?: string;
+  /** Firestore revision of the last cloud save/load (local-only bookkeeping). */
+  cloudRevision?: number;
+  cloudSyncedAt?: string;
   costAndJobs: CostAndJobState;
   versions: AssetVersion[];
   chatMessages: ChatMessage[];

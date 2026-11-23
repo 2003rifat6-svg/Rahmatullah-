@@ -16,7 +16,8 @@ import {
   WorkspaceScreen,
 } from './types/studio';
 import { createBlankProject, createSampleProject } from './data/sampleProject';
-import { loadStudioState, saveStudioState } from './utils/storage';
+import { loadStudioState, normalizeProject, saveStudioState } from './utils/storage';
+import { cloudAuth, cloudProjects, CloudUser } from './services/cloudSync';
 import { createId, mergeShotOutputs, parsePromptsFromRawText, shotKey } from './utils/validation';
 import { buildMaterialsBundle, DEFAULT_CLOUD_SETTINGS, interpretMainChatMessage } from './services/studioBackend';
 import { phase2CloudServices } from './services/cloudApiInterfaces';
@@ -84,6 +85,7 @@ export default function App() {
   const [zipInspection, setZipInspection] = useState<ZipImportInspection | null>(null);
   const [isSendingChat, setIsSendingChat] = useState(false);
   const [run, setRun] = useState<GenerationRunState | null>(null);
+  const [cloudUser, setCloudUser] = useState<CloudUser | null>(null);
   const cancelRef = useRef(false);
   const projectsRef = useRef(projects);
   projectsRef.current = projects;
@@ -247,21 +249,6 @@ export default function App() {
     );
 
   // ---------- 3. Character Reference Images ----------
-  const syncSlotMediaToGcsIfConnected = async (projectId: string, characterId: string, slotKey: CharacterRefSlotKey, dataUrl: string) => {
-    if (cloudSettings.status !== 'connected' || !dataUrl.startsWith('data:')) return;
-    try {
-      const blob = await (await fetch(dataUrl)).blob();
-      const res = await phase2CloudServices.gcs.uploadMediaAsset(cloudSettings, projectId, `characters/${characterId}/${slotKey}.jpg`, blob);
-      setCloudSyncStatus(
-        res.ok
-          ? { status: 'synced', lastSyncedAt: new Date().toISOString(), lastAction: 'media_upload' }
-          : { status: res.notImplemented ? 'not_implemented' : 'error', lastError: res.error, lastAction: 'media_upload' }
-      );
-    } catch (err) {
-      setCloudSyncStatus({ status: 'error', lastError: err instanceof Error ? err.message : 'Upload failed', lastAction: 'media_upload' });
-    }
-  };
-
   const handleSaveCharacterSlot = (characterId: string, slotKey: CharacterRefSlotKey, savedSlot: CharacterRefSlot) => {
     const now = new Date().toISOString();
     updateActiveProject((proj) =>
@@ -278,7 +265,6 @@ export default function App() {
         now
       )
     );
-    if (savedSlot.imageUrl) void syncSlotMediaToGcsIfConnected(activeProject.id, characterId, slotKey, savedSlot.imageUrl);
   };
 
   const handleToggleCharacterSlotLock = (characterId: string, slotKey: CharacterRefSlotKey, nextLocked: boolean) => {
@@ -514,23 +500,71 @@ export default function App() {
   };
 
   // ---------- Projects ----------
-  const syncProjectToCloud = async (action: 'create' | 'update' | 'delete', projectOrId: MovieProject | string) => {
-    if (cloudSettings.status !== 'connected') {
-      setCloudSyncStatus({ status: 'local_only', lastAction: action });
+  // ---------- Optional Cloud Sync (Firestore + Cloud Storage). Local IndexedDB save is unaffected. ----------
+  useEffect(() => {
+    if (!hydrated || cloudSettings.status !== 'connected' || cloudSettings.authMode !== 'google') {
+      setCloudUser(null);
       return;
     }
-    setCloudSyncStatus((prev) => ({ ...prev, status: 'syncing', lastAction: action, lastError: undefined }));
-    const res =
-      action === 'create'
-        ? await phase2CloudServices.firestore.createProjectMetadata(cloudSettings, projectOrId as MovieProject)
-        : action === 'update'
-          ? await phase2CloudServices.firestore.saveProjectMetadata(cloudSettings, projectOrId as MovieProject)
-          : await phase2CloudServices.firestore.deleteProjectMetadata(cloudSettings, projectOrId as string);
-    setCloudSyncStatus(
-      res.ok
-        ? { status: 'synced', lastSyncedAt: new Date().toISOString(), lastAction: action }
-        : { status: res.notImplemented ? 'not_implemented' : 'error', lastError: res.error || 'Cloud sync failed.', lastAction: action }
+    void cloudAuth.me(cloudSettings).then((r) => setCloudUser(r.ok ? r.data.user : null));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [hydrated, cloudSettings.status, cloudSettings.authMode, cloudSettings.backendUrl]);
+
+  const handleSaveActiveToCloud = async (): Promise<string> => {
+    const snapshot = activeProject;
+    setCloudSyncStatus({ status: 'syncing', lastAction: 'update' });
+    let res = await cloudProjects.save(cloudSettings, snapshot);
+    if (!res.ok && res.status === 409) {
+      const overwrite = window.confirm(
+        `The cloud copy of "${snapshot.title}" was changed elsewhere (cloud revision ${res.cloudRevision ?? '?'}).\n\nOK = overwrite the cloud copy with this device's version.\nCancel = keep the cloud copy (you can Load it).`
+      );
+      if (!overwrite) {
+        setCloudSyncStatus({ status: 'error', lastError: 'Cloud copy is newer — not overwritten.', lastAction: 'update' });
+        return 'Not saved: the cloud copy is newer. Use Load to get it, or save again and choose overwrite.';
+      }
+      res = await cloudProjects.save(cloudSettings, snapshot, { force: true });
+    }
+    if (!res.ok) {
+      setCloudSyncStatus({ status: 'error', lastError: res.error, lastAction: 'update' });
+      if (res.signInRequired) setCloudUser(null);
+      return `Cloud save failed: ${res.error}`;
+    }
+    const { meta, project: stored } = res.data;
+    setProjects((prev) =>
+      prev.map((p) => {
+        if (p.id !== snapshot.id) return p;
+        // If nothing changed locally during the upload, adopt the stored copy
+        // (its images now point to Cloud Storage, which also frees browser space).
+        const base = p.updatedAt === snapshot.updatedAt ? normalizeProject({ ...stored, updatedAt: p.updatedAt } as MovieProject) : p;
+        return { ...base, cloudRevision: meta.revision, cloudSyncedAt: meta.updatedAt };
+      })
     );
+    setCloudSyncStatus({ status: 'synced', lastSyncedAt: meta.updatedAt, lastAction: 'update' });
+    return `Saved to cloud (revision ${meta.revision}).`;
+  };
+
+  const handleLoadFromCloud = async (id: string): Promise<string> => {
+    const res = await cloudProjects.get(cloudSettings, id);
+    if (!res.ok) return `Could not load from cloud: ${res.error}`;
+    const local = projects.find((p) => p.id === id);
+    if (local && !window.confirm(`Replace "${local.title}" on this device with the cloud copy (revision ${res.data.meta.revision})?`)) {
+      return 'Load cancelled — this device’s copy was kept.';
+    }
+    const loaded: MovieProject = {
+      ...normalizeProject(res.data.project),
+      cloudRevision: res.data.meta.revision,
+      cloudSyncedAt: res.data.meta.updatedAt,
+    };
+    setProjects((prev) => (local ? prev.map((p) => (p.id === id ? loaded : p)) : [loaded, ...prev]));
+    setActiveProjectId(id);
+    return `Loaded "${loaded.title}" from the cloud. It is now saved on this device too.`;
+  };
+
+  const handleDeleteFromCloud = async (id: string): Promise<string> => {
+    const res = await cloudProjects.remove(cloudSettings, id);
+    if (!res.ok) return `Cloud delete failed: ${res.error}`;
+    setProjects((prev) => prev.map((p) => (p.id === id ? { ...p, cloudRevision: undefined, cloudSyncedAt: undefined } : p)));
+    return 'Deleted from the cloud (Firestore document and its Cloud Storage files). The copy on this device was kept.';
   };
 
   const openProject = (id: string) => {
@@ -542,7 +576,6 @@ export default function App() {
     const created = createBlankProject(title, settings);
     setProjects((prev) => [created, ...prev]);
     openProject(created.id);
-    void syncProjectToCloud('create', created);
   };
 
   const handleLoadDemoProject = () => {
@@ -556,7 +589,6 @@ export default function App() {
   const handleImportZipProject = (imported: MovieProject) => {
     setProjects((prev) => [imported, ...prev]);
     openProject(imported.id);
-    void syncProjectToCloud('create', imported);
   };
 
   const handleDuplicateProject = (projectId: string) => {
@@ -586,7 +618,6 @@ export default function App() {
     };
     setProjects((prev) => [copy, ...prev]);
     openProject(copy.id);
-    void syncProjectToCloud('create', copy);
   };
 
   const handleDeleteProject = (projectId: string) => {
@@ -594,7 +625,6 @@ export default function App() {
     const remaining = projects.filter((p) => p.id !== projectId);
     setProjects(remaining);
     if (activeProjectId === projectId || activeProject.id === projectId) setActiveProjectId(remaining[0].id);
-    void syncProjectToCloud('delete', projectId);
   };
 
   const openSection = (key: MaterialSectionKey | 'materials_hub' | 'cloud_settings') => setScreen(key);
@@ -791,7 +821,15 @@ export default function App() {
             setCloudSettings(next);
             if (next.status !== 'connected') setCloudSyncStatus({ status: 'local_only' });
           }}
-          onSyncActiveProjectToCloud={() => void syncProjectToCloud('update', activeProject)}
+          cloudPanel={{
+            cloudUser,
+            localProjectIds: projects.map((p) => p.id),
+            onSignedIn: setCloudUser,
+            onSignedOut: () => setCloudUser(null),
+            onSaveActiveToCloud: handleSaveActiveToCloud,
+            onLoadFromCloud: handleLoadFromCloud,
+            onDeleteFromCloud: handleDeleteFromCloud,
+          }}
           onUpdateBudgetLimit={(budgetLimitUsd) =>
             updateActiveProject((proj) => ({ ...proj, costAndJobs: { ...proj.costAndJobs, budgetLimitUsd } }))
           }

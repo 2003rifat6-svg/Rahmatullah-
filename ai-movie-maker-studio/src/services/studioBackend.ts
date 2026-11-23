@@ -106,17 +106,27 @@ export async function testCloudBackendConnection(
         lastError: `Health check failed with HTTP ${res.status}.`,
       };
     }
-    let healthInfo: { geminiConfigured?: boolean; ffmpegAvailable?: boolean } = {};
+    let healthInfo: Partial<CloudBackendSettings> = {};
     try {
       const data = (await res.json()) as {
         ok?: boolean;
         status?: string;
         geminiConfigured?: boolean;
         ffmpegAvailable?: boolean;
+        authMode?: 'google' | 'none';
+        googleClientId?: string | null;
+        cloudSync?: boolean;
+        storage?: 'gcs' | 'local-disk';
+        warnings?: string[];
       };
       healthInfo = {
         geminiConfigured: data.geminiConfigured,
         ffmpegAvailable: data.ffmpegAvailable,
+        authMode: data.authMode,
+        googleClientId: data.googleClientId,
+        cloudSync: data.cloudSync,
+        storage: data.storage,
+        serverWarnings: data.warnings,
       };
       if (data && data.ok === false) {
         return {
@@ -134,8 +144,7 @@ export async function testCloudBackendConnection(
       backendUrl: cleanUrl,
       status: 'connected',
       lastCheckedAt: now,
-      geminiConfigured: healthInfo.geminiConfigured,
-      ffmpegAvailable: healthInfo.ffmpegAvailable,
+      ...healthInfo,
       lastError:
         healthInfo.geminiConfigured === false
           ? 'Backend is reachable, but GEMINI_API_KEY is not set on the server, so AI generation is disabled.'

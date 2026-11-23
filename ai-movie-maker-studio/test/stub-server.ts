@@ -1,15 +1,21 @@
 /**
  * TEST-ONLY server for the end-to-end UI test: the real Express app + the built
- * frontend, but with a stub AI provider so no paid API is called.
+ * frontend, with a stub AI provider so no paid API is called.
+ * STUB_CLOUD=1 additionally runs the real Firestore + GCS emulators and Google-sign-in
+ * mode with a test token verifier (test:<uid>:<email>).
  */
+import { Firestore } from '@google-cloud/firestore';
+import { Storage } from '@google-cloud/storage';
+import { OAuth2Client } from 'google-auth-library';
 import path from 'node:path';
-import { createApp } from '../server/app';
-import { createStubProvider, makeTestClip, tempDir } from './helpers';
+import { AppOptions, createApp } from '../server/app';
+import { GcsBlobStore, LocalDiskBlobStore } from '../server/blobStore';
+import { FirestoreProjectStore } from '../server/projectStore';
+import { startEmulators } from './emulators';
+import { createStubProvider, makeTestClip, tempDir, TEST_SESSION_SECRET, testVerifier } from './helpers';
 
 const dir = tempDir('e2e-');
-const clip = makeTestClip(dir, 'clip.mp4', 'blue');
-const { provider, resetPolls } = createStubProvider(clip);
-// Each new video job should take one "running" poll before completing.
+const { provider, resetPolls } = createStubProvider(makeTestClip(dir, 'clip.mp4', 'blue'));
 const wrapped = {
   ...provider,
   async startVideo(req: Parameters<typeof provider.startVideo>[0]) {
@@ -17,10 +23,33 @@ const wrapped = {
     return provider.startVideo(req);
   },
 };
-const app = createApp({
-  provider: process.env.STUB_NO_PROVIDER ? null : wrapped,
-  mediaDir: path.join(dir, 'media'),
+
+let opts: AppOptions = {
+  provider: wrapped,
+  blobStore: new LocalDiskBlobStore(path.join(dir, 'media')),
+  projectStore: null,
+  auth: { mode: 'none' },
   staticDir: path.resolve('dist'),
-});
+};
+
+if (process.env.STUB_CLOUD) {
+  const emu = await startEmulators();
+  process.on('exit', emu.stop);
+  process.on('SIGTERM', () => process.exit(0));
+  process.env.FIRESTORE_EMULATOR_HOST = emu.firestoreHost;
+  process.env.STORAGE_EMULATOR_HOST = emu.gcsEndpoint;
+  const dummy = new OAuth2Client();
+  dummy.setCredentials({ access_token: 'emulator', expiry_date: Date.now() + 36e5 });
+  const storage = new Storage({ projectId: 'demo-mms', authClient: dummy });
+  await storage.createBucket('mms-e2e');
+  const blobStore = new GcsBlobStore('mms-e2e', storage);
+  opts = {
+    ...opts,
+    blobStore,
+    projectStore: new FirestoreProjectStore(new Firestore({ projectId: 'demo-mms' }), blobStore),
+    auth: { mode: 'google', googleClientId: 'test-client-id', verifier: testVerifier, sessionSecret: TEST_SESSION_SECRET },
+  };
+}
+
 const port = Number(process.env.PORT || 8799);
-app.listen(port, () => console.log(`stub server ready on ${port}`));
+createApp(opts).listen(port, () => console.log(`stub server ready on ${port}`));

@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { ComponentProps, useRef, useState } from 'react';
 import {
   ArrowLeft,
   CheckCircle2,
@@ -31,6 +31,7 @@ import {
   ZipImportInspection,
 } from '../utils/zipManager';
 import { ZipImportPreviewModal } from './ZipImportPreviewModal';
+import { CloudSyncPanel } from './CloudSyncPanel';
 
 interface ProjectsAndCloudScreenProps {
   mode: 'projects' | 'cloud_settings';
@@ -51,7 +52,7 @@ interface ProjectsAndCloudScreenProps {
   onDuplicateProject: (projectId: string) => void;
   onDeleteProject: (projectId: string) => void;
   onSaveCloudSettings: (next: CloudBackendSettings) => void;
-  onSyncActiveProjectToCloud: () => void;
+  cloudPanel: Omit<ComponentProps<typeof CloudSyncPanel>, 'cloudSettings' | 'activeProject'>;
   onUpdateBudgetLimit: (budgetLimitUsd: number) => void;
   onClearJobLog: () => void;
 }
@@ -72,7 +73,7 @@ export function ProjectsAndCloudScreen({
   onDuplicateProject,
   onDeleteProject,
   onSaveCloudSettings,
-  onSyncActiveProjectToCloud,
+  cloudPanel,
   onUpdateBudgetLimit,
   onClearJobLog,
 }: ProjectsAndCloudScreenProps) {
@@ -314,24 +315,6 @@ export function ProjectsAndCloudScreen({
                   Local Storage and Cloud Sync are tracked separately. App remains 100% usable in Local Mode when Cloud Backend is disconnected.
                 </p>
               </div>
-              <button
-                type="button"
-                disabled={
-                  cloudSettings.status !== 'connected' ||
-                  cloudSyncStatus.status === 'syncing'
-                }
-                onClick={onSyncActiveProjectToCloud}
-                className="min-h-[38px] px-3.5 rounded-xl border border-[#E5A93C]/45 bg-[#E5A93C]/12 hover:bg-[#E5A93C]/20 disabled:opacity-40 text-xs font-semibold text-[#FDE68A] inline-flex items-center gap-1.5"
-              >
-                <RefreshCw
-                  className={`w-3.5 h-3.5 ${
-                    cloudSyncStatus.status === 'syncing' ? 'animate-spin' : ''
-                  }`}
-                />
-                {cloudSyncStatus.status === 'syncing'
-                  ? 'Syncing...'
-                  : 'Sync Active Project to Cloud'}
-              </button>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
@@ -384,7 +367,7 @@ export function ProjectsAndCloudScreen({
                           ? 'Backend Not Implemented'
                           : cloudSyncStatus.status === 'error'
                             ? 'Sync Failed'
-                            : 'Local Only (Disconnected)'}
+                            : 'Local only'}
                   </span>
                 </div>
                 <p className="text-slate-400">
@@ -394,7 +377,7 @@ export function ProjectsAndCloudScreen({
                       ? `Last cloud sync: ${new Date(
                           cloudSyncStatus.lastSyncedAt
                         ).toLocaleTimeString()}`
-                      : 'Only marks Synced after Cloud Run /api/projects succeeds.'}
+                      : 'Optional. Use “Save to Cloud” in the Cloud Sync panel below.'}
                 </p>
               </div>
             </div>
@@ -411,24 +394,6 @@ export function ProjectsAndCloudScreen({
               </div>
             )}
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
-              <div className="rounded-xl border border-white/[0.08] bg-[#07080B] p-3.5 space-y-1">
-                <div className="font-semibold text-blue-300">
-                  Phase 1 Active Locally (No Paid Calls)
-                </div>
-                <p className="text-slate-400">
-                  Local Command Chat · Story/Character/Prompt Save &amp; Lock · Scene/Shot Validation · Safe ZIP Import Preview &amp; Generated-Only ZIP Export
-                </p>
-              </div>
-              <div className="rounded-xl border border-white/[0.08] bg-[#07080B] p-3.5 space-y-1">
-                <div className="font-semibold text-[#E5A93C]">
-                  Phase 2 Requires Cloud Run Backend
-                </div>
-                <p className="text-slate-400">
-                  Gemini Conversational AI Chat · Vertex AI Image &amp; Video Generation · Firestore Sync · GCS Media Storage · Server-Side FFmpeg Complete Movie MP4 Export
-                </p>
-              </div>
-            </div>
           </section>
 
           {/* Google Cloud Backend Configuration */}
@@ -504,53 +469,6 @@ export function ProjectsAndCloudScreen({
                 <p className="mt-1 text-[11px] text-slate-500">Not an AI API key — just a password that protects your server from strangers.</p>
               </div>
 
-              <div>
-                <label className="block text-xs font-semibold text-slate-300 mb-1.5">
-                  GCP Project ID
-                </label>
-                <input
-                  type="text"
-                  value={cloudDraft.gcpProjectId}
-                  onChange={(e) =>
-                    setCloudDraft({
-                      ...cloudDraft,
-                      gcpProjectId: e.target.value,
-                    })
-                  }
-                  placeholder="my-movie-studio-gcp"
-                  className="w-full min-h-[44px] rounded-xl bg-[#07080B] border border-white/[0.12] px-3 text-sm text-white font-mono"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-semibold text-slate-300 mb-1.5">
-                  Region
-                </label>
-                <input
-                  type="text"
-                  value={cloudDraft.gcpRegion}
-                  onChange={(e) =>
-                    setCloudDraft({ ...cloudDraft, gcpRegion: e.target.value })
-                  }
-                  placeholder="us-central1"
-                  className="w-full min-h-[44px] rounded-xl bg-[#07080B] border border-white/[0.12] px-3 text-sm text-white font-mono"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-semibold text-slate-300 mb-1.5">
-                  Cloud Storage Bucket
-                </label>
-                <input
-                  type="text"
-                  value={cloudDraft.gcsBucket}
-                  onChange={(e) =>
-                    setCloudDraft({ ...cloudDraft, gcsBucket: e.target.value })
-                  }
-                  placeholder="movie-studio-assets-bucket"
-                  className="w-full min-h-[44px] rounded-xl bg-[#07080B] border border-white/[0.12] px-3 text-sm text-white font-mono"
-                />
-              </div>
             </div>
 
             {cloudDraft.lastError && (
@@ -562,7 +480,7 @@ export function ProjectsAndCloudScreen({
             <div className="flex flex-wrap items-center justify-between gap-3 pt-1">
               <div className="text-[11px] text-slate-400 flex items-center gap-1.5">
                 <Server className="w-3.5 h-3.5 text-[#E5A93C]" />
-                Included backend: Node/Express · Gemini (images, chat) · Veo (video) · FFmpeg. Cloud project sync: not implemented.
+                Backend: Node/Express · Gemini (images, chat) · Veo (video) · FFmpeg · Firestore + Cloud Storage (sync). Google Cloud project, bucket and region are set on the server (see README), not here.
               </div>
               <div className="flex items-center gap-2">
                 <button
@@ -586,6 +504,8 @@ export function ProjectsAndCloudScreen({
               </div>
             </div>
           </section>
+
+          <CloudSyncPanel {...cloudPanel} cloudSettings={cloudDraft.status === 'connected' ? { ...cloudSettings, ...cloudDraft } : cloudSettings} activeProject={activeProject} />
 
           {/* Cost & Job Control for Active Project */}
           <section className="rounded-2xl border border-white/[0.08] bg-[#10131A] p-5 space-y-5">

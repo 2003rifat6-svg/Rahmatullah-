@@ -6,6 +6,8 @@ import { execFileSync } from 'node:child_process';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
+import type { AddressInfo } from 'node:net';
+import type { createApp } from '../server/app';
 import type { StudioAiProvider } from '../server/provider';
 
 // 1x1 PNG
@@ -57,3 +59,25 @@ export function createStubProvider(clipFile: string) {
 export function tempDir(prefix: string) {
   return fs.mkdtempSync(path.join(os.tmpdir(), prefix));
 }
+
+/**
+ * TEST-ONLY Google ID token verifier: credential "test:<uid>:<email>".
+ * The real server always uses googleIdTokenVerifier (server/auth.ts).
+ */
+export const testVerifier = async (credential: string) => {
+  const [prefix, uid, email] = credential.split(':');
+  if (prefix !== 'test' || !uid || !email) throw new Error('bad test credential');
+  return { uid, email };
+};
+
+export const TEST_SESSION_SECRET = 'test-session-secret-0123456789abcdef-xyz';
+
+export function listen(app: ReturnType<typeof createApp>) {
+  return new Promise<{ base: string; close: () => void }>((resolve) => {
+    const srv = app.listen(0, '127.0.0.1', () => {
+      const port = (srv.address() as AddressInfo).port;
+      resolve({ base: `http://127.0.0.1:${port}`, close: () => srv.close() });
+    });
+  });
+}
+

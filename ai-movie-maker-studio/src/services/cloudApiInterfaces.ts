@@ -38,33 +38,6 @@ export interface IAiChatAssistantService {
   >;
 }
 
-export interface IFirestoreProjectSyncService {
-  createProjectMetadata(
-    cloud: CloudBackendSettings,
-    project: MovieProject
-  ): Promise<BackendCallResult<{ syncedAt: string }>>;
-  saveProjectMetadata(
-    cloud: CloudBackendSettings,
-    project: MovieProject
-  ): Promise<BackendCallResult<{ syncedAt: string }>>;
-  deleteProjectMetadata(
-    cloud: CloudBackendSettings,
-    projectId: string
-  ): Promise<BackendCallResult<{ deletedAt: string }>>;
-  listUserProjects(
-    cloud: CloudBackendSettings
-  ): Promise<BackendCallResult<MovieProject[]>>;
-}
-
-export interface IGcsMediaStorageService {
-  uploadMediaAsset(
-    cloud: CloudBackendSettings,
-    projectId: string,
-    pathKey: string,
-    fileBlob: Blob
-  ): Promise<BackendCallResult<{ gcsUri: string; signedPreviewUrl: string }>>;
-}
-
 export interface IImageGenerationService {
   generateCharacterReference(
     cloud: CloudBackendSettings,
@@ -168,17 +141,24 @@ function assertBackendConnected(
   return { ok: true, baseUrl: cleanUrl };
 }
 
+/** All backend calls send the session cookie (Google sign-in) and the CSRF header. */
+const fetch = (input: string, init: RequestInit = {}) => globalThis.fetch(input, { credentials: 'include', ...init });
+
 function jsonHeaders(cloud: CloudBackendSettings): Record<string, string> {
-  const h: Record<string, string> = { 'Content-Type': 'application/json' };
+  const h: Record<string, string> = { 'Content-Type': 'application/json', 'X-Requested-With': 'mms' };
   if (cloud.accessToken?.trim()) h['x-studio-token'] = cloud.accessToken.trim();
   return h;
 }
 
-function authHeaders(cloud: CloudBackendSettings): Record<string, string> {
-  return cloud.accessToken?.trim() ? { 'x-studio-token': cloud.accessToken.trim() } : {};
+export function authHeaders(cloud: CloudBackendSettings): Record<string, string> {
+  const h: Record<string, string> = { 'X-Requested-With': 'mms' };
+  if (cloud.accessToken?.trim()) h['x-studio-token'] = cloud.accessToken.trim();
+  return h;
 }
 
 /** Turns a server-relative media path ("/media/...") into an absolute URL on the backend. */
+export { jsonHeaders };
+
 export function resolveBackendUrl(cloud: CloudBackendSettings, url: string): string {
   if (!url || /^(data:|blob:|https?:)/.test(url)) return url;
   const base = cloud.backendUrl.trim().replace(/\/+$/, '');
@@ -306,133 +286,6 @@ export const phase2CloudServices = {
       }
     },
   } satisfies IAiChatAssistantService,
-
-  firestore: {
-    async createProjectMetadata(cloud, project) {
-      const conn = assertBackendConnected(cloud);
-      if (!conn.ok) {
-        return { ok: false, requiresBackendSetup: true, error: conn.error };
-      }
-      try {
-        const res = await fetch(`${conn.baseUrl}/api/projects`, {
-          method: 'POST',
-          headers: jsonHeaders(cloud),
-          body: JSON.stringify(project),
-        });
-        return await handleApiResponse<{ syncedAt: string }>(
-          res,
-          'POST /api/projects'
-        );
-      } catch (err) {
-        return {
-          ok: false,
-          error:
-            err instanceof Error ? err.message : 'Cloud project create failed.',
-        };
-      }
-    },
-
-    async saveProjectMetadata(cloud, project) {
-      const conn = assertBackendConnected(cloud);
-      if (!conn.ok) {
-        return { ok: false, requiresBackendSetup: true, error: conn.error };
-      }
-      try {
-        const res = await fetch(
-          `${conn.baseUrl}/api/projects/${encodeURIComponent(project.id)}`,
-          {
-            method: 'PUT',
-            headers: jsonHeaders(cloud),
-            body: JSON.stringify(project),
-          }
-        );
-        return await handleApiResponse<{ syncedAt: string }>(
-          res,
-          'PUT /api/projects/:id'
-        );
-      } catch (err) {
-        return {
-          ok: false,
-          error:
-            err instanceof Error ? err.message : 'Firestore sync failed.',
-        };
-      }
-    },
-
-    async deleteProjectMetadata(cloud, projectId) {
-      const conn = assertBackendConnected(cloud);
-      if (!conn.ok) {
-        return { ok: false, requiresBackendSetup: true, error: conn.error };
-      }
-      try {
-        const res = await fetch(
-          `${conn.baseUrl}/api/projects/${encodeURIComponent(projectId)}`,
-          {
-            method: 'DELETE',
-            headers: authHeaders(cloud),
-          }
-        );
-        return await handleApiResponse<{ deletedAt: string }>(
-          res,
-          'DELETE /api/projects/:id'
-        );
-      } catch (err) {
-        return {
-          ok: false,
-          error:
-            err instanceof Error ? err.message : 'Cloud project delete failed.',
-        };
-      }
-    },
-
-    async listUserProjects(cloud) {
-      const conn = assertBackendConnected(cloud);
-      if (!conn.ok) {
-        return { ok: false, requiresBackendSetup: true, error: conn.error };
-      }
-      try {
-        const res = await fetch(`${conn.baseUrl}/api/projects`, { headers: authHeaders(cloud) });
-        return await handleApiResponse<MovieProject[]>(res, 'GET /api/projects');
-      } catch (err) {
-        return {
-          ok: false,
-          error:
-            err instanceof Error
-              ? err.message
-              : 'Failed to list Firestore projects.',
-        };
-      }
-    },
-  } satisfies IFirestoreProjectSyncService,
-
-  gcs: {
-    async uploadMediaAsset(cloud, projectId, pathKey, fileBlob) {
-      const conn = assertBackendConnected(cloud);
-      if (!conn.ok) {
-        return { ok: false, requiresBackendSetup: true, error: conn.error };
-      }
-      try {
-        const form = new FormData();
-        form.append('projectId', projectId);
-        form.append('pathKey', pathKey);
-        form.append('file', fileBlob);
-        const res = await fetch(`${conn.baseUrl}/api/storage/upload`, {
-          method: 'POST',
-          headers: authHeaders(cloud),
-          body: form,
-        });
-        return await handleApiResponse<{
-          gcsUri: string;
-          signedPreviewUrl: string;
-        }>(res, 'POST /api/storage/upload');
-      } catch (err) {
-        return {
-          ok: false,
-          error: err instanceof Error ? err.message : 'GCS upload failed.',
-        };
-      }
-    },
-  } satisfies IGcsMediaStorageService,
 
   imageGen: {
     async generateCharacterReference(cloud, payload) {

@@ -1,5 +1,19 @@
 # পরিবর্তনের তালিকা (Changelog)
 
+## সংস্করণ ৩ — Google Cloud
+
+- **Sign in with Google:** Server Google ID Token যাচাই করে HttpOnly Cookie দেয়; CSRF সুরক্ষা; `ALLOWED_EMAILS` দিয়ে নির্দিষ্ট ইমেইল।
+- **Firestore:** Project Create / List / Load / Update / Delete (`users/<uid>/projects/<id>`), Revision দিয়ে Conflict ধরা (409), বড় Project GCS-এ।
+- **Cloud Storage:** ছবি, ভিডিও, ZIP, Movie Upload / List / Download (Range) / Delete; Signed URL দিয়ে বড় ফাইল সরাসরি GCS-এ।
+- Project Cloud-এ Save করলে ভেতরের ছবি GCS-এ সরে যায় (Firestore-এর 1 MiB সীমা)।
+- তৈরি ভিডিও ও Movie এখন GCS-এ; Cloud Run-এর Disk-এ কিছু রাখা হয় না, FFmpeg-এর অস্থায়ী ফাইল সঙ্গে সঙ্গে মোছে।
+- Cloud Run-এ Bucket বা Sign-in ছাড়া Server চালু হয় না (Fail-closed)।
+- Local (IndexedDB) Save আগের মতো; Cloud Sync আলাদা, হাতে চাপলে তবেই।
+- Dockerfile, Deploy স্ক্রিপ্ট, Firestore Rules, Bucket CORS, IAM ও Env তালিকা।
+- Test: Unit, আসল Firestore Emulator + fake-gcs-server-এ Integration, আর দুই ডিভাইস/দুই ব্যবহারকারীর Browser E2E।
+
+## সংস্করণ ২
+
 ## সমাধান করা সমস্যা
 
 - **Install/Build ভাঙা ছিল:** `esbuild@^0.25` Vite 8-এর সাথে মেলে না, তাই `npm install` ব্যর্থ হতো। `^0.28.0` করা হয়েছে; এখন install, typecheck, build সব চলে।

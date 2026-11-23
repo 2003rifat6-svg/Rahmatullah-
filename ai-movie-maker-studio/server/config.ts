@@ -1,0 +1,81 @@
+/**
+ * Builds the server options from environment variables (see .env.example / README).
+ * Fails closed: on Cloud Run the server will not start without sign-in and a GCS bucket.
+ */
+import { Firestore } from '@google-cloud/firestore';
+import path from 'node:path';
+import type { AppOptions } from './app';
+import { googleIdTokenVerifier } from './auth';
+import { BlobStore, GcsBlobStore, LocalDiskBlobStore } from './blobStore';
+import { FirestoreProjectStore } from './projectStore';
+import { createGeminiProvider } from './provider';
+
+export class ConfigError extends Error {}
+
+export function buildOptionsFromEnv(env: NodeJS.ProcessEnv = process.env): AppOptions {
+  const onCloudRun = Boolean(env.K_SERVICE);
+  const warnings: string[] = [];
+
+  // Storage
+  let blobStore: BlobStore;
+  if (env.GCS_BUCKET) {
+    blobStore = new GcsBlobStore(env.GCS_BUCKET);
+  } else if (onCloudRun) {
+    throw new ConfigError('GCS_BUCKET is required on Cloud Run (its disk is temporary; files must go to Cloud Storage).');
+  } else {
+    blobStore = new LocalDiskBlobStore(path.resolve(env.MEDIA_DIR || 'server-data/media'));
+    warnings.push('Files are stored on the local disk (development mode). Set GCS_BUCKET for Cloud Storage.');
+  }
+
+  // Auth
+  const clientId = (env.GOOGLE_OAUTH_CLIENT_ID || '').trim();
+  let auth: AppOptions['auth'];
+  if (clientId) {
+    const secret = env.SESSION_SECRET || '';
+    if (secret.length < 32) throw new ConfigError('SESSION_SECRET must be at least 32 characters when sign-in is enabled.');
+    auth = {
+      mode: 'google',
+      googleClientId: clientId,
+      verifier: googleIdTokenVerifier(clientId),
+      sessionSecret: secret,
+      allowedEmails: (env.ALLOWED_EMAILS || '')
+        .split(',')
+        .map((e) => e.trim().toLowerCase())
+        .filter(Boolean),
+    };
+    if (!auth.allowedEmails?.length) {
+      warnings.push('ALLOWED_EMAILS is empty: any Google account can sign in and use your Gemini key (each user sees only their own projects).');
+    }
+  } else if (onCloudRun) {
+    throw new ConfigError('GOOGLE_OAUTH_CLIENT_ID and SESSION_SECRET are required on Cloud Run (user data must be protected).');
+  } else {
+    auth = { mode: 'none', accessToken: env.STUDIO_ACCESS_TOKEN || undefined };
+    warnings.push('Sign-in is off (local development). Cloud sync is disabled until GOOGLE_OAUTH_CLIENT_ID is set.');
+  }
+
+  // Firestore (uses Application Default Credentials; FIRESTORE_EMULATOR_HOST for tests)
+  const firestoreOn = env.FIRESTORE_ENABLED === 'true' || Boolean(env.FIRESTORE_EMULATOR_HOST);
+  const projectStore = firestoreOn
+    ? new FirestoreProjectStore(
+        new Firestore({
+          projectId: env.GOOGLE_CLOUD_PROJECT || undefined,
+          databaseId: env.FIRESTORE_DATABASE_ID || undefined,
+          ignoreUndefinedProperties: true,
+        }),
+        blobStore
+      )
+    : null;
+  if (!projectStore) warnings.push('Firestore is off (FIRESTORE_ENABLED not true): cloud project sync is disabled.');
+
+  return {
+    provider: createGeminiProvider(env),
+    blobStore,
+    projectStore,
+    auth,
+    staticDir: path.resolve('dist'),
+    ffmpegPath: env.FFMPEG_PATH || 'ffmpeg',
+    signedUrls: env.GCS_SIGNED_URLS === 'true' && blobStore.kind === 'gcs',
+    crossSiteCookies: Boolean(env.CORS_ORIGIN),
+    warnings,
+  };
+}

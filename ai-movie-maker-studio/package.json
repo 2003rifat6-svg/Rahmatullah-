@@ -6,36 +6,48 @@
   "scripts": {
     "dev": "vite --port=3000 --host=0.0.0.0",
     "server": "tsx server/index.ts",
-    "build": "vite build",
-    "start": "npm run build && tsx server/index.ts",
+    "build": "vite build && npm run build:server",
+    "start": "npm run build && node dist-server/index.mjs",
     "preview": "vite preview",
-    "clean": "rm -rf dist",
+    "clean": "rm -rf dist dist-server",
     "lint": "tsc --noEmit && tsc --noEmit -p server/tsconfig.json",
-    "test": "tsx --test test/*.test.ts",
-    "test:e2e": "node test/e2e.mjs"
+    "test": "tsx --test test/server.test.ts test/logic.test.ts",
+    "test:e2e": "node test/e2e.mjs",
+    "build:server": "esbuild server/index.ts --bundle --platform=node --format=esm --target=node22 --packages=external --outfile=dist-server/index.mjs",
+    "start:prod": "node dist-server/index.mjs",
+    "test:integration": "tsx --test test/cloud.integration.test.ts",
+    "test:all": "npm test && npm run test:integration",
+    "test:e2e:cloud": "node test/e2e-cloud.mjs",
+    "emulators:setup": "npx -y firebase-tools@14 setup:emulators:firestore && go install github.com/fsouza/fake-gcs-server@v1.52.2"
   },
   "dependencies": {
+    "@google-cloud/firestore": "^9.4.1",
+    "@google-cloud/storage": "^9.0.0",
     "@google/genai": "^2.4.0",
-    "@tailwindcss/vite": "^4.3.3",
-    "@vitejs/plugin-react": "^6.1.1",
     "dotenv": "^17.2.3",
     "express": "^4.21.2",
+    "google-auth-library": "^11.3.4"
+  },
+  "devDependencies": {
+    "@tailwindcss/vite": "^4.3.3",
+    "@types/express": "^4.17.21",
+    "@types/node": "^22.14.0",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "@vitejs/plugin-react": "^6.1.1",
+    "autoprefixer": "^10.4.21",
+    "esbuild": "^0.28.0",
     "jszip": "^3.10.2",
     "lucide-react": "^0.546.0",
     "motion": "^12.23.24",
     "react": "^19.0.1",
     "react-dom": "^19.0.1",
-    "vite": "^8.3.0"
-  },
-  "devDependencies": {
-    "@types/node": "^22.14.0",
-    "@types/react": "^19.3.0",
-    "@types/react-dom": "^19.3.0",
-    "autoprefixer": "^10.4.21",
-    "esbuild": "^0.28.0",
     "tailwindcss": "^4.3.3",
     "tsx": "^4.21.0",
     "typescript": "^7.0.2",
-    "@types/express": "^4.17.21"
+    "vite": "^8.3.0"
+  },
+  "engines": {
+    "node": ">=22"
   }
 }
