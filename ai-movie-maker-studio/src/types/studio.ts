@@ -103,6 +103,8 @@ export interface ParsedPromptEntry {
   errorMessage?: string;
   /** Backend video job id while a video is being generated. */
   backendJobId?: string;
+  /** Id of the most recent backend job for this shot (kept after failure so a retry can link to it). */
+  lastJobId?: string;
 }
 
 /** Save / Lock state for the Generated Images and Generated Videos sections. */

@@ -8,7 +8,7 @@
  * every call is triggered by an explicit user action in the app, and the
  * provider is not created at all when GEMINI_API_KEY is missing.
  */
-import { GoogleGenAI } from '@google/genai';
+import { GenerateVideosOperation, GoogleGenAI } from '@google/genai';
 
 export interface InlineImage {
   mimeType: string;
@@ -18,6 +18,12 @@ export interface InlineImage {
 export interface ChatTurn {
   role: 'user' | 'assistant';
   text: string;
+}
+
+export interface TextOptions {
+  /** Ask the model for a JSON document (responseMimeType application/json). */
+  json?: boolean;
+  maxOutputTokens?: number;
 }
 
 export interface VideoStartRequest {
@@ -35,11 +41,12 @@ export type VideoPollResult =
 
 export interface StudioAiProvider {
   readonly models: { text: string; image: string; video: string };
-  generateText(systemInstruction: string, history: ChatTurn[], message: string): Promise<string>;
+  generateText(systemInstruction: string, history: ChatTurn[], message: string, opts?: TextOptions): Promise<string>;
   generateImage(prompt: string, references: InlineImage[], aspectRatio?: string): Promise<InlineImage>;
-  /** Starts a long-running video operation and returns an opaque operation handle. */
-  startVideo(req: VideoStartRequest): Promise<unknown>;
-  pollVideo(operation: unknown): Promise<{ operation: unknown; result: VideoPollResult }>;
+  /** Starts a long-running video operation. The returned name is stored in the durable job. */
+  startVideo(req: VideoStartRequest): Promise<{ operationName: string }>;
+  /** Looks up a stored operation by name (works after a server restart). */
+  pollVideo(operationName: string): Promise<VideoPollResult>;
   /** Downloads a provider-hosted video URI (needs the server-side key). */
   fetchVideoUri(uri: string): Promise<Uint8Array>;
 }
@@ -64,7 +71,7 @@ export function createGeminiProvider(env: NodeJS.ProcessEnv = process.env): Stud
   return {
     models,
 
-    async generateText(systemInstruction, history, message) {
+    async generateText(systemInstruction, history, message, opts) {
       const contents = [
         ...history.map((h) => ({
           role: h.role === 'assistant' ? 'model' : 'user',
@@ -75,7 +82,11 @@ export function createGeminiProvider(env: NodeJS.ProcessEnv = process.env): Stud
       const res = await ai.models.generateContent({
         model: models.text,
         contents,
-        config: { systemInstruction },
+        config: {
+          systemInstruction,
+          ...(opts?.json ? { responseMimeType: 'application/json' } : {}),
+          ...(opts?.maxOutputTokens ? { maxOutputTokens: opts.maxOutputTokens } : {}),
+        },
       });
       const text = res.text?.trim();
       if (!text) throw new Error('Gemini returned an empty reply.');
@@ -108,7 +119,7 @@ export function createGeminiProvider(env: NodeJS.ProcessEnv = process.env): Stud
     },
 
     async startVideo(req) {
-      return ai.models.generateVideos({
+      const op = await ai.models.generateVideos({
         model: models.video,
         prompt: req.prompt,
         ...(req.startFrame
@@ -121,41 +132,31 @@ export function createGeminiProvider(env: NodeJS.ProcessEnv = process.env): Stud
           ...(req.durationSeconds ? { durationSeconds: req.durationSeconds } : {}),
         },
       });
+      if (!op.name) throw new Error('Video provider did not return an operation name.');
+      return { operationName: op.name };
     },
 
-    async pollVideo(operation) {
-      const op = await ai.operations.getVideosOperation({
-        operation: operation as Parameters<typeof ai.operations.getVideosOperation>[0]['operation'],
-      });
-      if (!op.done) return { operation: op, result: { done: false } };
+    async pollVideo(operationName): Promise<VideoPollResult> {
+      // The SDK only needs the operation name to look the operation up again.
+      const handle = new GenerateVideosOperation();
+      handle.name = operationName;
+      const op = await ai.operations.getVideosOperation({ operation: handle });
+      if (!op.done) return { done: false };
       if (op.error) {
-        return {
-          operation: op,
-          result: { done: true, ok: false, error: String(op.error.message || JSON.stringify(op.error)) },
-        };
+        return { done: true, ok: false, error: String(op.error.message || JSON.stringify(op.error)) };
       }
       const vid = op.response?.generatedVideos?.[0]?.video;
       if (!vid || (!vid.videoBytes && !vid.uri)) {
         const reasons = op.response?.raiMediaFilteredReasons?.join('; ');
-        return {
-          operation: op,
-          result: {
-            done: true,
-            ok: false,
-            error: `Video model returned no video${reasons ? ` (filtered: ${reasons})` : ''}.`,
-          },
-        };
+        return { done: true, ok: false, error: `Video model returned no video${reasons ? ` (filtered: ${reasons})` : ''}.` };
       }
       return {
-        operation: op,
-        result: {
-          done: true,
-          ok: true,
-          video: {
-            bytes: vid.videoBytes ? Buffer.from(vid.videoBytes, 'base64') : undefined,
-            uri: vid.uri,
-            mimeType: vid.mimeType || 'video/mp4',
-          },
+        done: true,
+        ok: true,
+        video: {
+          bytes: vid.videoBytes ? Buffer.from(vid.videoBytes, 'base64') : undefined,
+          uri: vid.uri,
+          mimeType: vid.mimeType || 'video/mp4',
         },
       };
     },

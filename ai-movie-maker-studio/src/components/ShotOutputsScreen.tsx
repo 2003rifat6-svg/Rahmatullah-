@@ -27,6 +27,8 @@ interface Props {
   onUpload: (key: string, url: string, filename: string) => void;
   onSelectCandidate: (key: string, candidateId: string) => void;
   onRemoveCandidate: (key: string, candidateId: string) => void;
+  /** Cancels the running backend video job of a shot. */
+  onCancelJob: (key: string) => void;
   onSave: () => void;
   onToggleLock: (next: boolean) => void;
   onBack: () => void;
@@ -65,6 +67,7 @@ export function ShotOutputsScreen({
   onUpload,
   onSelectCandidate,
   onRemoveCandidate,
+  onCancelJob,
   onSave,
   onToggleLock,
   onBack,
@@ -379,6 +382,15 @@ export function ShotOutputsScreen({
                     </span>
                   </div>
                   <p className="text-xs text-slate-300 line-clamp-3">{item.promptText}</p>
+                  {!isImage && item.status === 'generating' && item.backendJobId && (
+                    <button
+                      type="button"
+                      onClick={() => onCancelJob(key)}
+                      className="text-[11px] text-rose-300 underline"
+                    >
+                      Cancel this video job
+                    </button>
+                  )}
                   {item.status === 'failed' && item.errorMessage && (
                     <p className="text-[11px] text-rose-300">{item.errorMessage}</p>
                   )}

@@ -13,6 +13,7 @@ import assert from 'node:assert/strict';
 import { after, before, describe, it } from 'node:test';
 import { createApp } from '../server/app';
 import { GcsBlobStore } from '../server/blobStore';
+import { FirestoreJobStore } from '../server/jobStore';
 import { FirestoreProjectStore, IntegrityError } from '../server/projectStore';
 import { Emulators, emulatorsAvailable, startEmulators } from './emulators';
 import { createStubProvider, listen, makeTestClip, tempDir, TEST_SESSION_SECRET, testVerifier } from './helpers';
@@ -86,6 +87,8 @@ describe('Cloud safety (Firestore + GCS emulators)', { skip: missing ?? false },
         provider: stub.provider,
         blobStore: blobs,
         projectStore: store,
+        jobStore: new FirestoreJobStore(db),
+        videoJobs: { pollIntervalMs: 0 },
         auth: { mode: 'google', googleClientId: 'test', verifier: testVerifier, sessionSecret: TEST_SESSION_SECRET, allowedEmails: ['alice@x.com', 'bob@x.com'] },
       })
     );
@@ -197,6 +200,8 @@ describe('Cloud safety (Firestore + GCS emulators)', { skip: missing ?? false },
         provider: null,
         blobStore: blobs,
         projectStore: store,
+        jobStore: new FirestoreJobStore(db),
+        videoJobs: { pollIntervalMs: 0 },
         auth: { mode: 'google', googleClientId: 'test', verifier: testVerifier, sessionSecret: TEST_SESSION_SECRET, allowedEmails: ['bob@x.com'] },
       })
     );
@@ -214,6 +219,8 @@ describe('Cloud safety (Firestore + GCS emulators)', { skip: missing ?? false },
           provider: null,
           blobStore: blobs,
           projectStore: store,
+          jobStore: new FirestoreJobStore(db),
+          videoJobs: { pollIntervalMs: 0 },
           auth: { mode: 'google', googleClientId: 'test', verifier: testVerifier, sessionSecret: TEST_SESSION_SECRET, allowedEmails: [] },
         }),
       /ALLOWED_EMAILS/

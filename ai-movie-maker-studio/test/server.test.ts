@@ -11,6 +11,7 @@ import { after, before, describe, it } from 'node:test';
 import { createApp, mediaKeyFromUrl } from '../server/app';
 import { readCookie, sessionCookie, signSession, verifySession } from '../server/auth';
 import { isSafeKey, LocalDiskBlobStore, projectPrefix } from '../server/blobStore';
+import { BlobJobStore } from '../server/jobStore';
 import { buildOptionsFromEnv, ConfigError } from '../server/config';
 import { createGeminiProvider } from '../server/provider';
 import { createStubProvider, listen, makeTestClip, tempDir, TINY_PNG_BASE64 } from './helpers';
@@ -85,10 +86,14 @@ describe('config fails closed', () => {
   });
 });
 
+function devBlobs() {
+  return new LocalDiskBlobStore(tempDir('m-'));
+}
+
 describe('local dev mode (no sign-in, local disk)', () => {
   let srv: { base: string; close: () => void };
   before(async () => {
-    srv = await listen(createApp({ provider: null, blobStore: new LocalDiskBlobStore(tempDir('m-')), projectStore: null, auth: { mode: 'none' } }));
+    srv = await listen(createApp({ provider: null, blobStore: devBlobs(), projectStore: null, jobStore: new BlobJobStore(devBlobs()), auth: { mode: 'none' } }));
   });
   after(() => srv.close());
 
@@ -125,7 +130,14 @@ describe('AI + FFmpeg with stub provider (local disk storage)', () => {
     stub = createStubProvider(makeTestClip(tempDir('clips-'), 'clip.mp4', 'red'));
     mediaDir = tempDir('media-');
     srv = await listen(
-      createApp({ provider: stub.provider, blobStore: new LocalDiskBlobStore(mediaDir), projectStore: null, auth: { mode: 'none', accessToken: 'secret-token' } })
+      createApp({
+        provider: stub.provider,
+        blobStore: new LocalDiskBlobStore(mediaDir),
+        projectStore: null,
+        jobStore: new BlobJobStore(new LocalDiskBlobStore(mediaDir)),
+        videoJobs: { pollIntervalMs: 0 },
+        auth: { mode: 'none', accessToken: 'secret-token' },
+      })
     );
   });
   after(() => srv.close());
@@ -155,15 +167,18 @@ describe('AI + FFmpeg with stub provider (local disk storage)', () => {
     const before = fs.readdirSync(os.tmpdir()).filter((f) => f.startsWith('mms-export-')).length;
     const urls: string[] = [];
     for (const shot of ['SH01', 'SH02']) {
-      stub.resetPolls();
-      const { jobId } = await (
-        await post(srv.base, '/api/generate/shot-video', { projectId: 'proj_1', sceneId: 'S01', shotId: shot, prompt: 'push in', startImage: PNG_DATA_URL }, auth)
-      ).json();
+      const start = await post(
+        srv.base,
+        '/api/generate/shot-video',
+        { projectId: 'proj_1', sceneId: 'S01', shotId: shot, prompt: 'push in', startImage: PNG_DATA_URL, idempotencyKey: `idem-${shot}-0001` },
+        auth
+      );
+      assert.equal(start.status, 201);
+      const { jobId } = await start.json();
       assert.equal((await (await fetch(`${srv.base}/api/generate/video-status/${jobId}`, { headers: auth })).json()).status, 'running');
-      await new Promise((r) => setTimeout(r, 4200));
       const done = await (await fetch(`${srv.base}/api/generate/video-status/${jobId}`, { headers: auth })).json();
       assert.equal(done.status, 'completed');
-      assert.match(done.videoUrl, /^\/api\/media\/users\/local\/projects\/proj_1\/videos\/S01_SH0\d_.*\.mp4$/);
+      assert.match(done.videoUrl, /^\/api\/media\/users\/local\/projects\/proj_1\/videos\/S01_SH0\d_vj_[0-9a-f]{32}\.mp4$/);
       urls.push(done.videoUrl);
     }
     const media = await fetch(srv.base + urls[0], { headers: { Range: 'bytes=0-9' } });
@@ -186,7 +201,7 @@ describe('AI + FFmpeg with stub provider (local disk storage)', () => {
     }
   });
 
-  it('unknown video job ids answer 410', async () => {
-    assert.equal((await fetch(`${srv.base}/api/generate/video-status/nope`, { headers: auth })).status, 410);
+  it('unknown video job ids answer 404', async () => {
+    assert.equal((await fetch(`${srv.base}/api/generate/video-status/nope`, { headers: auth })).status, 404);
   });
 });

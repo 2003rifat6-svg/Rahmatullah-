@@ -297,6 +297,13 @@ export default function App() {
   const handleRemoveCandidate = (kind: ShotKind, key: string, candidateId: string) =>
     patchShot(activeProject.id, kind, key, (item) => removeVersion(item, candidateId));
 
+  const cancelShotVideo = async (key: string) => {
+    const item = activeProject.videoPrompts.parsedItems.find((v) => shotKey(v) === key);
+    if (!item?.backendJobId) return;
+    // The watcher of this shot sees status "cancelled" from the server and marks the shot accordingly.
+    await phase2CloudServices.videoGen.cancelVideoJob(cloudSettings, item.backendJobId);
+  };
+
   const watchVideo = async (projectId: string, key: string, jobId: string, cloud: CloudBackendSettings) => {
     const res = await waitForVideoJob(cloud, jobId, () => cancelRef.current);
     if (res.ok) {
@@ -342,7 +349,7 @@ export default function App() {
         } else {
           const started = await startShotVideo(proj, cloud, item);
           if (started.ok) {
-            patchShot(projectId, 'video', key, (i) => ({ ...i, backendJobId: started.jobId }));
+            patchShot(projectId, 'video', key, (i) => ({ ...i, backendJobId: started.jobId, lastJobId: started.jobId }));
             ok = await watchVideo(projectId, key, started.jobId, cloud);
             if (!ok) error = 'see shot';
           } else {
@@ -614,6 +621,7 @@ export default function App() {
     onUpload: (key: string, url: string, filename: string) => handleUploadOutput(kind, key, url, filename),
     onSelectCandidate: (key: string, id: string) => handleSelectCandidate(kind, key, id),
     onRemoveCandidate: (key: string, id: string) => handleRemoveCandidate(kind, key, id),
+    onCancelJob: (key: string) => void cancelShotVideo(key),
     onSave: () => handleSaveOutputs(kind),
     onToggleLock: toggleSectionLock(kind === 'image' ? 'generatedImagesSection' : 'generatedVideosSection'),
     onBack: goHub,

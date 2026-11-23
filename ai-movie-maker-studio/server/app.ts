@@ -32,6 +32,10 @@ import {
 } from './auth';
 import { BlobStore, isSafeKey, projectPrefix, safeSegment, userPrefix } from './blobStore';
 import { ConflictError, NotFoundError, ProjectStore } from './projectStore';
+import { JobStore, publicJob } from './jobStore';
+import { JobQueue } from './queue';
+import { advanceJob, cancelJob, startVideoJob, VideoJobDeps } from './videoJobs';
+import { logError, safeErrorMessage } from './redact';
 import { InlineImage, parseDataUrl, StudioAiProvider } from './provider';
 
 export type AuthOptions =
@@ -54,6 +58,12 @@ export interface AppOptions {
   provider: StudioAiProvider | null;
   blobStore: BlobStore;
   projectStore: ProjectStore | null;
+  /** Durable video-job storage (Firestore in production, local files in development). */
+  jobStore: JobStore;
+  /** Background queue adapter (default: inline = browser polling drives progress). */
+  queue?: JobQueue;
+  /** Optional tuning (tests use small values). */
+  videoJobs?: { pollIntervalMs?: number; queuedTimeoutMs?: number; maxPollErrors?: number };
   auth: AuthOptions;
   staticDir?: string;
   ffmpegPath?: string;
@@ -61,20 +71,6 @@ export interface AppOptions {
   signedUrls?: boolean;
   crossSiteCookies?: boolean;
   warnings?: string[];
-}
-
-interface VideoJob {
-  id: string;
-  uid: string;
-  projectId: string;
-  sceneId: string;
-  shotId: string;
-  status: 'running' | 'completed' | 'failed';
-  operation: unknown;
-  videoUrl?: string;
-  error?: string;
-  startedAt: string;
-  lastPolledAt: number;
 }
 
 declare module 'express-serve-static-core' {
@@ -147,7 +143,6 @@ export function createApp(opts: AppOptions) {
   }
   const app = express();
   const ffmpegPath = opts.ffmpegPath || 'ffmpeg';
-  const jobs = new Map<string, VideoJob>();
   const store = opts.blobStore;
   const auth = opts.auth;
 
@@ -208,7 +203,9 @@ export function createApp(opts: AppOptions) {
     });
   };
 
-  const ownsKey = (req: Request, key: string) => isSafeKey(key) && key.startsWith(userPrefix(req.user!.uid));
+  /** Internal folders (_body: project bodies, _jobs: dev job files) are never reachable through the file API. */
+  const INTERNAL_KEY = /\/(_body|_jobs)\//;
+  const ownsKey = (req: Request, key: string) => isSafeKey(key) && key.startsWith(userPrefix(req.user!.uid)) && !INTERNAL_KEY.test(key);
 
   const fail = (res: Response, err: unknown, fallback: string) => {
     if (err instanceof ConflictError) return res.status(409).json({ error: err.message, cloudRevision: err.cloudRevision });
@@ -310,12 +307,6 @@ export function createApp(opts: AppOptions) {
   // Everything else under /api: signed-in user + CSRF header (cookie auth).
   app.use('/api', requireUser);
   if (auth.mode === 'google') app.use('/api', requireCsrfHeader);
-
-  const saveMedia = async (uid: string, projectId: string, kind: string, baseName: string, bytes: Uint8Array, mime: string) => {
-    const key = `${projectPrefix(uid, projectId)}${kind}/${safeSegment(baseName)}_${randomUUID().slice(0, 8)}.${extFor(mime)}`;
-    await store.put(key, bytes, mime);
-    return `${MEDIA_ROUTE}${key}`;
-  };
 
   /** Moves every large data: URL inside the project JSON into storage (Firestore docs max 1 MiB). */
   const externalizeMedia = async (uid: string, projectId: string, value: unknown): Promise<unknown> => {
@@ -545,61 +536,88 @@ export function createApp(opts: AppOptions) {
     }
   });
 
+  // ---------- video jobs (durable: Firestore) ----------
+  const jobDeps = (): VideoJobDeps => ({
+    provider: opts.provider!,
+    jobs: opts.jobStore,
+    blobs: store,
+    pollIntervalMs: opts.videoJobs?.pollIntervalMs ?? 4000,
+    queuedTimeoutMs: opts.videoJobs?.queuedTimeoutMs ?? 5 * 60_000,
+    maxPollErrors: opts.videoJobs?.maxPollErrors ?? 5,
+    mediaRoute: MEDIA_ROUTE,
+    queue: opts.queue,
+  });
+  const ID_RE = /^[A-Za-z0-9_-]{1,64}$/;
+  const IDEM_RE = /^[A-Za-z0-9_.:-]{8,128}$/;
+
   app.post('/api/generate/shot-video', json, requireProvider, async (req, res) => {
-    const { projectId, sceneId, shotId, prompt, startImage, aspectRatio, resolution, durationSec } = req.body ?? {};
+    const { projectId, sceneId, shotId, linkedImageKey, prompt, startImage, aspectRatio, resolution, durationSec, idempotencyKey, retryOf } = req.body ?? {};
     if (typeof prompt !== 'string' || !prompt.trim()) return res.status(400).json({ error: 'prompt is required.' });
+    for (const [name, v] of [['projectId', projectId], ['sceneId', sceneId], ['shotId', shotId]] as const) {
+      if (typeof v !== 'string' || !ID_RE.test(v)) return res.status(400).json({ error: `${name} is required (letters, digits, _ and - only).` });
+    }
+    if (typeof idempotencyKey !== 'string' || !IDEM_RE.test(idempotencyKey)) {
+      return res.status(400).json({ error: 'idempotencyKey is required (8-128 characters). The same key never starts a second job.' });
+    }
     const frame = typeof startImage === 'string' ? parseDataUrl(startImage) : null;
     if (!frame) return res.status(400).json({ error: 'startImage (the shot image as a data URL) is required for image-to-video.' });
     try {
-      const operation = await opts.provider!.startVideo({
+      const out = await startVideoJob(jobDeps(), {
+        uid: req.user!.uid,
+        projectId,
+        sceneId,
+        shotId,
+        linkedImageKey: typeof linkedImageKey === 'string' && ID_RE.test(linkedImageKey.replace(/[^A-Za-z0-9_-]/g, '_')) ? linkedImageKey.slice(0, 64) : `${sceneId}-${shotId}`,
+        idempotencyKey,
         prompt,
         startFrame: frame,
         aspectRatio: aspectRatio === '9:16' ? '9:16' : aspectRatio === '16:9' ? '16:9' : undefined,
-        resolution,
-        durationSeconds: Number(durationSec) || undefined,
+        resolution: typeof resolution === 'string' ? resolution : undefined,
+        durationSec: Number(durationSec) || undefined,
+        retryOf: typeof retryOf === 'string' && ID_RE.test(retryOf) ? retryOf : null,
       });
-      const job: VideoJob = {
-        id: `vjob_${randomUUID()}`,
-        uid: req.user!.uid,
-        projectId: safeSegment(projectId, 'project'),
-        sceneId: safeSegment(sceneId),
-        shotId: safeSegment(shotId),
-        status: 'running',
-        operation,
-        startedAt: new Date().toISOString(),
-        lastPolledAt: 0,
-      };
-      jobs.set(job.id, job);
-      res.json({ jobId: job.id, status: job.status });
+      if (out.job.status === 'failed' && !out.reused) {
+        return res.status(502).json({ ...publicJob(out.job), error: out.job.error?.message || 'Could not start video generation.' });
+      }
+      res.status(out.started ? 201 : 200).json({ ...publicJob(out.job), reused: out.reused ?? null });
     } catch (err) {
-      res.status(502).json({ error: err instanceof Error ? err.message : 'Could not start video generation.' });
+      logError('shot-video failed', err);
+      res.status(502).json({ error: `Could not start video generation: ${safeErrorMessage(err)}` });
     }
   });
 
   app.get('/api/generate/video-status/:id', requireProvider, async (req, res) => {
-    const job = jobs.get(String(req.params.id));
-    if (!job || job.uid !== req.user!.uid) {
-      return res.status(410).json({ error: 'Unknown video job (the server may have restarted). Generate this shot again.' });
+    try {
+      const job = await advanceJob(jobDeps(), req.user!.uid, String(req.params.id));
+      if (!job) return res.status(404).json({ error: 'Unknown video job. Generate this shot again.' });
+      res.json(publicJob(job));
+    } catch (err) {
+      logError('video-status failed', err);
+      res.status(500).json({ error: `Could not read the video job: ${safeErrorMessage(err)}` });
     }
-    if (job.status === 'running' && Date.now() - job.lastPolledAt > 4000) {
-      job.lastPolledAt = Date.now();
-      try {
-        const { operation, result } = await opts.provider!.pollVideo(job.operation);
-        job.operation = operation;
-        if (result.done && result.ok) {
-          const bytes = result.video.bytes ?? (await opts.provider!.fetchVideoUri(result.video.uri!));
-          job.videoUrl = await saveMedia(job.uid, job.projectId, 'videos', `${job.sceneId}_${job.shotId}`, bytes, result.video.mimeType);
-          job.status = 'completed';
-        } else if (result.done && !result.ok) {
-          job.status = 'failed';
-          job.error = result.error;
-        }
-      } catch (err) {
-        job.status = 'failed';
-        job.error = err instanceof Error ? err.message : 'Video status check failed.';
-      }
+  });
+
+  app.post('/api/generate/video-cancel/:id', requireProvider, async (req, res) => {
+    try {
+      const jobBefore = await opts.jobStore.get(req.user!.uid, String(req.params.id));
+      if (!jobBefore) return res.status(404).json({ error: 'Unknown video job.' });
+      const job = await cancelJob(jobDeps(), req.user!.uid, jobBefore.id);
+      res.json({ ...publicJob(job ?? jobBefore), note: 'The video provider cannot stop a request it already accepted; its result is discarded.' });
+    } catch (err) {
+      logError('video-cancel failed', err);
+      res.status(500).json({ error: `Could not cancel: ${safeErrorMessage(err)}` });
     }
-    res.json({ jobId: job.id, status: job.status, videoUrl: job.videoUrl, error: job.error, startedAt: job.startedAt });
+  });
+
+  app.get('/api/generate/jobs', async (req, res) => {
+    const projectId = String(req.query.projectId || '');
+    if (!ID_RE.test(projectId)) return res.status(400).json({ error: 'projectId is required.' });
+    try {
+      res.json({ jobs: (await opts.jobStore.listByProject(req.user!.uid, projectId)).map(publicJob) });
+    } catch (err) {
+      logError('list jobs failed', err);
+      res.status(500).json({ error: `Could not list jobs: ${safeErrorMessage(err)}` });
+    }
   });
 
   // ---------- FFmpeg movie export ----------

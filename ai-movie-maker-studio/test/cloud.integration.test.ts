@@ -11,6 +11,7 @@ import assert from 'node:assert/strict';
 import { after, before, describe, it } from 'node:test';
 import { createApp } from '../server/app';
 import { GcsBlobStore } from '../server/blobStore';
+import { FirestoreJobStore } from '../server/jobStore';
 import { FirestoreProjectStore } from '../server/projectStore';
 import { Emulators, emulatorsAvailable, startEmulators } from './emulators';
 import { createStubProvider, listen, makeTestClip, tempDir, TEST_SESSION_SECRET, testVerifier, TINY_PNG_BASE64 } from './helpers';
@@ -77,6 +78,8 @@ describe('Google Cloud integration (Firestore + GCS emulators)', { skip: missing
         provider: stub.provider,
         blobStore,
         projectStore: new FirestoreProjectStore(db, blobStore),
+        jobStore: new FirestoreJobStore(db),
+        videoJobs: { pollIntervalMs: 0 },
         auth: { mode: 'google', googleClientId: 'test', verifier: testVerifier, sessionSecret: TEST_SESSION_SECRET, allowedEmails: ['alice@x.com', 'bob@x.com'] },
       })
     );
@@ -213,12 +216,11 @@ describe('Google Cloud integration (Firestore + GCS emulators)', { skip: missing
   it('video generation result goes to GCS; FFmpeg movie is built from GCS clips and saved to GCS', async () => {
     const urls: string[] = [];
     for (const shot of ['SH01', 'SH02']) {
-      stub.resetPolls();
-      const start = await alice.json('POST', '/api/generate/shot-video', { projectId: 'proj_a', sceneId: 'S01', shotId: shot, prompt: 'pan', startImage: PNG });
+      const start = await alice.json('POST', '/api/generate/shot-video', { projectId: 'proj_a', sceneId: 'S01', shotId: shot, prompt: 'pan', startImage: PNG, idempotencyKey: `int-${shot}-00001` });
+      assert.equal(start.status, 201);
       const id = start.body.jobId;
-      assert.equal((await bob.json('GET', `/api/generate/video-status/${id}`)).status, 410, 'other users cannot see the job');
+      assert.equal((await bob.json('GET', `/api/generate/video-status/${id}`)).status, 404, 'other users cannot see the job');
       await alice.json('GET', `/api/generate/video-status/${id}`);
-      await new Promise((r) => setTimeout(r, 4200));
       const done = await alice.json('GET', `/api/generate/video-status/${id}`);
       assert.equal(done.body.status, 'completed');
       urls.push(done.body.videoUrl);

@@ -10,24 +10,20 @@ import { OAuth2Client } from 'google-auth-library';
 import path from 'node:path';
 import { AppOptions, createApp } from '../server/app';
 import { GcsBlobStore, LocalDiskBlobStore } from '../server/blobStore';
+import { BlobJobStore, FirestoreJobStore } from '../server/jobStore';
 import { FirestoreProjectStore } from '../server/projectStore';
 import { startEmulators } from './emulators';
 import { createStubProvider, makeTestClip, tempDir, TEST_SESSION_SECRET, testVerifier } from './helpers';
 
 const dir = tempDir('e2e-');
-const { provider, resetPolls } = createStubProvider(makeTestClip(dir, 'clip.mp4', 'blue'));
-const wrapped = {
-  ...provider,
-  async startVideo(req: Parameters<typeof provider.startVideo>[0]) {
-    resetPolls();
-    return provider.startVideo(req);
-  },
-};
-
+const { provider } = createStubProvider(makeTestClip(dir, 'clip.mp4', 'blue'));
+const localBlobs = new LocalDiskBlobStore(path.join(dir, 'media'));
 let opts: AppOptions = {
-  provider: wrapped,
-  blobStore: new LocalDiskBlobStore(path.join(dir, 'media')),
+  provider,
+  blobStore: localBlobs,
   projectStore: null,
+  jobStore: new BlobJobStore(localBlobs),
+  videoJobs: { pollIntervalMs: 0 },
   auth: { mode: 'none' },
   staticDir: path.resolve('dist'),
 };
@@ -47,6 +43,7 @@ if (process.env.STUB_CLOUD) {
     ...opts,
     blobStore,
     projectStore: new FirestoreProjectStore(new Firestore({ projectId: 'demo-mms' }), blobStore),
+    jobStore: new FirestoreJobStore(new Firestore({ projectId: 'demo-mms' })),
     auth: { mode: 'google', googleClientId: 'test-client-id', verifier: testVerifier, sessionSecret: TEST_SESSION_SECRET, allowedEmails: ['alice@x.com', 'bob@x.com'] },
   };
 }

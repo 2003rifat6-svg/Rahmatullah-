@@ -72,23 +72,36 @@ export interface ShotVideoRequest {
   prompt: string;
   /** Data URL of the shot image used as the first frame (image-to-video). */
   startImage: string;
+  /** Scene-Shot key of the image this video is made from (e.g. "S01-SH02"). */
+  linkedImageKey: string;
+  /** New for every deliberate click. The server never starts a second job for the same key. */
+  idempotencyKey: string;
+  /** Id of the failed job this run retries (optional). */
+  retryOf?: string;
   aspectRatio: AspectRatio;
   resolution: SupportedResolution;
   durationSec: number;
 }
 
 export interface VideoJobStatus {
-  status: 'running' | 'completed' | 'failed';
+  jobId?: string;
+  status: 'queued' | 'running' | 'completed' | 'failed' | 'cancelled';
   videoUrl?: string;
   error?: string;
+  /** Set when the server returned an existing job instead of starting a new one. */
+  reused?: 'idempotent' | 'active' | null;
 }
 
 export interface IVideoGenerationService {
   startShotVideo(
     cloud: CloudBackendSettings,
     payload: ShotVideoRequest
-  ): Promise<BackendCallResult<{ jobId: string }>>;
+  ): Promise<BackendCallResult<{ jobId: string; reused?: 'idempotent' | 'active' | null }>>;
   getVideoJobStatus(
+    cloud: CloudBackendSettings,
+    jobId: string
+  ): Promise<BackendCallResult<VideoJobStatus>>;
+  cancelVideoJob(
     cloud: CloudBackendSettings,
     jobId: string
   ): Promise<BackendCallResult<VideoJobStatus>>;
@@ -377,12 +390,12 @@ export const phase2CloudServices = {
           headers: jsonHeaders(cloud),
           body: JSON.stringify(payload),
         });
-        const parsed = await handleApiResponse<{ jobId?: string }>(res, 'POST /api/generate/shot-video');
+        const parsed = await handleApiResponse<{ jobId?: string; reused?: 'idempotent' | 'active' | null }>(res, 'POST /api/generate/shot-video');
         if (!parsed.ok) return { ...parsed, data: undefined };
         if (!parsed.data?.jobId) {
           return { ok: false, error: 'Video endpoint did not return a jobId.' };
         }
-        return { ok: true, data: { jobId: parsed.data.jobId } };
+        return { ok: true, data: { jobId: parsed.data.jobId, reused: parsed.data.reused ?? null } };
       } catch (err) {
         return {
           ok: false,
@@ -401,7 +414,7 @@ export const phase2CloudServices = {
           `${conn.baseUrl}/api/generate/video-status/${encodeURIComponent(jobId)}`,
           { headers: authHeaders(cloud) }
         );
-        if (res.status === 410) {
+        if (res.status === 410 || res.status === 404) {
           const body = (await res.json().catch(() => ({}))) as { error?: string };
           return {
             ok: true,
@@ -414,6 +427,22 @@ export const phase2CloudServices = {
           ok: false,
           error: err instanceof Error ? err.message : 'Video status request failed.',
         };
+      }
+    },
+
+    async cancelVideoJob(cloud, jobId) {
+      const conn = assertBackendConnected(cloud);
+      if (!conn.ok) {
+        return { ok: false, requiresBackendSetup: true, error: conn.error };
+      }
+      try {
+        const res = await fetch(`${conn.baseUrl}/api/generate/video-cancel/${encodeURIComponent(jobId)}`, {
+          method: 'POST',
+          headers: authHeaders(cloud),
+        });
+        return await handleApiResponse<VideoJobStatus>(res, 'POST /api/generate/video-cancel');
+      } catch (err) {
+        return { ok: false, error: err instanceof Error ? err.message : 'Cancel request failed.' };
       }
     },
   } satisfies IVideoGenerationService,

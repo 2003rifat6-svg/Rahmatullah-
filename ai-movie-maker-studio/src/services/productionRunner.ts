@@ -45,11 +45,16 @@ export async function generateShotImage(
   return { ok: true, url: res.data.imageUrl };
 }
 
+function newIdempotencyKey(projectId: string, key: string): string {
+  const rand = globalThis.crypto?.randomUUID?.() ?? `${Date.now().toString(36)}${Math.random().toString(36).slice(2, 12)}`;
+  return `${projectId.slice(0, 24)}:${key}:${rand}`.replace(/[^A-Za-z0-9_.:-]/g, '_').slice(0, 120);
+}
+
 export async function startShotVideo(
   project: MovieProject,
   cloud: CloudBackendSettings,
   video: ParsedPromptEntry
-): Promise<{ ok: true; jobId: string } | { ok: false; error: string }> {
+): Promise<{ ok: true; jobId: string; reused: boolean } | { ok: false; error: string }> {
   const img = project.imagePrompts.parsedItems.find((i) => shotKey(i) === (video.linkedImageKey || shotKey(video)));
   if (!img?.generatedUrl) {
     return { ok: false, error: `No image for ${shotKey(video)} — generate or upload it in Generated Images first.` };
@@ -63,12 +68,15 @@ export async function startShotVideo(
     shotId: video.shotId,
     prompt: video.promptText,
     startImage,
+    linkedImageKey: video.linkedImageKey || shotKey(video),
+    idempotencyKey: newIdempotencyKey(project.id, shotKey(video)),
+    retryOf: video.status === 'failed' ? video.lastJobId : undefined,
     aspectRatio: ps.aspectRatio,
     resolution: ps.resolution,
     durationSec: ps.videoDurationSec,
   });
   if (!res.ok || !res.data) return { ok: false, error: res.error || 'Could not start video generation.' };
-  return { ok: true, jobId: res.data.jobId };
+  return { ok: true, jobId: res.data.jobId, reused: Boolean(res.data.reused) };
 }
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
@@ -88,6 +96,7 @@ export async function waitForVideoJob(
     if (!res.ok || !res.data) return { ok: false, error: res.error || 'Video status check failed.' };
     if (res.data.status === 'completed' && res.data.videoUrl) return { ok: true, url: res.data.videoUrl };
     if (res.data.status === 'failed') return { ok: false, error: res.data.error || 'Video generation failed.' };
+    if (res.data.status === 'cancelled') return { ok: false, error: 'This video job was cancelled.' };
     await sleep(intervalMs);
   }
   return { ok: false, error: 'Timed out after 15 minutes waiting for the video.', stillRunning: true };
