@@ -115,7 +115,7 @@ describe('Cloud safety (Firestore + GCS emulators)', { skip: missing ?? false },
     assert.equal(created.status, 201);
     const before = await bodyText('alice1', 'big1');
 
-    const stale = await alice.json('PUT', '/api/projects/big1', { project: big('STALE', 'B'), baseRevision: 0 });
+    const stale = await alice.json('PUT', '/api/projects/big1', { project: big('STALE', 'B'), baseRevision: 4 });
     assert.equal(stale.status, 409);
     assert.equal(stale.body.cloudRevision, 1);
 
@@ -162,7 +162,7 @@ describe('Cloud safety (Firestore + GCS emulators)', { skip: missing ?? false },
 
   it('small project: conflict and failed commit also leave the document unchanged', async () => {
     await alice.json('POST', '/api/projects', { project: { id: 'small1', title: 'S1', story: { rawText: 'one' } } });
-    const conflict = await alice.json('PUT', '/api/projects/small1', { project: { id: 'small1', title: 'S2' }, baseRevision: 0 });
+    const conflict = await alice.json('PUT', '/api/projects/small1', { project: { id: 'small1', title: 'S2' }, baseRevision: 9 });
     assert.equal(conflict.status, 409);
     failNextCommit = true;
     await assert.rejects(store.save('alice1', 'small1', { id: 'small1', title: 'S3' }, { mode: 'update', baseRevision: 1 }), /simulated/);

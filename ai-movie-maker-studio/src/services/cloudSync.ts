@@ -36,7 +36,9 @@ export interface CloudFile {
   url: string;
 }
 
-export type CloudResult<T> = { ok: true; data: T } | { ok: false; status: number; error: string; cloudRevision?: number; signInRequired?: boolean };
+export type CloudResult<T> =
+  | { ok: true; data: T }
+  | { ok: false; status: number; error: string; code?: string; cloudRevision?: number; cloudUpdatedAt?: string; signInRequired?: boolean };
 
 const base = (cloud: CloudBackendSettings) => cloud.backendUrl.trim().replace(/\/+$/, '');
 
@@ -55,7 +57,9 @@ async function call<T>(cloud: CloudBackendSettings, method: string, path: string
         ok: false,
         status: res.status,
         error: String(data.error || `HTTP ${res.status}`),
+        code: typeof data.code === 'string' ? data.code : undefined,
         cloudRevision: typeof data.cloudRevision === 'number' ? data.cloudRevision : undefined,
+        cloudUpdatedAt: typeof data.cloudUpdatedAt === 'string' ? data.cloudUpdatedAt : undefined,
         signInRequired: res.status === 401,
       };
     }
@@ -95,17 +99,18 @@ export const cloudProjects = {
   list: (cloud: CloudBackendSettings) => call<{ projects: CloudProjectMeta[] }>(cloud, 'GET', '/api/projects'),
   get: (cloud: CloudBackendSettings, id: string) =>
     call<{ meta: CloudProjectMeta; project: MovieProject }>(cloud, 'GET', `/api/projects/${encodeURIComponent(id)}`),
-  /** Creates or updates. Without force, a newer cloud copy returns status 409. */
-  save: (cloud: CloudBackendSettings, project: MovieProject, opts: { force?: boolean } = {}) => {
-    const clean = stripLocalOnly(project);
-    return project.cloudRevision === undefined && !opts.force
-      ? call<{ meta: CloudProjectMeta; project: MovieProject }>(cloud, 'POST', '/api/projects', { project: clean })
-      : call<{ meta: CloudProjectMeta; project: MovieProject }>(cloud, 'PUT', `/api/projects/${encodeURIComponent(project.id)}`, {
-          project: clean,
-          baseRevision: project.cloudRevision,
-          force: Boolean(opts.force),
-        });
-  },
+  /** Creates the cloud copy. 409 (revision_conflict) if it already exists. */
+  create: (cloud: CloudBackendSettings, project: MovieProject) =>
+    call<{ meta: CloudProjectMeta; project: MovieProject }>(cloud, 'POST', '/api/projects', { project: stripLocalOnly(project) }),
+  /**
+   * Updates the cloud copy. `baseRevision` (the cloud revision this change is based on) is mandatory;
+   * a different current revision returns 409 and nothing is overwritten.
+   */
+  update: (cloud: CloudBackendSettings, project: MovieProject, baseRevision: number) =>
+    call<{ meta: CloudProjectMeta; project: MovieProject }>(cloud, 'PUT', `/api/projects/${encodeURIComponent(project.id)}`, {
+      project: stripLocalOnly(project),
+      baseRevision,
+    }),
   remove: (cloud: CloudBackendSettings, id: string) => call<{ deletedAt: string }>(cloud, 'DELETE', `/api/projects/${encodeURIComponent(id)}`),
 };
 

@@ -491,21 +491,41 @@ export default function App() {
     setCloudSyncStatus({ status: 'syncing', lastAction: 'update' });
     // Media of this browser (blob: URLs) must be sent as real data so it can go to Cloud Storage.
     const outgoing = await inlineBlobUrls(snapshot);
-    let res = await cloudProjects.save(cloudSettings, outgoing);
-    if (!res.ok && res.status === 409) {
+
+    // 1) normal save: update when this device already knows a cloud revision, otherwise create
+    let res =
+      snapshot.cloudRevision === undefined
+        ? await cloudProjects.create(cloudSettings, outgoing)
+        : await cloudProjects.update(cloudSettings, outgoing, snapshot.cloudRevision);
+    let note = '';
+
+    // 2) the cloud copy was deleted elsewhere: save it again as a new cloud copy (nothing is overwritten)
+    if (!res.ok && res.status === 404 && snapshot.cloudRevision !== undefined) {
+      res = await cloudProjects.create(cloudSettings, outgoing);
+      note = ' The old cloud copy had been deleted, so this is a new cloud copy.';
+    }
+
+    // 3) conflict: the cloud copy changed. Nothing was overwritten. Ask, then retry based on the cloud's current revision.
+    if (!res.ok && res.status === 409 && res.code === 'revision_conflict' && res.cloudRevision !== undefined) {
+      const when = res.cloudUpdatedAt ? new Date(res.cloudUpdatedAt).toLocaleString() : 'unknown time';
       const overwrite = window.confirm(
-        `The cloud copy of "${snapshot.title}" was changed elsewhere (cloud revision ${res.cloudRevision ?? '?'}).\n\nOK = overwrite the cloud copy with this device's version.\nCancel = keep the cloud copy (you can Load it).`
+        `The cloud copy of "${snapshot.title}" was changed elsewhere (cloud revision ${res.cloudRevision}, last saved ${when}). Nothing has been overwritten yet.\n\n` +
+          `OK = replace the cloud copy with this device's version.\nCancel = keep the cloud copy (you can Load it; this device's copy stays as it is).`
       );
       if (!overwrite) {
         setCloudSyncStatus({ status: 'error', lastError: 'Cloud copy is newer — not overwritten.', lastAction: 'update' });
-        return 'Not saved: the cloud copy is newer. Use Load to get it, or save again and choose overwrite.';
+        return 'Not saved: the cloud copy is newer, so nothing was overwritten. Use Load to get it, or save again and choose to replace it. This device keeps its own copy.';
       }
-      res = await cloudProjects.save(cloudSettings, { ...outgoing, cloudRevision: res.cloudRevision ?? outgoing.cloudRevision }, { force: true });
+      // "Replace" = update based on the revision the user was just shown. If the cloud changed again meanwhile, this conflicts again.
+      res = await cloudProjects.update(cloudSettings, outgoing, res.cloudRevision);
     }
+
     if (!res.ok) {
       setCloudSyncStatus({ status: 'error', lastError: res.error, lastAction: 'update' });
       if (res.signInRequired) setCloudUser(null);
-      return `Cloud save failed: ${res.error}`;
+      return res.status === 409
+        ? `Not saved: ${res.error} Your data on this device is unchanged.`
+        : `Cloud save failed: ${res.error}`;
     }
     const { meta, project: stored } = res.data;
     setProjects((prev) =>
@@ -518,7 +538,7 @@ export default function App() {
       })
     );
     setCloudSyncStatus({ status: 'synced', lastSyncedAt: meta.updatedAt, lastAction: 'update' });
-    return `Saved to cloud (revision ${meta.revision}).`;
+    return `Saved to cloud (revision ${meta.revision}).${note}`;
   };
 
   const handleLoadFromCloud = async (id: string): Promise<string> => {

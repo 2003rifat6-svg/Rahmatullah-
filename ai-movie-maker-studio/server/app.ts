@@ -31,7 +31,7 @@ import {
   verifySession,
 } from './auth';
 import { BlobStore, isSafeKey, projectPrefix, safeSegment, userPrefix } from './blobStore';
-import { ConflictError, NotFoundError, ProjectStore } from './projectStore';
+import { ConflictError, IntegrityError, NotFoundError, ProjectDeletingError, ProjectStore, ValidationError } from './projectStore';
 import { JobStore, publicJob } from './jobStore';
 import { JobQueue } from './queue';
 import { advanceJob, cancelJob, startVideoJob, VideoJobDeps } from './videoJobs';
@@ -208,8 +208,11 @@ export function createApp(opts: AppOptions) {
   const ownsKey = (req: Request, key: string) => isSafeKey(key) && key.startsWith(userPrefix(req.user!.uid)) && !INTERNAL_KEY.test(key);
 
   const fail = (res: Response, err: unknown, fallback: string) => {
-    if (err instanceof ConflictError) return res.status(409).json({ error: err.message, cloudRevision: err.cloudRevision });
-    if (err instanceof NotFoundError) return res.status(404).json({ error: err.message });
+    if (err instanceof ConflictError) return res.status(409).json({ error: err.message, code: 'revision_conflict', cloudRevision: err.cloudRevision, cloudUpdatedAt: err.cloudUpdatedAt });
+    if (err instanceof ProjectDeletingError) return res.status(409).json({ error: err.message, code: 'project_deleting' });
+    if (err instanceof ValidationError) return res.status(400).json({ error: err.message, code: 'bad_request' });
+    if (err instanceof IntegrityError) return res.status(500).json({ error: err.message, code: 'integrity_error' });
+    if (err instanceof NotFoundError) return res.status(404).json({ error: err.message, code: 'not_found' });
     console.error(fallback, err);
     return res.status(500).json({ error: `${fallback}: ${err instanceof Error ? err.message : 'unknown error'}` });
   };
@@ -351,17 +354,23 @@ export function createApp(opts: AppOptions) {
     const project = req.body?.project;
     const id = mode === 'create' ? project?.id : req.params.id;
     if (!project || typeof project !== 'object' || typeof id !== 'string' || !id) {
-      return res.status(400).json({ error: 'Body must be { project } with a project id.' });
+      return res.status(400).json({ error: 'Body must be { project } with a project id.', code: 'bad_request' });
     }
-    if (mode === 'update' && project.id !== id) return res.status(400).json({ error: 'project.id does not match the URL.' });
+    if (mode === 'update') {
+      if (project.id !== id) return res.status(400).json({ error: 'project.id does not match the URL.', code: 'bad_request' });
+      const base = req.body?.baseRevision;
+      if (!Number.isInteger(base) || base < 1) {
+        return res.status(400).json({
+          error: 'baseRevision is required for updates: the cloud revision your change is based on. Load the project (or save it for the first time with POST) first.',
+          code: 'base_revision_required',
+        });
+      }
+    }
     try {
       const uid = req.user!.uid;
+      await opts.projectStore!.assertWritable(uid, id);
       const clean = (await externalizeMedia(uid, id, project)) as Record<string, unknown>;
-      const meta = await opts.projectStore!.save(uid, id, clean, {
-        mode,
-        baseRevision: typeof req.body.baseRevision === 'number' ? req.body.baseRevision : undefined,
-        force: req.body.force === true,
-      });
+      const meta = await opts.projectStore!.save(uid, id, clean, mode === 'create' ? { mode } : { mode, baseRevision: req.body.baseRevision });
       res.status(mode === 'create' ? 201 : 200).json({ meta, project: clean, syncedAt: meta.updatedAt });
     } catch (err) {
       fail(res, err, 'Saving project failed');

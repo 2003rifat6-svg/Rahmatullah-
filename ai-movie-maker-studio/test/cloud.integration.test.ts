@@ -111,7 +111,7 @@ describe('Google Cloud integration (Firestore + GCS emulators)', { skip: missing
     assert.equal((await alice.json('GET', '/api/auth/me')).body.user.email, 'alice@x.com');
   });
 
-  it('projects: create → list → get → update (revision) → conflict 409 → force', async () => {
+  it('projects: create → list → get → update (revision) → conflict 409 → explicit replace on the current revision', async () => {
     const created = await alice.json('POST', '/api/projects', { project: project('proj_a', 'Alice Movie') });
     assert.equal(created.status, 201);
     assert.equal(created.body.meta.revision, 1);
@@ -128,7 +128,8 @@ describe('Google Cloud integration (Firestore + GCS emulators)', { skip: missing
     assert.equal(stale.status, 409);
     assert.equal(stale.body.cloudRevision, 2);
 
-    const forced = await alice.json('PUT', '/api/projects/proj_a', { project: project('proj_a', 'forced'), baseRevision: 1, force: true });
+    // "Overwrite" = the user confirmed, then the update is based on the revision the conflict reported (no blind force).
+    const forced = await alice.json('PUT', '/api/projects/proj_a', { project: project('proj_a', 'forced'), baseRevision: stale.body.cloudRevision });
     assert.equal(forced.body.meta.revision, 3);
     const got = await alice.json('GET', '/api/projects/proj_a');
     assert.equal(got.body.project.title, 'forced');
@@ -144,7 +145,9 @@ describe('Google Cloud integration (Firestore + GCS emulators)', { skip: missing
     assert.equal((await bob.json('GET', '/api/projects/proj_a')).status, 404);
     assert.equal((await bob.json('DELETE', '/api/projects/proj_a')).status, 404);
     // Bob "updating" proj_a only creates his own separate copy, Alice's stays untouched
-    await bob.json('PUT', '/api/projects/proj_a', { project: project('proj_a', 'bob copy') });
+    // An update can never create: Bob has no proj_a of his own, so it is refused (404); creating is a separate POST.
+    assert.equal((await bob.json('PUT', '/api/projects/proj_a', { project: project('proj_a', 'bob update'), baseRevision: 1 })).status, 404);
+    await bob.json('POST', '/api/projects', { project: project('proj_a', 'bob copy') });
     assert.equal((await alice.json('GET', '/api/projects/proj_a')).body.project.title, 'forced');
     assert.equal((await bob.json('GET', '/api/projects/proj_a')).body.project.title, 'bob copy');
   });
