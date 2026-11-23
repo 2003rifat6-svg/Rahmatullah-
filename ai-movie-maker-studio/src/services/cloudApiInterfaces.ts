@@ -1,3 +1,5 @@
+import type { StoryPlan, StoryPlanMeta } from '../types/storyPlan';
+import type { ServerJob } from '../utils/jobRecovery';
 import {
   AspectRatio,
   CharacterRefSlotKey,
@@ -105,6 +107,10 @@ export interface IVideoGenerationService {
     cloud: CloudBackendSettings,
     jobId: string
   ): Promise<BackendCallResult<VideoJobStatus>>;
+  listJobs(
+    cloud: CloudBackendSettings,
+    projectId: string
+  ): Promise<BackendCallResult<{ jobs: ServerJob[] }>>;
 }
 
 export interface IFfmpegExportService {
@@ -300,6 +306,28 @@ export const phase2CloudServices = {
     },
   } satisfies IAiChatAssistantService,
 
+  story: {
+    async analyze(
+      cloud: CloudBackendSettings,
+      payload: { story: string; style?: string; maxScenes?: number; shotsPerScene?: number }
+    ): Promise<BackendCallResult<{ plan: StoryPlan; meta: StoryPlanMeta }>> {
+      const conn = assertBackendConnected(cloud);
+      if (!conn.ok) {
+        return { ok: false, requiresBackendSetup: true, error: conn.error };
+      }
+      try {
+        const res = await fetch(`${conn.baseUrl}/api/story/analyze`, {
+          method: 'POST',
+          headers: jsonHeaders(cloud),
+          body: JSON.stringify(payload),
+        });
+        return await handleApiResponse<{ plan: StoryPlan; meta: StoryPlanMeta }>(res, 'POST /api/story/analyze');
+      } catch (err) {
+        return { ok: false, error: err instanceof Error ? err.message : 'Story analysis request failed.' };
+      }
+    },
+  },
+
   imageGen: {
     async generateCharacterReference(cloud, payload) {
       const conn = assertBackendConnected(cloud);
@@ -427,6 +455,19 @@ export const phase2CloudServices = {
           ok: false,
           error: err instanceof Error ? err.message : 'Video status request failed.',
         };
+      }
+    },
+
+    async listJobs(cloud, projectId) {
+      const conn = assertBackendConnected(cloud);
+      if (!conn.ok) {
+        return { ok: false, requiresBackendSetup: true, error: conn.error };
+      }
+      try {
+        const res = await fetch(`${conn.baseUrl}/api/generate/jobs?projectId=${encodeURIComponent(projectId)}`, { headers: authHeaders(cloud) });
+        return await handleApiResponse<{ jobs: ServerJob[] }>(res, 'GET /api/generate/jobs');
+      } catch (err) {
+        return { ok: false, error: err instanceof Error ? err.message : 'Job list request failed.' };
       }
     },
 

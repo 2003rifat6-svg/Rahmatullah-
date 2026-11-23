@@ -15,7 +15,8 @@ export function addVersion(
   item: ParsedPromptEntry,
   url: string,
   source: AssetSource,
-  filename?: string
+  filename?: string,
+  jobId?: string
 ): ParsedPromptEntry {
   const version: ShotAssetCandidate = {
     id: newVersionId(),
@@ -24,6 +25,7 @@ export function addVersion(
     createdAt: new Date().toISOString(),
     fromPrompt: item.promptText,
     filename,
+    ...(jobId ? { jobId } : {}),
   };
   return {
     ...item,

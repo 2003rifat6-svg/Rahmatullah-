@@ -117,7 +117,7 @@ try {
     await page.getByRole('button', { name: 'Lock' }).click();
     await page.getByRole('button', { name: 'Back', exact: true }).click();
     await fillAndLock('image_prompts', 'Image Prompts editor', 'S01 | SH01 | Rahim walks by the river\nS01 | SH02 | Close-up of Rahim smiling');
-    await fillAndLock('video_prompts', 'Video Prompts editor', 'S01 | SH01 | Slow tracking shot of Rahim\nS01 | SH02 | Gentle push-in on Rahim');
+    await fillAndLock('video_prompts', 'Video Prompts editor', 'S01 | SH01 | Slow tracking shot of Rahim\nS01 | SH02 | FAIL_ONCE gentle push-in on Rahim');
     await page.getByTestId('hub-production_settings').click();
     await page.getByRole('button', { name: /^Save/ }).click();
     await page.getByRole('button', { name: 'Lock' }).click();
@@ -215,8 +215,21 @@ try {
     await page.getByRole('button', { name: 'Generate missing (2)' }).click();
     await page.getByRole('button', { name: 'Yes, generate' }).click();
     await page.getByText('Video job running on server…').first().waitFor();
-    await page.getByTestId('shot-status-S01-SH02').filter({ hasText: 'AI generated' }).waitFor({ timeout: 60000 });
+    // S01-SH01 succeeds; S01-SH02 fails on purpose the first time (stub: FAIL_ONCE) -> real error is shown, nothing fake
     await page.getByTestId('shot-status-S01-SH01').filter({ hasText: 'AI generated' }).waitFor({ timeout: 60000 });
+    await page.getByTestId('shot-status-S01-SH02').filter({ hasText: 'Failed' }).waitFor({ timeout: 60000 });
+    await page.getByRole('region', { name: 'Shot S01-SH02' }).getByText(/stub video failure/).waitFor();
+    assert.equal(await page.getByRole('region', { name: 'Shot S01-SH02' }).locator('video').count(), 0, 'a failed shot shows no video');
+    // one click retries every failed shot (a NEW job: new idempotency key, linked to the failed one)
+    const retry = page.getByTestId('retry-failed');
+    assert.match(await retry.innerText(), /Retry failed \(1\)/);
+    await retry.click();
+    await page.getByRole('button', { name: 'Yes, generate' }).click();
+    await page.getByTestId('shot-status-S01-SH02').filter({ hasText: 'AI generated' }).waitFor({ timeout: 60000 });
+    assert.equal(await page.getByTestId('retry-failed').count(), 0, 'nothing left to retry');
+    await page.getByTestId('versions-toggle-S01-SH02').filter({ hasText: '(1)' }).waitFor();
+    await page.getByRole('button', { name: 'Check the server for finished videos' }).click();
+    await page.getByText(/Nothing to recover/).waitFor();
     await page.getByRole('button', { name: 'Assemble Movie (MP4)' }).click();
     await page.getByRole('link', { name: 'Download movie MP4' }).waitFor({ timeout: 30000 });
     const dl = page.waitForEvent('download');
@@ -225,6 +238,71 @@ try {
     assert.match(file.suggestedFilename(), /_Videos\.zip$/);
     await shot('06-generated-videos');
   });
+
+  // ---- AI Story Analysis in its own, fresh project (own browser profile) ----
+  const STORY = 'Rahim is a poor boatman who rows the river every dawn. One night a storm sinks his boat and he saves a young woman named Nila from the water.';
+  const ctx2 = await browser.newContext({ viewport: { width: 390, height: 844 } });
+  const p2 = await ctx2.newPage();
+  p2.on('dialog', (d) => void d.accept());
+  const hub2 = async () => {
+    await p2.getByLabel('Attach files or open project materials').click();
+    await p2.getByRole('button', { name: /OPEN PROJECT MATERIALS/ }).click();
+  };
+  await step('Story analysis: draft only; edits and reload keep it; nothing becomes material until Save', async () => {
+    await p2.goto(BASE);
+    await p2.getByRole('button', { name: 'Cloud and Cost Settings' }).click();
+    await p2.getByRole('button', { name: /Use this app/ }).click();
+    await p2.getByRole('button', { name: 'Test Backend Connection' }).click();
+    await p2.getByText('Connected', { exact: true }).waitFor();
+    await p2.getByRole('button', { name: /Chat/ }).first().click();
+    await hub2();
+    await p2.getByTestId('hub-story').click();
+    await p2.getByLabel('Story Master editor').fill(STORY);
+    await p2.getByRole('button', { name: 'Save' }).click();
+    await p2.getByRole('button', { name: /AI Story Analysis/ }).click();
+    await p2.getByRole('button', { name: 'Analyze', exact: true }).click(); // confirm dialog (paid API notice) auto-accepted
+    await p2.getByText('DRAFT — not saved as project materials').waitFor({ timeout: 30000 });
+    await p2.getByRole('heading', { name: /Scenes & shots \(6 selected\)/ }).waitFor();
+    await p2.getByRole('button', { name: /S01.*Scene 1/ }).waitFor();
+    await p2.screenshot({ path: path.join(shotsDir, '07-story-draft.png'), fullPage: true });
+    const prompt = p2.getByLabel('Image prompt S01-SH01');
+    await prompt.fill('EDITED prompt: Rahim rows at dawn.');
+    await prompt.blur();
+    await p2.waitForTimeout(500);
+    // reload: the (paid) draft and the user's edit survive
+    await p2.reload();
+    await hub2();
+    assert.match(await p2.getByTestId('hub-status-image_prompts').innerText(), /Empty/, 'a draft is not a material');
+    assert.match(await p2.getByTestId('hub-status-characters').innerText(), /Empty/);
+    await p2.getByTestId('hub-story').click();
+    await p2.getByRole('button', { name: /AI Story Analysis/ }).click();
+    await p2.getByText('DRAFT — not saved as project materials').waitFor();
+    assert.equal(await p2.getByLabel('Image prompt S01-SH01').inputValue(), 'EDITED prompt: Rahim rows at dawn.');
+    // leave one shot out, then save as materials
+    await p2.getByRole('button', { name: /S03/ }).click();
+    await p2.getByLabel('Include shot S03-SH01').uncheck();
+    await p2.getByRole('button', { name: 'Save as Project Materials' }).click();
+    await p2.getByText(/Characters added: 2/).waitFor();
+    await p2.getByText(/Image Prompts: 5 shot\(s\) saved/).waitFor();
+    await p2.getByRole('button', { name: 'Story Master' }).click();
+    await p2.getByRole('button', { name: 'Project Materials (back)' }).click();
+    assert.match(await p2.getByTestId('hub-status-image_prompts').innerText(), /Saved · Unlocked/);
+    assert.match(await p2.getByTestId('hub-status-video_prompts').innerText(), /Saved · Unlocked/);
+    assert.match(await p2.getByTestId('hub-characters').innerText(), /2 saved · 0 complete/, 'characters need reference images before they count as complete');
+    assert.doesNotMatch(await p2.getByTestId('hub-status-characters').innerText(), /Locked/);
+    // prompts keep the user's edit and the left-out shot is gone
+    await p2.getByTestId('hub-image_prompts').click();
+    const text = await p2.getByLabel('Image Prompts editor').inputValue();
+    assert.ok(text.includes('S01 | SH01 | EDITED prompt: Rahim rows at dawn.'));
+    assert.ok(!text.includes('S03 | SH01'));
+    assert.equal(text.split('\n').length, 5);
+    await p2.getByRole('button', { name: 'Back', exact: true }).click();
+    // nothing was generated automatically
+    await p2.getByTestId('hub-generated_images').click();
+    assert.equal(await p2.getByText('No output yet').count() >= 5, true);
+    assert.match(await p2.getByTestId('hub-status-generated_images').innerText().catch(() => 'Empty'), /Empty|^$/);
+  });
+  await ctx2.close();
 
   console.log(`\nE2E PASSED. Screenshots: ${shotsDir}`);
 } catch (err) {

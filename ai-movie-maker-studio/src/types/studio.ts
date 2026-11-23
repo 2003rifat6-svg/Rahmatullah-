@@ -3,6 +3,7 @@ export type WorkspaceScreen =
   | 'chat'
   | 'materials_hub'
   | 'story'
+  | 'story_analysis'
   | 'characters'
   | 'character_refs'
   | 'image_prompts'
@@ -85,6 +86,8 @@ export interface ShotAssetCandidate {
   /** Prompt text the asset was produced from (to detect stale outputs). */
   fromPrompt: string;
   filename?: string;
+  /** Backend job that produced this version (AI video), used to recover finished jobs. */
+  jobId?: string;
 }
 
 export interface ParsedPromptEntry {
@@ -254,6 +257,8 @@ export interface MovieProject {
   generatedImagesSection: OutputSectionState;
   generatedVideosSection: OutputSectionState;
   lastBundleSentAt?: string;
+  /** AI story analysis result. A DRAFT: not part of any section or bundle until the user saves it as materials. */
+  storyPlanDraft?: import('./storyPlan').StoryPlanDraft;
   /** Firestore revision of the last cloud save/load (local-only bookkeeping). */
   cloudRevision?: number;
   cloudSyncedAt?: string;

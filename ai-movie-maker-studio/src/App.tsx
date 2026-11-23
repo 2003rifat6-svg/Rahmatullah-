@@ -18,8 +18,9 @@ import { createBlankProject, createSampleProject } from './data/sampleProject';
 import { loadStudioState, normalizeProject, saveStudioState } from './utils/storage';
 import { requestPersistentStorage } from './utils/mediaStore';
 import { cloudAuth, cloudProjects, CloudUser, uploadProjectMedia } from './services/cloudSync';
-import { createId, mergeShotOutputs, parsePromptsFromRawText, shotKey } from './utils/validation';
+import { characterDisplayName, createId, mergeShotOutputs, parsePromptsFromRawText, shotKey } from './utils/validation';
 import { addVersion, removeVersion, selectVersion } from './utils/versions';
+import { applyRecoveredJobs, findRecoverableJobs } from './utils/jobRecovery';
 import { buildMaterialsBundle, DEFAULT_CLOUD_SETTINGS, interpretMainChatMessage } from './services/studioBackend';
 import { phase2CloudServices } from './services/cloudApiInterfaces';
 import { generateShotImage, runPool, startShotVideo, waitForVideoJob } from './services/productionRunner';
@@ -33,6 +34,10 @@ import { currentSelection, GenerationRunState, ShotOutputsScreen } from './compo
 import { ProjectsAndCloudScreen } from './components/ProjectsAndCloudScreen';
 import { ZipImportPreviewModal } from './components/ZipImportPreviewModal';
 import { MaterialsHubScreen } from './components/MaterialsHubScreen';
+import { PlanSelection, StoryAnalysisScreen } from './components/StoryAnalysisScreen';
+import { characterInfoText, hashStory, promptsText } from './utils/storyPlan';
+import type { StoryPlan } from './types/storyPlan';
+import { createEmptyCharacterCard } from './data/sampleProject';
 
 type ShotKind = 'image' | 'video';
 
@@ -200,6 +205,74 @@ export default function App() {
       }));
     };
 
+  // ---------- AI Story Analysis (draft only; nothing is final until the user saves it) ----------
+  const handleAnalyzeStory = async (o: { style: string; maxScenes: number; shotsPerScene: number }): Promise<{ ok: true } | { ok: false; error: string }> => {
+    const proj = activeProject;
+    const res = await phase2CloudServices.story.analyze(cloudSettings, { story: proj.story.rawText, style: o.style, maxScenes: o.maxScenes, shotsPerScene: o.shotsPerScene });
+    if (!res.ok || !res.data) return { ok: false, error: res.error || 'Story analysis failed.' };
+    const { plan, meta } = res.data;
+    // The paid result is kept immediately as a draft, so a reload never loses it.
+    updateProject(proj.id, (p) => ({ ...p, storyPlanDraft: { plan, meta, createdAt: new Date().toISOString(), storyHash: hashStory(proj.story.rawText) } }));
+    return { ok: true };
+  };
+
+  const handleUpdateDraft = (plan: StoryPlan) =>
+    updateActiveProject((p) => (p.storyPlanDraft ? { ...p, storyPlanDraft: { ...p.storyPlanDraft, plan } } : p));
+
+  const handleDiscardDraft = () => updateActiveProject((p) => ({ ...p, storyPlanDraft: undefined }));
+
+  /** The ONLY place where a draft becomes project materials: the user pressed "Save as Project Materials". */
+  const handleApplyPlan = (plan: StoryPlan, sel: PlanSelection): string => {
+    const now = new Date().toISOString();
+    const existing = new Set(activeProject.characters.map((c) => characterDisplayName(c).toLowerCase()));
+    const newCards = sel.characters
+      .filter((c) => !existing.has(c.name.toLowerCase()))
+      .map((c) => {
+        const planChar = plan.characters.find((x) => x.name === c.name);
+        const look = planChar?.consistencyPrompt ?? '';
+        const card = createEmptyCharacterCard();
+        return {
+          ...card,
+          nameAndDetails: c.infoText,
+          savedAt: now,
+          // reference prompts are pre-filled so the user only presses "AI Generate" or uploads photos
+          references: {
+            face: { ...card.references.face, prompt: `Close-up face portrait of ${c.name}: ${look}` },
+            front: { ...card.references.front, prompt: `Full-body front view of ${c.name}: ${look}` },
+            side: { ...card.references.side, prompt: `Full-body side view of ${c.name}: ${look}` },
+            back: { ...card.references.back, prompt: `Full-body back view of ${c.name}: ${look}` },
+          },
+        };
+      });
+    const skipped = sel.characters.length - newCards.length;
+    const excluded = new Set(sel.excludedShots);
+    const imageText = promptsText(plan, 'image', excluded);
+    const videoText = promptsText(plan, 'video', excluded);
+    const shotCount = imageText ? imageText.split('\n').length : 0;
+
+    updateActiveProject((proj) => {
+      let next = proj;
+      if (newCards.length) next = { ...next, characters: [...next.characters, ...newCards] };
+      if (sel.includeImagePrompts && imageText) {
+        const parsed = mergeShotOutputs(parsePromptsFromRawText(imageText, 'image'), next.imagePrompts.parsedItems);
+        next = { ...next, imagePrompts: { ...next.imagePrompts, rawText: imageText, filename: 'ai_story_image_prompts.txt', savedAt: now, locked: false, lockedAt: undefined, parsedItems: parsed } };
+      }
+      if (sel.includeVideoPrompts && videoText) {
+        const parsed = mergeShotOutputs(parsePromptsFromRawText(videoText, 'video', next.imagePrompts.parsedItems), next.videoPrompts.parsedItems);
+        next = { ...next, videoPrompts: { ...next.videoPrompts, rawText: videoText, filename: 'ai_story_video_prompts.txt', savedAt: now, locked: false, lockedAt: undefined, parsedItems: parsed } };
+      }
+      return withHistory(next, `Saved AI story analysis as materials (${newCards.length} character(s), ${shotCount} shot(s))`, now);
+    });
+
+    return [
+      `Saved as project materials (all stay UNLOCKED; nothing was generated):`,
+      `• Characters added: ${newCards.length}${skipped > 0 ? ` (${skipped} already existed and were not changed)` : ''} — they are incomplete until a Face image is saved.`,
+      sel.includeImagePrompts ? `• Image Prompts: ${shotCount} shot(s) saved.` : '• Image Prompts are LOCKED — not changed. Unlock them and save again to apply.',
+      sel.includeVideoPrompts ? `• Video Prompts: ${shotCount} shot(s) saved, linked to the image prompts by Scene/Shot ID.` : '• Video Prompts are LOCKED — not changed.',
+      'Next: add the characters’ reference images, review, then Lock and start production yourself.',
+    ].join('\n');
+  };
+
   // ---------- 2. Character Information ----------
   const handleSaveCharacterInfo = (card: CharacterCard) => {
     const now = new Date().toISOString();
@@ -297,6 +370,17 @@ export default function App() {
   const handleRemoveCandidate = (kind: ShotKind, key: string, candidateId: string) =>
     patchShot(activeProject.id, kind, key, (item) => removeVersion(item, candidateId));
 
+  /** Brings back videos that the server finished but this browser never received. Manual and explicit. */
+  const recoverServerVideos = async (): Promise<string> => {
+    const proj = activeProject;
+    const res = await phase2CloudServices.videoGen.listJobs(cloudSettings, proj.id);
+    if (!res.ok || !res.data) return `Could not ask the server for jobs: ${res.error || 'unknown error'}`;
+    const found = findRecoverableJobs(proj, res.data.jobs);
+    if (found.length === 0) return 'Nothing to recover: every finished video of the server is already in this project.';
+    updateProject(proj.id, (p) => applyRecoveredJobs(p, findRecoverableJobs(p, res.data!.jobs)));
+    return `Recovered ${found.length} finished video(s) from the server as new versions.`;
+  };
+
   const cancelShotVideo = async (key: string) => {
     const item = activeProject.videoPrompts.parsedItems.find((v) => shotKey(v) === key);
     if (!item?.backendJobId) return;
@@ -307,7 +391,7 @@ export default function App() {
   const watchVideo = async (projectId: string, key: string, jobId: string, cloud: CloudBackendSettings) => {
     const res = await waitForVideoJob(cloud, jobId, () => cancelRef.current);
     if (res.ok) {
-      patchShot(projectId, 'video', key, (item) => addVersion(item, res.url, 'cloud_generated'));
+      patchShot(projectId, 'video', key, (item) => addVersion(item, res.url, 'cloud_generated', undefined, jobId));
       return true;
     }
     patchShot(projectId, 'video', key, (item) => ({
@@ -648,6 +732,7 @@ export default function App() {
     onSelectCandidate: (key: string, id: string) => handleSelectCandidate(kind, key, id),
     onRemoveCandidate: (key: string, id: string) => handleRemoveCandidate(kind, key, id),
     onCancelJob: (key: string) => void cancelShotVideo(key),
+    onRecoverJobs: recoverServerVideos,
     onSave: () => handleSaveOutputs(kind),
     onToggleLock: toggleSectionLock(kind === 'image' ? 'generatedImagesSection' : 'generatedVideosSection'),
     onBack: goHub,
@@ -703,6 +788,23 @@ export default function App() {
             onSave={handleSaveStory}
             onToggleLock={toggleSectionLock('story')}
             onBack={goHub}
+            onOpenAnalysis={() => setScreen('story_analysis')}
+          />
+        </div>
+      )}
+
+      {screen === 'story_analysis' && (
+        <div className="px-3 sm:px-5 py-4">
+          <StoryAnalysisScreen
+            key={`${activeProject.id}_analysis`}
+            project={activeProject}
+            cloudSettings={cloudSettings}
+            onAnalyze={handleAnalyzeStory}
+            onUpdateDraft={handleUpdateDraft}
+            onDiscardDraft={handleDiscardDraft}
+            onApply={handleApplyPlan}
+            buildInfoText={(name, plan) => characterInfoText(plan.characters.find((c) => c.name === name)!)}
+            onNavigate={(to) => setScreen(to)}
           />
         </div>
       )}

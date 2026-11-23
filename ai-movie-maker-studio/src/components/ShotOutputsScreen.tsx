@@ -29,6 +29,8 @@ interface Props {
   onRemoveCandidate: (key: string, candidateId: string) => void;
   /** Cancels the running backend video job of a shot. */
   onCancelJob: (key: string) => void;
+  /** Video screen: asks the server for finished videos this project does not have yet. */
+  onRecoverJobs: () => Promise<string>;
   onSave: () => void;
   onToggleLock: (next: boolean) => void;
   onBack: () => void;
@@ -68,6 +70,7 @@ export function ShotOutputsScreen({
   onSelectCandidate,
   onRemoveCandidate,
   onCancelJob,
+  onRecoverJobs,
   onSave,
   onToggleLock,
   onBack,
@@ -115,6 +118,10 @@ export function ShotOutputsScreen({
   const qty = isImage ? project.productionSettings.imageQuantity : project.productionSettings.videoQuantity;
   const slug = sanitizeFolderName(project.title);
   const canEdit = !section.locked && !running;
+
+  const failedKeys = items
+    .filter((i) => i.status === 'failed' && (isImage || imageByKey.get(i.linkedImageKey || shotKey(i))?.generatedUrl))
+    .map(shotKey);
 
   const missingKeys = items
     .filter((i) => !i.generatedUrl && (isImage || imageByKey.get(i.linkedImageKey || shotKey(i))?.generatedUrl))
@@ -318,6 +325,27 @@ export function ShotOutputsScreen({
         </div>
       ) : (
         <>
+          {failedKeys.length > 0 && (
+            <button
+              type="button"
+              disabled={!canEdit || otherRunning}
+              onClick={() => askGenerate(failedKeys)}
+              data-testid="retry-failed"
+              className="w-full min-h-[44px] rounded-xl border border-rose-400/40 bg-rose-500/10 text-rose-200 text-sm font-semibold disabled:opacity-40"
+            >
+              Retry failed ({failedKeys.length})
+            </button>
+          )}
+          {!isImage && connected && (
+            <button
+              type="button"
+              disabled={running}
+              onClick={async () => setNotice({ type: 'info', text: await onRecoverJobs() })}
+              className="w-full min-h-[40px] rounded-xl border border-white/[0.12] bg-[#10131A] text-xs font-semibold text-slate-200 disabled:opacity-40"
+            >
+              Check the server for finished videos
+            </button>
+          )}
           <div className={`grid ${isImage ? 'grid-cols-2' : 'grid-cols-1'} gap-2.5`}>
             <button
               type="button"

@@ -26,6 +26,8 @@ interface SimpleTextModuleScreenProps {
   onSave: (nextText: string, filename?: string) => void;
   onToggleLock: (nextLocked: boolean) => void;
   onBack: () => void;
+  /** Story Master only: opens the AI Story Analysis (draft) screen. */
+  onOpenAnalysis?: () => void;
 }
 
 export function SimpleTextModuleScreen({
@@ -43,6 +45,7 @@ export function SimpleTextModuleScreen({
   onSave,
   onToggleLock,
   onBack,
+  onOpenAnalysis,
 }: SimpleTextModuleScreenProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [draftText, setDraftText] = useState(rawText);
@@ -150,6 +153,19 @@ export function SimpleTextModuleScreen({
           Upload File
         </button>
       </div>
+
+      {kind === 'story' && onOpenAnalysis && (
+        <button
+          type="button"
+          onClick={() => {
+            if (isDirty && !window.confirm('Your latest story edits are not saved. The analysis uses the SAVED story. Open the analysis anyway?')) return;
+            onOpenAnalysis();
+          }}
+          className="w-full min-h-[46px] rounded-xl border border-[#E5A93C]/40 bg-[#E5A93C]/10 hover:bg-[#E5A93C]/20 text-[#FDE68A] text-sm font-semibold"
+        >
+          ✨ AI Story Analysis → characters, scenes, shots, prompts (draft)
+        </button>
+      )}
 
       <textarea
         rows={13}

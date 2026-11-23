@@ -36,6 +36,7 @@ import { JobStore, publicJob } from './jobStore';
 import { JobQueue } from './queue';
 import { advanceJob, cancelJob, startVideoJob, VideoJobDeps } from './videoJobs';
 import { logError, safeErrorMessage } from './redact';
+import { analyzeStory, PipelineError } from './storyPipeline';
 import { corsMiddleware, originGuard, securityHeaders } from './security';
 import { checkDeclared, checkFile, UPLOAD_KINDS, UPLOAD_RULES, UploadKind, MIME_FAMILIES } from './uploads';
 import { limitsFor, QuotaConfig, quotaConfigFromEnv, QuotaError, QuotaGroup, UsageStore } from './usage';
@@ -656,6 +657,29 @@ export function createApp(opts: AppOptions) {
       res.json({ sceneId, shotId, imageUrl: `data:${img.mimeType};base64,${img.base64}` });
     } catch (err) {
       aiFail(res, err, 'Shot image generation failed');
+    }
+  });
+
+  // ---------- story analysis (text only; never starts image/video generation) ----------
+  app.post('/api/story/analyze', jsonStory, requireProvider, async (req, res) => {
+    try {
+      const story = v.text('story', req.body?.story, LIMITS.story, { required: true });
+      if (story.length < 40) throw new RequestError(400, 'The story is too short to analyze (at least 40 characters).', 'story_too_short');
+      const style = v.text('style', req.body?.style, 300);
+      const maxScenes = v.intInRange('maxScenes', req.body?.maxScenes, 1, 12);
+      const shotsPerScene = v.intInRange('shotsPerScene', req.body?.shotsPerScene, 1, 8);
+      await reserve(req, 'story');
+      res.json(await analyzeStory(opts.provider!, story, { style, maxScenes, shotsPerScene }));
+    } catch (err) {
+      if (err instanceof PipelineError) {
+        return res.status(422).json({
+          error: `${err.message} Step: ${err.stage}. ${err.problems.slice(0, 3).join(' ')}`.trim(),
+          code: 'story_analysis_invalid',
+          stage: err.stage,
+          problems: err.problems,
+        });
+      }
+      aiFail(res, err, 'Story analysis failed');
     }
   });
 

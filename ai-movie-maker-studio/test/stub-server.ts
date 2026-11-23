@@ -14,11 +14,16 @@ import { BlobJobStore, FirestoreJobStore } from '../server/jobStore';
 import { BlobUsageStore, FirestoreUsageStore } from '../server/usage';
 import { FirestoreProjectStore } from '../server/projectStore';
 import { startEmulators } from './emulators';
+import { createStoryMock } from './storyMock';
 import { createStubProvider, makeTestClip, tempDir, TEST_SESSION_SECRET, testVerifier } from './helpers';
 
 const dir = tempDir('e2e-');
 const { provider } = createStubProvider(makeTestClip(dir, 'clip.mp4', 'blue'));
 const localBlobs = new LocalDiskBlobStore(path.join(dir, 'media'));
+// Story-analysis stages are answered by the scripted story mock, everything else by the stub provider.
+const storyMock = createStoryMock();
+const stubText = provider.generateText.bind(provider);
+provider.generateText = (system, history, message, o) => (system.includes('[[STAGE:') || message.startsWith('[[STAGE:') ? storyMock.provider.generateText(system, history, message, o) : stubText(system, history, message, o));
 let opts: AppOptions = {
   provider,
   blobStore: localBlobs,
