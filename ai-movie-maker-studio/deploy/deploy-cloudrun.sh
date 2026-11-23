@@ -30,6 +30,7 @@ BUCKET="${BUCKET:-${PROJECT_ID}-movie-studio-media}"
 SA_NAME="${SA_NAME:-movie-studio-run}"
 SA="${SA_NAME}@${PROJECT_ID}.iam.gserviceaccount.com"
 SIGNED_URLS="${SIGNED_URLS:-true}"
+MAX_INSTANCES="${MAX_INSTANCES:-3}"
 
 cat <<INFO
 Project:  ${PROJECT_ID}      Region: ${REGION}
@@ -87,11 +88,17 @@ gcloud run deploy "$SERVICE" --source . --region "$REGION" \
   --service-account "$SA" \
   --allow-unauthenticated \
   --memory 1Gi --cpu 1 --timeout 900 --concurrency 20 \
-  --min-instances 0 --max-instances 1 --session-affinity \
+  --min-instances 0 --max-instances "$MAX_INSTANCES" --session-affinity \
   --set-env-vars "^;^GCS_BUCKET=$BUCKET;FIRESTORE_ENABLED=true;GOOGLE_CLOUD_PROJECT=$PROJECT_ID;GOOGLE_OAUTH_CLIENT_ID=$OAUTH_CLIENT_ID;ALLOWED_EMAILS=$ALLOWED_EMAILS;GCS_SIGNED_URLS=$SIGNED_URLS" \
   --set-secrets "$SECRETS"
 
 URL="$(gcloud run services describe "$SERVICE" --region "$REGION" --format='value(status.url)')"
+
+echo "== 6b. Firestore TTL policies (old video jobs / usage counters are removed automatically; optional)"
+for group in jobs usage; do
+  gcloud firestore fields ttls update expiresAt --collection-group="$group" --enable-ttl --async \
+    || echo "WARNING: could not enable the TTL policy for '$group' (you can do it later in the Firestore console)."
+done
 
 echo "== 7. Bucket CORS for direct browser uploads/downloads"
 sed "s#https://REPLACE-WITH-YOUR-CLOUD-RUN-URL.run.app#$URL#" deploy/cors.json > /tmp/mms-cors.json

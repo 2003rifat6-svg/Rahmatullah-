@@ -1,6 +1,6 @@
 # AI Movie Maker Studio
 
-Mobile-first AI film production studio. Story → Characters (Face / Front / Side / Back references) → Image Prompts → Video Prompts → Production Settings → **Step 1 images** → **Step 2 image-to-video** → ZIP export → FFmpeg movie. Optional **Cloud Sync** (Firestore + Cloud Storage) with **Sign in with Google**.
+Mobile-first AI film production studio. Story → Characters (Face / Front / Side / Back references) → Image Prompts → Video Prompts → Production Settings → **Step 1 images** → **Step 2 image-to-video** → ZIP export → FFmpeg movie. Optional **Cloud Sync** (Firestore + Cloud Storage) with **Sign in with Google**, durable video jobs, per-user quotas, automated story analysis (AI draft) and an installable **PWA**.
 
 > সহজ বাংলা Deploy নির্দেশনা নিচে আছে ("Cloud Run-এ Deploy — ধাপে ধাপে")।
 
@@ -9,15 +9,15 @@ Mobile-first AI film production studio. Story → Characters (Face / Front / Sid
 Node.js 22+ (and `ffmpeg` for movie assembly).
 
 ```bash
-npm install
-cp .env.example .env          # optional: GEMINI_API_KEY for real AI generation
-npm start                     # builds and serves app + API on http://localhost:8787
+npm ci
+cp .env.example .env          # optional: GEMINI_API_KEY (+ STUDIO_ACCESS_TOKEN) for real AI generation
+npm start                     # builds and serves app + API on http://localhost:8787 (this computer only)
 ```
 
 Dev mode with hot reload: `npm run server` (API :8787) + `npm run dev` (app :3000, proxies the API).
 In the app: **Cloud ☁ → "Use this app's own server" → Test Backend Connection**.
 
-Without sign-in configured, everything works locally (saved in the browser's IndexedDB); Cloud Sync stays off.
+Without sign-in configured, everything works locally (browser IndexedDB); Cloud Sync stays off. In this mode the server listens on `127.0.0.1` only, and a real `GEMINI_API_KEY` is refused unless `STUDIO_ACCESS_TOKEN` is set.
 
 ## Cloud Run-এ Deploy — ধাপে ধাপে (সহজ নির্দেশনা)
 
@@ -63,106 +63,126 @@ APIs enabled by the script: `run`, `cloudbuild`, `artifactregistry`, `firestore`
 | Variable | Required on Cloud Run | Meaning |
 |---|---|---|
 | `GCS_BUCKET` | **yes** | Cloud Storage bucket for all media (server refuses to start without it on Cloud Run) |
-| `GOOGLE_OAUTH_CLIENT_ID` | **yes** | OAuth Web client ID for Sign in with Google |
+| `GOOGLE_OAUTH_CLIENT_ID` | **yes** | OAuth Web client id for Sign in with Google |
 | `SESSION_SECRET` (secret) | **yes** | ≥ 32 random chars, signs the HttpOnly login cookie |
-| `FIRESTORE_ENABLED` | yes for Cloud Sync | `true` turns on Firestore project sync |
+| `ALLOWED_EMAILS` | **yes** | comma-separated Google accounts allowed in. Empty / only commas / invalid addresses => the server **refuses to start**; the deploy script checks the same rules before any gcloud command |
+| `FIRESTORE_ENABLED` | **yes** | `true`: projects, durable video jobs and usage counters live in Firestore |
 | `GOOGLE_CLOUD_PROJECT` | recommended | GCP project id |
-| `ALLOWED_EMAILS` | recommended | comma list of Google accounts allowed to sign in |
 | `GEMINI_API_KEY` (secret) | no | empty = AI generation disabled (paid API) |
-| `GCS_SIGNED_URLS` | no | `true` = big uploads/downloads go directly to GCS |
-| `FIRESTORE_DATABASE_ID` | no | non-default Firestore database |
+| `QUOTA_CHAT_PER_MIN` / `_PER_DAY` | no | per user (defaults 20 / 300) |
+| `QUOTA_IMAGE_PER_MIN` / `_PER_DAY` | no | per user (defaults 30 / 400) |
+| `QUOTA_VIDEO_PER_MIN` / `_PER_DAY` | no | per user, Veo (defaults 4 / 40) |
+| `QUOTA_STORY_PER_MIN` / `_PER_DAY` | no | per user, story analysis (defaults 3 / 30) |
+| `QUOTA_PROJECT_IMAGE_PER_DAY` / `QUOTA_PROJECT_VIDEO_PER_DAY` | no | per project (defaults 200 / 20) |
+| `CORS_ORIGINS` | no | exact origins allowed to call the API from another website, e.g. `https://app.example.com`. Default: none (same site only). No wildcards. |
+| `GCS_SIGNED_URLS` | no | `true` = big uploads/downloads go directly to GCS (files are re-checked after upload) |
+| `JOB_QUEUE` | no | only `inline` is implemented (see `server/queue.ts` for the Cloud Tasks / Pub/Sub adapter interface) |
 | `GEMINI_TEXT_MODEL` / `GEMINI_IMAGE_MODEL` / `GEMINI_VIDEO_MODEL` | no | model overrides |
+| `FIRESTORE_DATABASE_ID`, `FFMPEG_PATH` | no | special setups |
 | `PORT` | set by Cloud Run | listen port |
-| `MEDIA_DIR`, `STUDIO_ACCESS_TOKEN`, `CORS_ORIGIN`, `FFMPEG_PATH` | no | local development / special setups |
+| `HOST`, `MEDIA_DIR`, `STUDIO_ACCESS_TOKEN` | no | local development only |
+
+Deploy script settings (not server variables): `PROJECT_ID`, `OAUTH_CLIENT_ID`, `ALLOWED_EMAILS`, `REGION`, `SERVICE`, `BUCKET`, `SA_NAME`, `SIGNED_URLS`, `MAX_INSTANCES` (1–20, default 3). All are validated before the first gcloud command.
 
 ## Security model
 
-- **Sign in with Google** → the server verifies the Google ID token (`google-auth-library`) and sets an **HttpOnly, Secure, SameSite=Lax** signed session cookie (7 days). State-changing requests also need an `X-Requested-With` header (CSRF guard).
-- The user id is the Google account's `sub`, taken **only** from the verified token. All data lives under `users/<uid>/…` in Firestore and in GCS; every request checks that prefix. Other users get 404 for your projects and files.
-- Firestore rules deny all browser access; only the server's service account can read/write. The bucket has public access prevention.
-- Gemini key and session secret are in Secret Manager, never in the frontend.
-- On Cloud Run nothing important is written to the container disk: generated videos and assembled movies go to GCS; FFmpeg's temporary work folder is deleted after every export.
+- **Sign in with Google** → the server verifies the Google ID token (`google-auth-library`) and sets an **HttpOnly, SameSite=Lax** session cookie (**always `Secure` in production**). The account must be in `ALLOWED_EMAILS`; removing an address ends its sessions immediately.
+- The user id is the Google account's `sub`, taken **only** from the verified token. All data lives under `users/<uid>/…` (Firestore + GCS); every request checks that prefix. User ids sent by a client are ignored.
+- **Headers/CSP** on every response (strict Content-Security-Policy: no inline/eval scripts, only Google sign-in as external script, frames denied, `nosniff`, no-referrer, HSTS on https). **CORS**: exact origins only (`CORS_ORIGINS`). **CSRF**: writes need `X-Requested-With` and a same-site/allowed `Origin`.
+- **Quotas & rate limits are durable** (Firestore counters, shared by all instances, survive restarts): per user per minute/day for chat, images, videos (Veo) and story analysis, plus per project per day. Over the limit → HTTP 429 with `Retry-After`. Invalid requests and duplicate video requests use no quota. (Fixed windows can allow a short burst around a window boundary; minute + day limits together bound the spend.) Sign-in attempts are also limited per address (per instance).
+- **Input validation** for prompts, ids, enums, sizes (per-route body limits) and images (PNG/JPEG/WebP by file signature). **Uploads**: allowed types per folder, size caps, magic-byte check, direct (signed-URL) uploads are verified afterwards and deleted if invalid; files are served inline only if image/video, everything else as a download.
+- Secrets (API key, tokens, cookies) are redacted from logs and error answers. Keys live only in Secret Manager / environment, never in the frontend or the ZIP.
+- Nothing important is written to the container disk: videos and movies go to GCS; FFmpeg's temporary folder is deleted after each export.
 
 ## Local save vs Cloud Sync
 
-- The browser (IndexedDB, with localStorage backup) is always the main save — exactly as before, also offline and without sign-in.
-- Cloud Sync is **manual and optional**: Cloud ☁ → *Save to Cloud* / *Load* / *Delete from cloud*. Nothing syncs automatically.
-- Each cloud save increments a **revision**. If another device saved a newer copy, you get a warning and choose: keep the cloud copy (Load it) or overwrite.
-- When a project is saved to the cloud, its images (data URLs) are moved to Cloud Storage and replaced by `/api/media/...` links (Firestore documents are limited to 1 MiB; bodies over 800 KB are stored in GCS automatically).
-- Deleting a project locally does not delete the cloud copy, and *Delete from cloud* keeps the local copy.
+- The browser (IndexedDB) is always the main save — also offline and without sign-in. **Images and videos are kept in a separate IndexedDB store**; the project record holds only small references. **Every generated or uploaded version is kept** (no limit); nothing is deleted automatically. The Cloud ☁ screen shows storage use and offers “Clean unused local files”, which deletes only files no project uses, after confirmation. A warning appears when browser storage is 80% full.
+- Cloud Sync is **manual and optional**: *Save to Cloud* / *Load* / *Delete from cloud*. Media is uploaded to Cloud Storage first, then the small project JSON is saved.
+- Every cloud project has a **revision**. An update **must** state the revision it is based on (`baseRevision`, otherwise 400). If the cloud copy is newer you get a conflict (409) with the cloud revision and time; nothing is overwritten. “Replace” re-sends based on the revision you were shown, so a newer change in between conflicts again. Updates never create a project.
+- Large projects (> 800 KB) store their body as a new GCS object per save (never overwritten); the previous one is removed only after the Firestore commit; a SHA-256 checksum is verified on every read.
+- Delete is two-phase (mark `deleting` → remove files → remove document). While deleting, the project is hidden and cannot be saved; an interrupted delete is resumed automatically (when projects are listed) or by repeating Delete.
+
+## Video jobs
+
+Video generation is a durable job in Firestore (`users/<uid>/jobs/<id>`): job id, project, user, Scene/Shot mapping, status (`queued` / `running` / `completed` / `failed` / `cancelled`), provider operation name, result, error. A restarted or different server instance continues the job from the stored operation name. The browser sends an **idempotency key**; the same key — or a second request for a shot that already has an active job — returns the existing job and never starts a second paid generation. A poll lease prevents two instances from polling/saving the same job. Failed shots can be retried (new job linked by `retryOf`); running jobs can be cancelled (the provider cannot stop a request it already accepted, so that may still be billed; the result is discarded). “Check the server for finished videos” brings back results the browser never received. Progress shown is always the real job status.
+
+## AI story analysis (draft)
+
+Story Master → **AI Story Analysis**: analysis → characters → scenes → shots → image & video prompts (3+ text requests, 1 story-analysis quota). The JSON of every step is validated and, if invalid, sent back to the model for repair (max 2 per step). Scene/Shot ids (`S01`, `SH01`), one image + one video prompt per shot, and each character's fixed description inside every prompt are enforced in code. The result is an editable **draft** kept across reloads; it becomes project materials only when you press *Save as Project Materials* (locked sections are not touched), and it never starts image/video generation.
+
+## PWA
+
+Installable (manifest + icons + service worker), opens offline with all data already on the device, with an offline fallback page. The service worker never caches `/api`, `/media` or `/health`. Safe-area insets are handled; on iPhone Home Screen apps downloads use the share sheet (not tested on a real iPhone).
 
 ## Where things live
 
 | Part | Files |
 |---|---|
-| Main Chat (control centre) | `src/components/MainWorkspaceScreen.tsx` |
-| Project Materials Hub (8 sections + **Send All Materials to Main Chat**) | `src/components/MaterialsHubScreen.tsx`, `src/utils/sections.ts` |
-| 1 Story, 4 Image Prompts, 5 Video Prompts | `src/components/SimpleTextModuleScreen.tsx` |
-| 2 Character Information (unlimited characters) | `src/components/CharacterInfoScreen.tsx` |
-| 3 Character Reference Images (4 slots each) | `src/components/CharacterReferencesScreen.tsx` |
-| 6 Production Settings | `src/components/ProductionSettingsModal.tsx` (page variant) |
-| 7 Generated Images, 8 Generated Videos & Export | `src/components/ShotOutputsScreen.tsx`, `src/services/productionRunner.ts` |
-| Shared Save / Lock / Unlock / Back bar | `src/components/SectionControls.tsx` |
-| Validation, Scene/Shot parsing, bundle rules | `src/utils/validation.ts`, `src/services/studioBackend.ts` |
-| Backend API routes, auth checks | `server/app.ts` |
-| Sign in with Google, session cookie, CSRF | `server/auth.ts` |
-| Firestore project store | `server/projectStore.ts` |
-| Cloud Storage / local-dev file store | `server/blobStore.ts` |
-| Env → config (fails closed on Cloud Run) | `server/config.ts`, `server/index.ts` |
+| Main Chat | `src/components/MainWorkspaceScreen.tsx` |
+| Project Materials Hub (8 sections + **Send All**) | `src/components/MaterialsHubScreen.tsx`, `src/utils/sections.ts` |
+| Story / prompts text sections | `src/components/SimpleTextModuleScreen.tsx` |
+| AI Story Analysis | `src/components/StoryAnalysisScreen.tsx`, `server/storyPipeline.ts`, `src/utils/storyPlan.ts` |
+| Characters, references, settings | `CharacterInfoScreen.tsx`, `CharacterReferencesScreen.tsx`, `ProductionSettingsModal.tsx` |
+| Generated images/videos, versions | `src/components/ShotOutputsScreen.tsx`, `src/utils/versions.ts`, `src/utils/mediaStore.ts`, `src/services/productionRunner.ts` |
+| Local persistence | `src/utils/storage.ts`, `src/utils/mediaStore.ts` |
+| Cloud Sync UI/client | `CloudSyncPanel.tsx`, `src/services/cloudSync.ts` |
+| API routes & checks | `server/app.ts`, `server/validators.ts`, `server/uploads.ts`, `server/security.ts` |
+| Auth | `server/auth.ts` |
+| Projects (Firestore) | `server/projectStore.ts` |
+| Files (GCS / local dev) | `server/blobStore.ts` |
+| Video jobs | `server/jobStore.ts`, `server/videoJobs.ts`, `server/queue.ts` |
+| Quotas | `server/usage.ts` |
+| Config (fails closed) | `server/config.ts`, `server/shared/config-rules.mjs` |
 | Gemini / Veo provider | `server/provider.ts` |
-| Cloud Sync UI + client | `src/components/CloudSyncPanel.tsx`, `src/services/cloudSync.ts` |
-| Deploy | `Dockerfile`, `deploy/deploy-cloudrun.sh`, `deploy/cors.json`, `deploy/firestore.rules` |
+| Deploy | `Dockerfile`, `deploy/deploy-cloudrun.sh`, `deploy/validate-config.mjs`, `deploy/cors.json`, `deploy/firestore.rules` |
+| PWA | `public/manifest.webmanifest`, `public/sw.js`, `public/offline.html`, `public/icons/` |
 
 ## Rules the app follows
 
-- Every section opens **UNLOCKED**. **Save** stores data and never locks. **Lock / Unlock** are separate buttons; Lock needs a clean Save first. Unlock re-enables every text field, upload and AI button.
-- **Back** always returns to Project Materials (asks first if there are unsaved edits). Nothing is ever sent to Main Chat from a section.
-- A new character is only a draft until its **Save Character** is pressed. A character is *complete* when its information is saved **and** a Face image is saved. Incomplete characters never go to Main Chat or to generation.
-- Only the **Send All Materials to Main Chat** button sends materials — as one organised bundle of *saved* content.
-- Image generation (Step 1) and video generation (Step 2) are separate. Each video uses the image of its Scene/Shot as its first frame. Re-saving prompts keeps existing outputs (matched by Scene/Shot ID).
-- No fake AI output or fake progress: without a backend + key, generate buttons explain why they are disabled, and you can upload your own files (marked "Uploaded").
-- The API key exists only on the server. Every paid generation asks for confirmation and shows the number of requests.
+- Every section opens **UNLOCKED**. **Save** never locks. Lock needs a clean Save first; Unlock re-enables everything.
+- **Back** returns to Project Materials; nothing is ever sent to Main Chat by a section.
+- A character is complete when its information AND a Face image are saved; incomplete characters never go to chat or generation.
+- Only **Send All Materials to Main Chat** sends materials (saved content only, as one bundle).
+- Images (Step 1) and videos (Step 2) are separate steps, each confirmed before any paid request.
+- No fake AI output or progress: without backend/key the buttons explain why they are off; uploads are marked “Uploaded”.
 
 ## Backend API
 
-| Method | Path | Auth | What it does |
-|---|---|---|---|
-| GET | `/health` | – | status: Gemini, FFmpeg, auth mode, Cloud Sync, storage |
-| POST | `/api/auth/session` | – | `{ credential }` Google ID token → session cookie |
-| GET | `/api/auth/me` · POST `/api/auth/logout` | cookie | current user · sign out |
-| GET | `/api/projects` | user | list my cloud projects (Firestore) |
-| POST | `/api/projects` | user | create `{ project }` (409 if it exists) |
-| GET | `/api/projects/:id` | user | load |
-| PUT | `/api/projects/:id` | user | update `{ project, baseRevision, force? }` → 409 on conflict |
-| DELETE | `/api/projects/:id` | user | delete document + all its GCS files |
-| GET | `/api/storage/files?projectId=` | user | list files of a project |
-| POST | `/api/storage/upload-url` | user | prepare upload → signed GCS URL or `/api/storage/upload/<key>` |
-| PUT | `/api/storage/upload/<key>` | owner | upload through the server (≤ 30 MB) |
-| GET | `/api/media/<key>` | owner | download / stream (Range), or redirect to a 15-min signed URL |
-| DELETE | `/api/storage/files/<key>` | owner | delete a file |
-| POST | `/api/chat`, `/api/generate-character-ref`, `/api/generate/shot-image`, `/api/generate/shot-video` | user | AI (Gemini / Veo), 503 without key |
-| GET | `/api/generate/video-status/:id` | job owner | real Veo job status; result saved to GCS |
-| POST | `/api/export/mp4` | owner of all clips | FFmpeg join → saved to GCS |
+| Method | Path | What it does |
+|---|---|---|
+| GET | `/health` | status: Gemini, FFmpeg, auth mode, Cloud Sync, storage |
+| POST | `/api/auth/session` · GET `/api/auth/me` · POST `/api/auth/logout` | Google ID token → session cookie |
+| GET / POST | `/api/projects` | list / create (409 if it exists) |
+| GET / PUT / DELETE | `/api/projects/:id` | load / update (**`baseRevision` required**, 409 on conflict) / delete (two-phase) |
+| GET | `/api/storage/files?projectId=` | list files |
+| POST | `/api/storage/upload-url` · `/api/storage/upload-complete` | prepare an upload (type/size checked) · verify a direct upload |
+| PUT | `/api/storage/upload/<key>` | upload through the server (≤ 30 MB, signature checked) |
+| GET / DELETE | `/api/media/<key>` · `/api/storage/files/<key>` | download (Range) / delete, owner only |
+| POST | `/api/chat`, `/api/generate-character-ref`, `/api/generate/shot-image`, `/api/story/analyze` | AI (503 without key, 429 over quota) |
+| POST | `/api/generate/shot-video` | start a durable job (`idempotencyKey` required) |
+| GET / POST | `/api/generate/video-status/:id` · `/api/generate/video-cancel/:id` · GET `/api/generate/jobs?projectId=` | job status / cancel / list |
+| POST | `/api/export/mp4` | FFmpeg join of your stored clips → saved to GCS |
 
 ## Tests
 
 ```bash
-npm run lint                 # TypeScript (app + strict server)
-npm test                     # unit tests: auth, config fail-closed, keys, validation, AI stub, FFmpeg
-npm run emulators:setup      # one time: Firestore emulator + fake-gcs-server
-npm run test:integration     # real Firestore + GCS client libraries against the emulators
-npm run build && npm run test:e2e && npm run test:e2e:cloud   # phone-size browser tests
+npm ci
+npm run verify          # runs everything below and prints PASS / FAIL / SKIPPED (a skipped step is never "passed")
 ```
 
-Stub AI provider and test sign-in verifier live only in `test/`; the real server never uses them.
+Or one by one: `npm run lint` · `npm run test:unit` (unit, security, deployment guard, PWA files, story pipeline, versions) · `npm run emulators:setup` once, then `npm run test:integration` (real Firestore + GCS client libraries on the official emulators: revision conflicts, concurrency, delete recovery, jobs, quotas) · `npm run build` · `npm run test:e2e`, `npm run test:e2e:cloud`, `npm run test:e2e:pwa` (phone-size Chromium; needs `npx playwright install chromium` once).
+
+The stub AI provider, scripted story AI and test sign-in verifier live only in `test/`; the real server never uses them.
 
 ## Known limits
 
-- Not tested against a real Google Cloud project or real Gemini/Veo (no project, billing or API key was used). Firestore and GCS were tested with the official Firestore emulator and fake-gcs-server through the real Google client libraries.
-- The Docker image was not built here (no Docker daemon); its build steps (`npm run build`, `node dist-server/index.mjs`) were run directly.
-- Veo video jobs are tracked in server memory, so the deploy uses `--max-instances 1 --session-affinity`. If the instance restarts during a job, that shot shows an error and can be generated again.
-- Uploads through the server are limited to 30 MB (Cloud Run's 32 MB request limit); with `GCS_SIGNED_URLS=true` the browser uploads directly to GCS.
-- Veo accepts only 16:9 and 9:16 for video.
+- **Not tested against a real Google Cloud project, real Google sign-in, real Gemini or Veo** (no project, billing or API key was used). Firestore and GCS were tested with the official emulators through the real Google client libraries. The Veo operation lookup by name follows the SDK source but was not run against the live API. Signed-URL uploads/downloads and bucket CORS only work on real Cloud Storage.
+- The Docker image was not built here (no Docker daemon); its build and run steps were run by hand.
+- Job progress advances while a browser polls (`JOB_QUEUE=inline`). Jobs are durable, but a result is only saved when something polls; a real background queue needs the adapter in `server/queue.ts` (Cloud Tasks / Pub/Sub, not implemented).
+- Quotas are per user/project; a user could use many project ids, so the per-user limits are the hard cap. The sign-in limiter is per instance.
+- Not designed for thousands of concurrent users: FFmpeg runs inside the web service (1 CPU/1 GB), Gemini/Veo quotas and cost are shared, and no load test was done.
+- Cloud Sync sends one request per media file (≤ 30 MB each; larger files need `GCS_SIGNED_URLS=true`).
+- Veo accepts only 16:9 and 9:16. iPhone Home-Screen download behaviour is untested.
 
 ## বাংলা সারাংশ
 

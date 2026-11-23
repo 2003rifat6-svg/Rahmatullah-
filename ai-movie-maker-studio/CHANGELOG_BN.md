@@ -1,5 +1,25 @@
 # পরিবর্তনের তালিকা (Changelog)
 
+## সংস্করণ ৪.০ — Critical Bug Fix ও উন্নয়ন
+
+### ঠিক করা ত্রুটি (Bug Fix)
+- **Version History:** আগে সর্বোচ্চ ৮টি Version থাকত (`slice(-8)`), নবমটি এলে পুরোনো মুছে যেত। এখন সীমাহীন; কোনো Version নিজে থেকে মোছে না। Version-এর মেটাডেটা Project-এ, বড় ছবি/ভিডিও আলাদা IndexedDB স্টোরে। Reload-এর পরেও সব থাকে। ব্রাউজারের জায়গা ৮০% ভরলে সতর্কবার্তা।
+- **Video Job:** আগে Server-এর মেমোরির `Map`-এ থাকত, Restart-এ হারাত। এখন Firestore-এ স্থায়ী (Job ID, Project, User, সময়, Status, Result, Error, Scene/Shot)। Restart-এর পর অন্য Instance থেকেও চালু থাকে।
+- **Revision Conflict:** `baseRevision` বাদ দিলেও Update চলত। এখন বাধ্যতামূলক (না থাকলে 400)। Mismatch = 409; Update কখনো নতুন Project তৈরি করে না; অন্ধ `force` Overwrite সরানো হয়েছে।
+- **Save/Delete Race:** Delete দুই ধাপে (`deleting` চিহ্ন → ফাইল মোছা → Document মোছা); Delete চলাকালে Save প্রত্যাখ্যাত; মাঝপথে ব্যর্থ Delete নিজে থেকে বা আবার Delete চাপলে শেষ হয়; পুনরুদ্ধার কখনো নতুন তৈরি Project-কে ছোঁয় না; এতিম (Orphan) ফাইল পরিষ্কার।
+- **Deployment Guard:** `ALLOWED_EMAILS`-এ শুধু কমা/স্পেস বা ভুল ইমেইল থাকলে এখন Backend ও Deploy-স্ক্রিপ্ট দুটোই একই নিয়মে থামে (`server/shared/config-rules.mjs`)। প্রথম `gcloud` কমান্ডের আগে সব যাচাই।
+- **CSP-র ভুল (পরীক্ষায় ধরা পড়ে):** `connect-src`-এ `blob:`/`data:` না থাকায় Reload-এর পর সংরক্ষিত ছবির Upload/Download আটকাত। ঠিক করা হয়েছে; E2E এখন CSP-লঙ্ঘনে ব্যর্থ হয়।
+
+### নতুন সুবিধা
+- **স্থায়ী Rate Limit ও Quota (Firestore):** প্রতি ব্যবহারকারী/প্রতি Project, Chat/Image/Video/Story আলাদা, মিনিট ও দিন; সীমা পেরোলে 429 + `Retry-After` + দুই ভাষার বার্তা; Restart-এ হারায় না; বাতিল ও Duplicate অনুরোধে Quota খরচ হয় না।
+- **Security:** Security Header ও কড়া CSP, নির্দিষ্ট Origin-এর CORS, Origin যাচাই (CSRF), Production-এ সবসময় `Secure` Cookie, Secret লুকানো Log, Upload-এর ধরন/আকার/ফাইল-স্বাক্ষর যাচাই, সব Prompt/Metadata যাচাই, Dev-সার্ভার শুধু `127.0.0.1`-এ।
+- **Idempotency ও Job নিয়ন্ত্রণ:** একই Key বা সক্রিয় Shot-এ দ্বিতীয় Paid Job শুরু হয় না; Retry (এক চাপে সব ব্যর্থ Shot), বাতিল, সার্ভারে শেষ হওয়া ভিডিও পুনরুদ্ধার।
+- **AI Story Analysis (খসড়া):** গল্প → চরিত্র → Scene → Shot → Image/Video Prompt; JSON যাচাই ও মেরামত; Scene/Shot ID, চরিত্রের ধারাবাহিকতা ও Image↔Video Mapping কোডে নিশ্চিত; খসড়া সম্পাদনাযোগ্য, শুধু Save চাপলে Materials হয়, Production নিজে থেকে শুরু হয় না।
+- **PWA:** Manifest, আইকন, Service Worker, Offline-এ অ্যাপ খোলা, Offline পেজ; কোনো ব্যক্তিগত ডেটা Cache হয় না। Safe-area ও iPhone Share fallback।
+- Cloud Save-এ ছবি/ভিডিও আলাদা আপলোড (Version সীমাহীন হওয়ায় ৩০ MB অনুরোধ-সীমা এড়াতে)।
+- Queue Adapter ইন্টারফেস (`server/queue.ts`), Deploy-এ `MAX_INSTANCES` ও Firestore TTL ধাপ।
+- `npm run verify`: সব যাচাই চালিয়ে PASS/FAIL/SKIPPED দেখায়। Playwright এখন `package.json`-এ।
+
 ## সংস্করণ ৩.২ — Final Release
 
 - Deploy স্ক্রিপ্ট: `ALLOWED_EMAILS` ফাঁকা বা না দিলে এখন পরিষ্কার বার্তা দিয়ে থামে (আগে `unbound variable` Error আসত; তখনও কিছু তৈরি হতো না)।

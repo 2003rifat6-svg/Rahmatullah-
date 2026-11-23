@@ -107,6 +107,8 @@ describe('deploy script', () => {
     assert.ok(r.calls.length > 5, 'gcloud was called after the confirmation');
     assert.ok(r.calls.some((c) => c.includes('ALLOWED_EMAILS=me@gmail.com,friend@gmail.com;')), 'normalized list is what gets deployed');
     assert.ok(!r.calls.some((c) => /ALLOWED_EMAILS=[^;]* /.test(c)), 'no stray spaces');
+    assert.ok(r.calls.some((c) => c.includes('--max-instances 3')), 'default instance limit is passed');
+    assert.ok(r.calls.some((c) => c.includes('firestore fields ttls update expiresAt --collection-group=jobs')), 'TTL policy for old jobs');
   });
 
   it('valid configuration but the answer is not YES: nothing is run', () => {
@@ -145,6 +147,9 @@ describe('deploy script', () => {
     ['bad BUCKET', { BUCKET: 'Bad Bucket!' }, /BUCKET/],
     ['bad SERVICE', { SERVICE: 'Bad_Service' }, /SERVICE/],
     ['bad SIGNED_URLS', { SIGNED_URLS: 'maybe' }, /SIGNED_URLS/],
+    ['bad MAX_INSTANCES (0)', { MAX_INSTANCES: '0' }, /MAX_INSTANCES/],
+    ['bad MAX_INSTANCES (text)', { MAX_INSTANCES: 'many' }, /MAX_INSTANCES/],
+    ['bad MAX_INSTANCES (too many)', { MAX_INSTANCES: '99' }, /MAX_INSTANCES/],
   ];
   for (const [name, override, re] of invalidOthers) {
     it(`${name}: stops before any gcloud command`, () => {

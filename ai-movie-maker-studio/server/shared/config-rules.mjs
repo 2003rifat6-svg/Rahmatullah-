@@ -82,12 +82,15 @@ export function validateDeployConfig(env) {
   const saName = get('SA_NAME', 'movie-studio-run');
   if (!/^[a-z][a-z0-9-]{4,28}[a-z0-9]$/.test(saName)) errors.push(`SA_NAME "${saName}" is not a valid service account name (6-30 characters).`);
 
+  const maxInstances = get('MAX_INSTANCES', '3');
+  if (!/^[0-9]+$/.test(maxInstances) || Number(maxInstances) < 1 || Number(maxInstances) > 20) errors.push(`MAX_INSTANCES must be a whole number from 1 to 20 (got "${maxInstances}").`);
+
   const signed = get('SIGNED_URLS', 'true');
   if (signed !== 'true' && signed !== 'false') errors.push(`SIGNED_URLS must be true or false (got "${signed}").`);
 
   return {
     errors,
     allowedEmails: emails.emails,
-    values: { projectId, region, service, bucket, saName, signedUrls: signed, oauthClientId: get('OAUTH_CLIENT_ID') },
+    values: { projectId, region, service, bucket, saName, signedUrls: signed, maxInstances, oauthClientId: get('OAUTH_CLIENT_ID') },
   };
 }
