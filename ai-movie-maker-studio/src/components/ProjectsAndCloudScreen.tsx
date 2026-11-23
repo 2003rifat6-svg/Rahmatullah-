@@ -32,6 +32,7 @@ import {
 } from '../utils/zipManager';
 import { ZipImportPreviewModal } from './ZipImportPreviewModal';
 import { CloudSyncPanel } from './CloudSyncPanel';
+import { LocalStoragePanel } from './LocalStoragePanel';
 
 interface ProjectsAndCloudScreenProps {
   mode: 'projects' | 'cloud_settings';
@@ -381,6 +382,8 @@ export function ProjectsAndCloudScreen({
                 </p>
               </div>
             </div>
+
+            <LocalStoragePanel projects={projects} />
 
             {storageStatus.error && (
               <div className="rounded-xl border border-rose-500/40 bg-rose-500/10 px-3.5 py-2.5 text-xs text-rose-200">

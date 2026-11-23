@@ -1,8 +1,9 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { AlertTriangle, Download, Film, Loader2, Sparkles, Square, Trash2, Upload } from 'lucide-react';
 import { CloudBackendSettings, MovieProject, OutputSectionState, ParsedPromptEntry } from '../types/studio';
 import { auditProjectMaterials, selectedCandidate, shotKey } from '../utils/validation';
 import { readAndOptimizeImageFile, triggerDownload } from '../utils/storage';
+import { estimateStorage, formatBytes, StorageEstimate } from '../utils/mediaStore';
 import { exportImagesOnlyZip, exportVideosOnlyZip, sanitizeFolderName } from '../utils/zipManager';
 import { phase2CloudServices, resolveBackendUrl } from '../services/cloudApiInterfaces';
 import { SafeImage } from './SafeImage';
@@ -78,6 +79,19 @@ export function ShotOutputsScreen({
   const [confirmKeys, setConfirmKeys] = useState<string[] | null>(null);
   const [busyExport, setBusyExport] = useState<'zip_images' | 'zip_videos' | 'mp4' | null>(null);
   const [mp4Url, setMp4Url] = useState<string | null>(null);
+  const [openVersions, setOpenVersions] = useState<Record<string, boolean>>({});
+  const [previewIds, setPreviewIds] = useState<Record<string, string | null>>({});
+  const [storage, setStorage] = useState<StorageEstimate | null>(null);
+  const totalVersions = items.reduce((n, i) => n + (i.candidates?.length ?? 0), 0);
+
+  // Browser storage level: versions are never deleted automatically, so the user is told when space runs low.
+  useEffect(() => {
+    let alive = true;
+    void estimateStorage().then((e) => alive && setStorage(e));
+    return () => {
+      alive = false;
+    };
+  }, [totalVersions]);
 
   const selection = currentSelection(items);
   const savedClean = Boolean(section.savedAt) && sameSelection(section.savedSelection, selection);
@@ -248,6 +262,14 @@ export function ShotOutputsScreen({
         </div>
       )}
 
+      {storage && storage.ratio >= 0.8 && (
+        <div role="alert" className="rounded-xl border border-amber-500/40 bg-amber-500/10 p-3 text-xs text-amber-100">
+          Browser storage is {Math.round(storage.ratio * 100)}% full ({formatBytes(storage.usage)} of {formatBytes(storage.quota)}).
+          {storage.ratio >= 0.95 ? ' New outputs may fail to save.' : ''} All versions are kept — nothing is deleted automatically.
+          Free space by removing versions you no longer need, using Cloud ☁ → “Clean unused local files”, or saving the project to the cloud / a ZIP.
+        </div>
+      )}
+
       {blocked && (
         <div className="rounded-xl border border-rose-500/35 bg-rose-500/10 p-3 text-xs text-rose-100 space-y-1">
           <div className="font-semibold">AI generation is blocked until these are fixed:</div>
@@ -321,6 +343,8 @@ export function ShotOutputsScreen({
               const sel = selectedCandidate(item);
               const srcImage = isImage ? undefined : imageByKey.get(item.linkedImageKey || key);
               const stale = sel && sel.fromPrompt !== item.promptText;
+              const versions = item.candidates ?? [];
+              const previewing = previewIds[key] ? versions.find((c) => c.id === previewIds[key]) : undefined;
               const fileId = `out_${kind}_${item.id}`;
               const noSourceImage = !isImage && !srcImage?.generatedUrl;
               return (
@@ -373,11 +397,11 @@ export function ShotOutputsScreen({
                       </div>
                     )}
                     <div className="aspect-video rounded-xl overflow-hidden bg-[#07080B] border border-white/[0.08]">
-                      {item.generatedUrl ? (
+                      {(previewing?.url ?? item.generatedUrl) ? (
                         isImage ? (
-                          <SafeImage src={item.generatedUrl} alt={`Shot ${key}`} className="w-full h-full object-contain" />
+                          <SafeImage src={previewing?.url ?? item.generatedUrl} alt={`Shot ${key}`} className="w-full h-full object-contain" />
                         ) : (
-                          <video src={resolveBackendUrl(cloudSettings, item.generatedUrl)} controls playsInline className="w-full h-full object-contain bg-black" />
+                          <video src={resolveBackendUrl(cloudSettings, (previewing?.url ?? item.generatedUrl)!)} controls playsInline className="w-full h-full object-contain bg-black" />
                         )
                       ) : (
                         <div className="w-full h-full flex items-center justify-center text-[11px] text-slate-500">
@@ -387,37 +411,108 @@ export function ShotOutputsScreen({
                     </div>
                   </div>
 
-                  {(item.candidates?.length ?? 0) > 1 && (
-                    <div className="flex gap-2 overflow-x-auto">
-                      {item.candidates!.map((c, ci) => (
-                        <div key={c.id} className="shrink-0 space-y-1">
-                          <button
-                            type="button"
-                            disabled={!canEdit}
-                            onClick={() => onSelectCandidate(key, c.id)}
-                            aria-label={`Select version ${ci + 1} for ${key}`}
-                            className={`block w-20 aspect-video rounded-md overflow-hidden border-2 ${
-                              c.id === sel?.id ? 'border-[#E5A93C]' : 'border-transparent'
-                            } disabled:opacity-60`}
-                          >
-                            {isImage ? (
-                              <SafeImage src={c.url} alt={`Version ${ci + 1}`} />
-                            ) : (
-                              <span className="w-full h-full flex items-center justify-center bg-[#07080B] text-[10px] text-slate-300">
-                                <Film className="w-3 h-3 mr-1" /> v{ci + 1}
-                              </span>
-                            )}
-                          </button>
-                          <button
-                            type="button"
-                            disabled={!canEdit}
-                            onClick={() => onRemoveCandidate(key, c.id)}
-                            className="w-20 text-[10px] text-rose-300 disabled:opacity-40 inline-flex items-center justify-center gap-0.5"
-                          >
-                            <Trash2 className="w-3 h-3" /> remove
-                          </button>
-                        </div>
-                      ))}
+                  {previewing && (
+                    <p className="text-[11px] text-blue-300">
+                      Previewing v{versions.indexOf(previewing) + 1} — not selected.{' '}
+                      <button type="button" className="underline" onClick={() => setPreviewIds((p) => ({ ...p, [key]: null }))}>
+                        Back to current
+                      </button>
+                    </p>
+                  )}
+
+                  {versions.length > 0 && (
+                    <div>
+                      <button
+                        type="button"
+                        aria-expanded={Boolean(openVersions[key])}
+                        onClick={() => setOpenVersions((o) => ({ ...o, [key]: !o[key] }))}
+                        data-testid={`versions-toggle-${key}`}
+                        className="text-xs font-semibold text-[#E5A93C] underline"
+                      >
+                        {openVersions[key] ? 'Hide' : 'Show'} versions ({versions.length})
+                      </button>
+                      {openVersions[key] && (
+                        <ul aria-label={`Versions of ${key}`} className="mt-2 space-y-2 max-h-72 overflow-y-auto">
+                          {[...versions].map((c, ci) => ({ c, n: ci + 1 })).reverse().map(({ c, n }) => {
+                            const isCurrent = c.id === sel?.id;
+                            return (
+                              <li
+                                key={c.id}
+                                data-testid={`version-${key}-${n}`}
+                                className={`rounded-lg border p-2 flex items-center gap-2.5 ${isCurrent ? 'border-[#E5A93C]/60 bg-[#E5A93C]/5' : 'border-white/[0.08] bg-[#07080B]'}`}
+                              >
+                                <button
+                                  type="button"
+                                  onClick={() => setPreviewIds((p) => ({ ...p, [key]: c.id === sel?.id ? null : c.id }))}
+                                  aria-label={`Preview version ${n} of ${key}`}
+                                  className="w-16 shrink-0 aspect-video rounded overflow-hidden border border-white/[0.1] bg-black"
+                                >
+                                  {isImage ? (
+                                    <SafeImage src={c.url} alt={`Version ${n}`} />
+                                  ) : (
+                                    <video src={resolveBackendUrl(cloudSettings, c.url)} muted preload="metadata" playsInline className="w-full h-full object-cover pointer-events-none" />
+                                  )}
+                                </button>
+                                <div className="min-w-0 flex-1 text-[11px]">
+                                  <div className="font-semibold text-white">
+                                    v{n}
+                                    {isCurrent && <span className="ml-1.5 text-[#E5A93C]">· current</span>}
+                                    {c.fromPrompt !== item.promptText && <span className="ml-1.5 text-amber-300">· older prompt</span>}
+                                  </div>
+                                  <div className="text-slate-400 truncate">
+                                    {new Date(c.createdAt).toLocaleString()} · {c.source === 'cloud_generated' ? 'AI generated' : c.source === 'uploaded' ? 'Uploaded' : 'Sample'}
+                                  </div>
+                                </div>
+                                <div className="flex flex-col gap-1 shrink-0">
+                                  <button
+                                    type="button"
+                                    disabled={!canEdit || isCurrent}
+                                    onClick={() => {
+                                      onSelectCandidate(key, c.id);
+                                      setPreviewIds((p) => ({ ...p, [key]: null }));
+                                    }}
+                                    className="min-h-[30px] px-2 rounded border border-[#E5A93C]/40 text-[10px] font-semibold text-[#FDE68A] disabled:opacity-40"
+                                  >
+                                    Use this
+                                  </button>
+                                  <div className="flex gap-1">
+                                    <button
+                                      type="button"
+                                      aria-label={`Download version ${n} of ${key}`}
+                                      onClick={async () => {
+                                        try {
+                                          const url = resolveBackendUrl(cloudSettings, c.url);
+                                          const blob = await (await fetch(url)).blob();
+                                          triggerDownload(blob, `${slug}_${item.sceneId}_${item.shotId}_v${n}.${extFromUrl(url, isImage ? 'jpg' : 'mp4')}`);
+                                        } catch {
+                                          setNotice({ type: 'error', text: `Could not download v${n} of ${key}.` });
+                                        }
+                                      }}
+                                      className="min-h-[30px] flex-1 px-2 rounded border border-white/[0.12] text-slate-200"
+                                    >
+                                      <Download className="w-3 h-3 mx-auto" />
+                                    </button>
+                                    <button
+                                      type="button"
+                                      disabled={!canEdit}
+                                      aria-label={`Remove version ${n} of ${key}`}
+                                      onClick={() => {
+                                        if (window.confirm(`Remove version v${n} of ${key} from this project? This cannot be undone.`)) {
+                                          onRemoveCandidate(key, c.id);
+                                          setPreviewIds((p) => ({ ...p, [key]: null }));
+                                        }
+                                      }}
+                                      className="min-h-[30px] flex-1 px-2 rounded border border-rose-500/30 text-rose-300 disabled:opacity-40"
+                                    >
+                                      <Trash2 className="w-3 h-3 mx-auto" />
+                                    </button>
+                                  </div>
+                                </div>
+                              </li>
+                            );
+                          })}
+                        </ul>
+                      )}
                     </div>
                   )}
 

@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
 import {
-  AssetSource,
   CharacterCard,
   CharacterRefSlot,
   CharacterRefSlotKey,
@@ -17,8 +16,10 @@ import {
 } from './types/studio';
 import { createBlankProject, createSampleProject } from './data/sampleProject';
 import { loadStudioState, normalizeProject, saveStudioState } from './utils/storage';
+import { inlineBlobUrls, requestPersistentStorage } from './utils/mediaStore';
 import { cloudAuth, cloudProjects, CloudUser } from './services/cloudSync';
 import { createId, mergeShotOutputs, parsePromptsFromRawText, shotKey } from './utils/validation';
+import { addVersion, removeVersion, selectVersion } from './utils/versions';
 import { buildMaterialsBundle, DEFAULT_CLOUD_SETTINGS, interpretMainChatMessage } from './services/studioBackend';
 import { phase2CloudServices } from './services/cloudApiInterfaces';
 import { generateShotImage, runPool, startShotVideo, waitForVideoJob } from './services/productionRunner';
@@ -42,33 +43,6 @@ function withHistory(proj: MovieProject, summary: string, now = new Date().toISO
       ...proj.costAndJobs,
       history: [{ id: createId('hist'), timestamp: now, summary }, ...proj.costAndJobs.history].slice(0, 80),
     },
-  };
-}
-
-function addCandidate(
-  item: ParsedPromptEntry,
-  url: string,
-  source: AssetSource,
-  filename?: string
-): ParsedPromptEntry {
-  const cand = {
-    id: createId('cand'),
-    url,
-    source,
-    createdAt: new Date().toISOString(),
-    fromPrompt: item.promptText,
-    filename,
-  };
-  const candidates = [...(item.candidates ?? []), cand].slice(-8);
-  return {
-    ...item,
-    candidates,
-    selectedCandidateId: cand.id,
-    generatedUrl: url,
-    assetSource: source,
-    status: 'completed',
-    errorMessage: undefined,
-    backendJobId: undefined,
   };
 }
 
@@ -106,7 +80,16 @@ export default function App() {
         const hasActive = saved.projects.some((p) => p.id === saved.activeProjectId);
         setActiveProjectId(hasActive ? saved.activeProjectId : saved.projects[0].id);
         setCloudSettings({ ...DEFAULT_CLOUD_SETTINGS, ...(saved.cloudSettings ?? {}) });
-        setStorageStatus({ ok: true, engine: result.engine, lastSavedAt: saved.savedAt });
+        setStorageStatus({
+          ok: true,
+          engine: result.engine,
+          lastSavedAt: saved.savedAt,
+          quotaWarning: result.missingMedia
+            ? `${result.missingMedia} saved image/video file(s) could not be found in browser storage (they may have been cleared). Restore them from a project ZIP or the cloud copy.`
+            : undefined,
+        });
+        if (result.missingMedia) setStorageAlertDismissed(false);
+        void requestPersistentStorage();
       })
       .finally(() => {
         if (active) setHydrated(true);
@@ -306,32 +289,18 @@ export default function App() {
   };
 
   const handleUploadOutput = (kind: ShotKind, key: string, url: string, filename: string) =>
-    patchShot(activeProject.id, kind, key, (item) => addCandidate(item, url, 'uploaded', filename));
+    patchShot(activeProject.id, kind, key, (item) => addVersion(item, url, 'uploaded', filename));
 
   const handleSelectCandidate = (kind: ShotKind, key: string, candidateId: string) =>
-    patchShot(activeProject.id, kind, key, (item) => {
-      const c = item.candidates?.find((x) => x.id === candidateId);
-      return c ? { ...item, selectedCandidateId: c.id, generatedUrl: c.url, assetSource: c.source } : item;
-    });
+    patchShot(activeProject.id, kind, key, (item) => selectVersion(item, candidateId));
 
   const handleRemoveCandidate = (kind: ShotKind, key: string, candidateId: string) =>
-    patchShot(activeProject.id, kind, key, (item) => {
-      const candidates = (item.candidates ?? []).filter((c) => c.id !== candidateId);
-      const sel = candidates.find((c) => c.id === item.selectedCandidateId) ?? candidates[candidates.length - 1];
-      return {
-        ...item,
-        candidates,
-        selectedCandidateId: sel?.id,
-        generatedUrl: sel?.url,
-        assetSource: sel?.source,
-        status: sel ? 'completed' : 'waiting',
-      };
-    });
+    patchShot(activeProject.id, kind, key, (item) => removeVersion(item, candidateId));
 
   const watchVideo = async (projectId: string, key: string, jobId: string, cloud: CloudBackendSettings) => {
     const res = await waitForVideoJob(cloud, jobId, () => cancelRef.current);
     if (res.ok) {
-      patchShot(projectId, 'video', key, (item) => addCandidate(item, res.url, 'cloud_generated'));
+      patchShot(projectId, 'video', key, (item) => addVersion(item, res.url, 'cloud_generated'));
       return true;
     }
     patchShot(projectId, 'video', key, (item) => ({
@@ -365,7 +334,7 @@ export default function App() {
         if (kind === 'image') {
           const res = await generateShotImage(proj, cloud, item);
           if (res.ok) {
-            patchShot(projectId, 'image', key, (i) => addCandidate(i, res.url, 'cloud_generated'));
+            patchShot(projectId, 'image', key, (i) => addVersion(i, res.url, 'cloud_generated'));
             ok = true;
           } else {
             error = res.error;
@@ -513,7 +482,9 @@ export default function App() {
   const handleSaveActiveToCloud = async (): Promise<string> => {
     const snapshot = activeProject;
     setCloudSyncStatus({ status: 'syncing', lastAction: 'update' });
-    let res = await cloudProjects.save(cloudSettings, snapshot);
+    // Media of this browser (blob: URLs) must be sent as real data so it can go to Cloud Storage.
+    const outgoing = await inlineBlobUrls(snapshot);
+    let res = await cloudProjects.save(cloudSettings, outgoing);
     if (!res.ok && res.status === 409) {
       const overwrite = window.confirm(
         `The cloud copy of "${snapshot.title}" was changed elsewhere (cloud revision ${res.cloudRevision ?? '?'}).\n\nOK = overwrite the cloud copy with this device's version.\nCancel = keep the cloud copy (you can Load it).`
@@ -522,7 +493,7 @@ export default function App() {
         setCloudSyncStatus({ status: 'error', lastError: 'Cloud copy is newer — not overwritten.', lastAction: 'update' });
         return 'Not saved: the cloud copy is newer. Use Load to get it, or save again and choose overwrite.';
       }
-      res = await cloudProjects.save(cloudSettings, snapshot, { force: true });
+      res = await cloudProjects.save(cloudSettings, { ...outgoing, cloudRevision: res.cloudRevision ?? outgoing.cloudRevision }, { force: true });
     }
     if (!res.ok) {
       setCloudSyncStatus({ status: 'error', lastError: res.error, lastAction: 'update' });

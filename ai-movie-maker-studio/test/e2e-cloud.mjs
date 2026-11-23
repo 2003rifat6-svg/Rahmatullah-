@@ -8,8 +8,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import assert from 'node:assert/strict';
-import { createRequire } from 'node:module';
-const { chromium } = createRequire(import.meta.url)('playwright');
+import { chromium } from 'playwright';
 
 const PORT = 8798;
 const BASE = `http://127.0.0.1:${PORT}`;

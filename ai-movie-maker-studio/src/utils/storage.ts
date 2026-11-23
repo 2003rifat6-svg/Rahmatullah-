@@ -10,6 +10,7 @@ import {
 } from '../types/studio';
 import { DEFAULT_CLOUD_SETTINGS } from '../services/studioBackend';
 import { createDefaultProductionSettings } from '../data/sampleProject';
+import { externalizeMedia, MEDIA_STORE, rehydrateMedia } from './mediaStore';
 
 function normalizeOutputSection(sec: OutputSectionState | undefined): OutputSectionState {
   return { ...(sec || {}), locked: Boolean(sec?.locked) };
@@ -68,6 +69,8 @@ export interface PersistedStudioState {
 export interface LoadStudioResult {
   state: PersistedStudioState | null;
   error?: string;
+  /** Saved files referenced by a project but missing from the media store. */
+  missingMedia?: number;
   engine: 'indexeddb' | 'localstorage' | 'none';
 }
 
@@ -137,17 +140,21 @@ export function normalizeProject(proj: MovieProject): MovieProject {
   };
 }
 
-function openStudioDb(): Promise<IDBDatabase> {
+export function openStudioDb(): Promise<IDBDatabase> {
   return new Promise((resolve, reject) => {
     if (typeof indexedDB === 'undefined') {
       reject(new Error('IndexedDB is unavailable in this browser context.'));
       return;
     }
-    const request = indexedDB.open(DB_NAME, 1);
+    // v2 adds the `media` store (large images/videos kept apart from project metadata).
+    const request = indexedDB.open(DB_NAME, 2);
     request.onupgradeneeded = () => {
       const db = request.result;
       if (!db.objectStoreNames.contains(STORE_NAME)) {
         db.createObjectStore(STORE_NAME);
+      }
+      if (!db.objectStoreNames.contains(MEDIA_STORE)) {
+        db.createObjectStore(MEDIA_STORE, { keyPath: 'id' });
       }
     };
     request.onsuccess = () => resolve(request.result);
@@ -173,13 +180,15 @@ export async function loadStudioState(): Promise<LoadStudioResult> {
       }
     );
     if (result && Array.isArray(result.projects) && result.projects.length > 0) {
+      const { state: rehydrated, missing } = await rehydrateMedia(db, result);
       return {
         state: {
-          ...result,
-          projects: result.projects.map(normalizeProject),
-          cloudSettings: result.cloudSettings ?? DEFAULT_CLOUD_SETTINGS,
+          ...rehydrated,
+          projects: rehydrated.projects.map(normalizeProject),
+          cloudSettings: rehydrated.cloudSettings ?? DEFAULT_CLOUD_SETTINGS,
         },
         engine: 'indexeddb',
+        missingMedia: missing.length,
       };
     }
   } catch (err) {
@@ -191,7 +200,17 @@ export async function loadStudioState(): Promise<LoadStudioResult> {
   try {
     const raw = localStorage.getItem(LOCAL_FALLBACK_KEY);
     if (raw) {
-      const parsed = JSON.parse(raw) as PersistedStudioState;
+      let parsed = JSON.parse(raw) as PersistedStudioState;
+      let missingMedia = 0;
+      if (raw.includes('idb://')) {
+        try {
+          const r = await rehydrateMedia(await openStudioDb(), parsed);
+          parsed = r.state;
+          missingMedia = r.missing.length;
+        } catch {
+          missingMedia = -1;
+        }
+      }
       if (Array.isArray(parsed.projects) && parsed.projects.length > 0) {
         return {
           state: {
@@ -200,6 +219,7 @@ export async function loadStudioState(): Promise<LoadStudioResult> {
             cloudSettings: parsed.cloudSettings ?? DEFAULT_CLOUD_SETTINGS,
           },
           engine: 'localstorage',
+          missingMedia: Math.max(0, missingMedia),
         };
       }
     }
@@ -218,16 +238,53 @@ export async function loadStudioState(): Promise<LoadStudioResult> {
   };
 }
 
-export async function saveStudioState(
-  state: PersistedStudioState
+let saving = false;
+let waiting: Array<{ state: PersistedStudioState; resolve: (s: StorageStatus) => void }> = [];
+
+/**
+ * Saves are queued and coalesced: only the newest waiting state is written, and writes never
+ * overlap (an older state can no longer overwrite a newer one).
+ */
+export function saveStudioState(state: PersistedStudioState): Promise<StorageStatus> {
+  return new Promise((resolve) => {
+    waiting.push({ state, resolve });
+    if (!saving) void drainSaves();
+  });
+}
+
+async function drainSaves() {
+  saving = true;
+  try {
+    while (waiting.length > 0) {
+      const batch = waiting;
+      waiting = [];
+      const status = await writeStudioState(batch[batch.length - 1].state);
+      for (const b of batch) b.resolve(status);
+    }
+  } finally {
+    saving = false;
+  }
+}
+
+async function writeStudioState(
+  liveState: PersistedStudioState
 ): Promise<StorageStatus> {
   let idbOk = false;
   let idbError: string | undefined;
   let lsOk = false;
   let lsError: string | undefined;
+  let state = liveState;
 
   try {
     const db = await openStudioDb();
+    // Large media goes to its own store; the project record keeps small references only.
+    try {
+      state = (await externalizeMedia(db, liveState)).persisted;
+    } catch (mediaErr) {
+      state = liveState;
+      idbError = mediaErr instanceof Error ? `media: ${mediaErr.message}` : 'media store write failed';
+      throw mediaErr;
+    }
     await new Promise<void>((resolve, reject) => {
       const tx = db.transaction(STORE_NAME, 'readwrite');
       const store = tx.objectStore(STORE_NAME);
@@ -258,9 +315,9 @@ export async function saveStudioState(
     return {
       ok: true,
       engine: 'indexeddb',
-      lastSavedAt: state.savedAt,
+      lastSavedAt: liveState.savedAt,
       quotaWarning: !lsOk
-        ? `Saved in IndexedDB, but localStorage backup exceeded browser limit (${lsError}). Large images are stored in IndexedDB only; connect Google Cloud Storage in Phase 2 for unlimited cloud persistence.`
+        ? `Saved in IndexedDB, but the small localStorage backup could not be written (${lsError}). Your data is safe in IndexedDB.`
         : undefined,
     };
   }
@@ -269,7 +326,7 @@ export async function saveStudioState(
     return {
       ok: true,
       engine: 'localstorage',
-      lastSavedAt: state.savedAt,
+      lastSavedAt: liveState.savedAt,
       quotaWarning: idbError
         ? `Saved to localStorage (~5MB limit) because IndexedDB failed: ${idbError}.`
         : undefined,

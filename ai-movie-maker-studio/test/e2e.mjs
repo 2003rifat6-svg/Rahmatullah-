@@ -5,9 +5,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import assert from 'node:assert/strict';
-import { createRequire } from 'node:module';
-// Uses the pre-installed Playwright if it is not a project dependency.
-const { chromium } = createRequire(import.meta.url)('playwright');
+import { chromium } from 'playwright';
 
 const PORT = 8799;
 const BASE = `http://127.0.0.1:${PORT}`;
@@ -173,6 +171,42 @@ try {
     await page.getByRole('button', { name: 'Lock' }).click();
     assert.equal(await page.getByRole('button', { name: /Generate missing/ }).isEnabled(), false);
     await shot('05-generated-images');
+    await page.getByRole('button', { name: 'Back', exact: true }).click();
+  });
+
+  await step('Version history: 10 versions kept (old cap was 8), reload keeps all, old version selectable', async () => {
+    await page.getByTestId('hub-generated_images').click(); // previous step ended on the Materials Hub
+    await page.getByRole('button', { name: 'Unlock' }).click();
+    const shotRegion = page.getByRole('region', { name: 'Shot S01-SH01' });
+    for (let n = 2; n <= 10; n++) {
+      await shotRegion.getByRole('button', { name: 'Regenerate' }).click();
+      await page.getByRole('dialog', { name: 'Confirm paid generation' }).getByRole('button', { name: 'Yes, generate' }).click();
+      await page.getByTestId('versions-toggle-S01-SH01').filter({ hasText: `(${n})` }).waitFor({ timeout: 15000 });
+    }
+    await page.getByRole('button', { name: 'Save Selection' }).click();
+    // reload the whole app: versions come back from the separate media store
+    await page.waitForTimeout(500);
+    await page.reload();
+    await openHub();
+    await page.getByTestId('hub-generated_images').click();
+    const toggle = page.getByTestId('versions-toggle-S01-SH01');
+    await toggle.filter({ hasText: '(10)' }).waitFor();
+    await toggle.click();
+    assert.equal(await page.locator('[data-testid^="version-S01-SH01-"]').count(), 10);
+    // every stored version still renders a real image (blob URL from the media store)
+    const loaded = await page.locator('[data-testid^="version-S01-SH01-"] img').evaluateAll((imgs) => imgs.map((i) => i.complete && i.naturalWidth > 0));
+    assert.equal(loaded.length, 10);
+    assert.ok(loaded.every(Boolean), 'all 10 versions load their image after reload');
+    // select the very first version again
+    const v1 = page.getByTestId('version-S01-SH01-1');
+    await v1.getByRole('button', { name: 'Use this' }).click();
+    await v1.getByText('current').waitFor();
+    // removal needs an explicit confirmation and affects only that version
+    await page.getByTestId('version-S01-SH01-10').getByRole('button', { name: /Remove version 10/ }).click();
+    await toggle.filter({ hasText: '(9)' }).waitFor();
+    await page.getByRole('button', { name: 'Save Selection' }).click();
+    await page.getByRole('button', { name: 'Lock' }).click();
+    await shot('05b-versions');
     await page.getByRole('button', { name: 'Back', exact: true }).click();
   });
 
