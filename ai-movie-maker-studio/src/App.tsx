@@ -16,8 +16,8 @@ import {
 } from './types/studio';
 import { createBlankProject, createSampleProject } from './data/sampleProject';
 import { loadStudioState, normalizeProject, saveStudioState } from './utils/storage';
-import { inlineBlobUrls, requestPersistentStorage } from './utils/mediaStore';
-import { cloudAuth, cloudProjects, CloudUser } from './services/cloudSync';
+import { requestPersistentStorage } from './utils/mediaStore';
+import { cloudAuth, cloudProjects, CloudUser, uploadProjectMedia } from './services/cloudSync';
 import { createId, mergeShotOutputs, parsePromptsFromRawText, shotKey } from './utils/validation';
 import { addVersion, removeVersion, selectVersion } from './utils/versions';
 import { buildMaterialsBundle, DEFAULT_CLOUD_SETTINGS, interpretMainChatMessage } from './services/studioBackend';
@@ -489,8 +489,14 @@ export default function App() {
   const handleSaveActiveToCloud = async (): Promise<string> => {
     const snapshot = activeProject;
     setCloudSyncStatus({ status: 'syncing', lastAction: 'update' });
-    // Media of this browser (blob: URLs) must be sent as real data so it can go to Cloud Storage.
-    const outgoing = await inlineBlobUrls(snapshot);
+    // Images/videos go to Cloud Storage first (one by one); the project JSON that follows is small.
+    const media = await uploadProjectMedia(cloudSettings, snapshot);
+    if (!media.ok) {
+      setCloudSyncStatus({ status: 'error', lastError: media.error, lastAction: 'media_upload' });
+      if (media.signInRequired) setCloudUser(null);
+      return `Cloud save failed: ${media.error} Nothing was changed in the cloud.`;
+    }
+    const outgoing = media.project;
 
     // 1) normal save: update when this device already knows a cloud revision, otherwise create
     let res =

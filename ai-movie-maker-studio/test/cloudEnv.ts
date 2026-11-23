@@ -6,6 +6,7 @@ import assert from 'node:assert/strict';
 import { AppOptions, createApp } from '../server/app';
 import { BlobStore, GcsBlobStore } from '../server/blobStore';
 import { FirestoreJobStore } from '../server/jobStore';
+import { FirestoreUsageStore } from '../server/usage';
 import { FirestoreProjectStore } from '../server/projectStore';
 import { Emulators, startEmulators } from './emulators';
 import { createStubProvider, listen, makeTestClip, tempDir, TEST_SESSION_SECRET, testVerifier } from './helpers';
@@ -73,6 +74,7 @@ export async function startCloudEnv(bucket: string, emails = ['alice@x.com', 'bo
         blobStore: b,
         projectStore: store,
         jobStore: new FirestoreJobStore(db),
+        usageStore: new FirestoreUsageStore(db),
         videoJobs: { pollIntervalMs: 0 },
         auth: { mode: 'google', googleClientId: 'test', verifier: testVerifier, sessionSecret: TEST_SESSION_SECRET, allowedEmails: emails },
         ...rest,

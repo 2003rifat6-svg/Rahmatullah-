@@ -144,8 +144,8 @@ export function ShotOutputsScreen({
       const url = await readAndOptimizeImageFile(file, 1920);
       onUpload(key, url, file.name);
     } else {
-      if (file.size > 40 * 1024 * 1024) {
-        setNotice({ type: 'error', text: 'Video file is larger than 40 MB — too big for browser storage.' });
+      if (file.size > 30 * 1024 * 1024) {
+        setNotice({ type: 'error', text: 'Video file is larger than 30 MB (the upload limit for cloud sync).' });
         return;
       }
       const url = await new Promise<string>((resolve, reject) => {

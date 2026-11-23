@@ -10,6 +10,7 @@ import { BlobStore, GcsBlobStore, LocalDiskBlobStore } from './blobStore';
 import { FirestoreProjectStore } from './projectStore';
 import { BlobJobStore, FirestoreJobStore, JobStore } from './jobStore';
 import { InlineJobQueue, SUPPORTED_QUEUES } from './queue';
+import { BlobUsageStore, FirestoreUsageStore, quotaConfigFromEnv, UsageStore } from './usage';
 import { createGeminiProvider } from './provider';
 
 export class ConfigError extends Error {}
@@ -74,16 +75,33 @@ export function buildOptionsFromEnv(env: NodeJS.ProcessEnv = process.env): AppOp
   const jobStore: JobStore = db ? new FirestoreJobStore(db) : new BlobJobStore(blobStore);
   if (!projectStore) warnings.push('Firestore is off (FIRESTORE_ENABLED not true): cloud project sync is disabled and video jobs are kept in local files (single instance, development only).');
 
+  // Rate limits / quotas are durable too (Firestore, or local files in development) — never memory only.
+  const usageStore: UsageStore = db ? new FirestoreUsageStore(db) : new BlobUsageStore(blobStore);
+  let quotas;
+  try {
+    quotas = quotaConfigFromEnv(env);
+  } catch (err) {
+    throw new ConfigError(err instanceof Error ? err.message : 'Invalid QUOTA_* value.');
+  }
+
   const queueName = (env.JOB_QUEUE || 'inline').trim();
   if (!(SUPPORTED_QUEUES as readonly string[]).includes(queueName)) {
     throw new ConfigError(`JOB_QUEUE="${queueName}" is not implemented. Supported: ${SUPPORTED_QUEUES.join(', ')}. See server/queue.ts to add a Cloud Tasks / Pub/Sub adapter.`);
   }
 
+  const provider = createGeminiProvider(env);
+  if (auth.mode === 'none' && provider && !auth.accessToken) {
+    // A paid API key must never sit behind an open endpoint, not even in development.
+    throw new ConfigError('GEMINI_API_KEY is set but sign-in is off and STUDIO_ACCESS_TOKEN is empty. Set STUDIO_ACCESS_TOKEN (or configure Google sign-in) so only you can use the paid API.');
+  }
+
   return {
-    provider: createGeminiProvider(env),
+    provider,
     blobStore,
     projectStore,
     jobStore,
+    usageStore,
+    quotas,
     queue: new InlineJobQueue(),
     auth,
     staticDir: path.resolve('dist'),

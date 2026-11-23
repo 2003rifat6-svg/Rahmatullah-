@@ -14,8 +14,10 @@ try {
 }
 
 const port = Number(process.env.PORT || 8787);
-createApp(options).listen(port, '0.0.0.0', () => {
-  console.log(`AI Movie Maker Studio backend on http://0.0.0.0:${port}`);
+// Without sign-in (development) only this computer may connect. Cloud Run (sign-in required) listens on all interfaces.
+const host = options.auth.mode === 'none' ? process.env.HOST || '127.0.0.1' : '0.0.0.0';
+createApp(options).listen(port, host, () => {
+  console.log(`AI Movie Maker Studio backend on http://${host}:${port}`);
   console.log(`Auth: ${options.auth.mode} · Storage: ${options.blobStore.kind} · Firestore: ${options.projectStore ? 'on' : 'off'}`);
   console.log(
     options.provider

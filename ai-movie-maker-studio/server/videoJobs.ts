@@ -37,6 +37,8 @@ export interface StartVideoInput {
   resolution?: string;
   durationSec?: number;
   retryOf?: string | null;
+  /** Called only when this call creates a NEW job, before the paid provider call (quota). May throw. */
+  reserve?: () => Promise<void>;
 }
 
 export interface StartVideoResult {
@@ -68,6 +70,20 @@ export async function startVideoJob(deps: VideoJobDeps, input: StartVideoInput):
   });
   // Atomic dedupe happened BEFORE the paid provider call: reused jobs never call the provider again.
   if (!created) return { job, started: false, reused: reason };
+
+  if (input.reserve) {
+    try {
+      await input.reserve();
+    } catch (err) {
+      // No paid call happens: release the shot so the user can try again later.
+      await deps.jobs.update(input.uid, job.id, (j) =>
+        ACTIVE.has(j.status)
+          ? { status: 'failed', error: { code: 'quota_exceeded', message: safeErrorMessage(err) }, finishedAt: new Date(now(deps)).toISOString() }
+          : null
+      );
+      throw err;
+    }
+  }
 
   try {
     const { operationName } = await deps.provider.startVideo({

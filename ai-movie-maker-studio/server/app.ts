@@ -36,6 +36,10 @@ import { JobStore, publicJob } from './jobStore';
 import { JobQueue } from './queue';
 import { advanceJob, cancelJob, startVideoJob, VideoJobDeps } from './videoJobs';
 import { logError, safeErrorMessage } from './redact';
+import { checkDeclared, checkFile, UPLOAD_KINDS, UPLOAD_RULES, UploadKind, MIME_FAMILIES } from './uploads';
+import { limitsFor, QuotaConfig, quotaConfigFromEnv, QuotaError, QuotaGroup, UsageStore } from './usage';
+import * as v from './validators';
+import { LIMITS, RequestError } from './validators';
 import { InlineImage, parseDataUrl, StudioAiProvider } from './provider';
 
 export type AuthOptions =
@@ -60,6 +64,10 @@ export interface AppOptions {
   projectStore: ProjectStore | null;
   /** Durable video-job storage (Firestore in production, local files in development). */
   jobStore: JobStore;
+  /** Durable rate-limit / quota counters (Firestore in production, local files in development). */
+  usageStore: UsageStore;
+  /** Quota numbers (default: environment / built-in defaults). */
+  quotas?: QuotaConfig;
   /** Background queue adapter (default: inline = browser polling drives progress). */
   queue?: JobQueue;
   /** Optional tuning (tests use small values). */
@@ -80,7 +88,6 @@ declare module 'express-serve-static-core' {
 }
 
 const MEDIA_ROUTE = '/api/media/';
-const KINDS = new Set(['images', 'videos', 'zips', 'movies', 'assets', 'files']);
 
 function extFor(mime: string): string {
   if (mime.includes('png')) return 'png';
@@ -90,7 +97,10 @@ function extFor(mime: string): string {
   if (mime.includes('webm')) return 'webm';
   if (mime.includes('quicktime')) return 'mov';
   if (mime.includes('zip')) return 'zip';
+  if (mime.includes('gif')) return 'gif';
+  if (mime.includes('pdf')) return 'pdf';
   if (mime.includes('json')) return 'json';
+  if (mime.includes('text/plain')) return 'txt';
   return 'bin';
 }
 
@@ -235,9 +245,58 @@ export function createApp(opts: AppOptions) {
   });
 
   // ---------- auth ----------
-  const json = express.json({ limit: '60mb' });
+  // Request size limits are set per route group (a chat message never needs 60 MB).
+  const parser = (limit: string) => express.json({ limit });
+  const jsonTiny = parser('64kb');
+  const jsonChat = parser('800kb');
+  const jsonStory = parser('400kb');
+  const jsonRef = parser('20mb');
+  const jsonShotImage = parser('40mb');
+  const jsonVideo = parser('12mb');
+  const jsonProject = parser('30mb'); // Cloud Run accepts at most 32 MB per request
+  const quotas = opts.quotas ?? quotaConfigFromEnv();
 
-  app.post('/api/auth/session', json, async (req, res) => {
+  /** Reserves one unit of a quota group. Throws QuotaError (-> 429) when a limit is used up. */
+  const reserve = async (req: Request, group: QuotaGroup, projectId?: string) => {
+    const r = await opts.usageStore.consume(req.user!.uid, limitsFor(quotas, group, projectId));
+    if (!r.allowed) throw new QuotaError(r);
+  };
+
+  /** One place that turns any AI/validation/quota failure into the right HTTP answer. */
+  const aiFail = (res: Response, err: unknown, fallback: string) => {
+    if (err instanceof RequestError) return res.status(err.status).json({ error: err.message, code: err.code });
+    if (err instanceof QuotaError) {
+      res.setHeader('Retry-After', String(err.detail.retryAfterSec));
+      return res.status(429).json({
+        error: err.message,
+        code: 'quota_exceeded',
+        limit: err.detail.limit,
+        window: err.detail.key,
+        resetAt: err.detail.resetAt,
+        retryAfterSec: err.detail.retryAfterSec,
+      });
+    }
+    logError(fallback, err);
+    return res.status(502).json({ error: `${fallback}: ${safeErrorMessage(err)}` });
+  };
+
+  // Sign-in is the only endpoint reachable without a session: cap attempts per address
+  // (per instance, supplementary protection only — the real quotas above are durable).
+  const signInHits = new Map<string, { n: number; reset: number }>();
+  const signInLimiter = (req: Request, res: Response, next: NextFunction) => {
+    const now = Date.now();
+    const ip = req.ip || 'unknown';
+    const e = signInHits.get(ip);
+    if (!e || e.reset < now) signInHits.set(ip, { n: 1, reset: now + 60_000 });
+    else if (++e.n > 30) {
+      res.setHeader('Retry-After', String(Math.ceil((e.reset - now) / 1000)));
+      return res.status(429).json({ error: 'Too many sign-in attempts. Please wait a minute.', code: 'rate_limited' });
+    }
+    if (signInHits.size > 5000) for (const [k, x] of signInHits) if (x.reset < now) signInHits.delete(k);
+    next();
+  };
+
+  app.post('/api/auth/session', signInLimiter, jsonTiny, async (req, res) => {
     if (auth.mode !== 'google') return res.status(503).json({ error: 'Sign-in is not configured on this server.' });
     const credential = req.body?.credential;
     if (typeof credential !== 'string' || credential.length < 10) return res.status(400).json({ error: 'credential is required.' });
@@ -281,7 +340,10 @@ export function createApp(opts: AppOptions) {
       if (opts.signedUrls && store.signedReadUrl && req.query.inline !== '1') {
         return res.redirect(302, await store.signedReadUrl(key, 15 * 60));
       }
-      res.setHeader('Content-Type', info.contentType);
+      // Only known-safe types are served inline; anything else is a download, never rendered by the browser.
+      const inline = Object.prototype.hasOwnProperty.call(MIME_FAMILIES, info.contentType) && info.contentType !== 'text/plain' && info.contentType !== 'application/json';
+      res.setHeader('Content-Type', inline ? info.contentType : 'application/octet-stream');
+      if (!inline) res.setHeader('Content-Disposition', `attachment; filename="${path.basename(key)}"`);
       res.setHeader('Accept-Ranges', 'bytes');
       res.setHeader('Cache-Control', 'private, max-age=3600');
       if (req.query.download === '1') res.setHeader('Content-Disposition', `attachment; filename="${path.basename(key)}"`);
@@ -376,8 +438,8 @@ export function createApp(opts: AppOptions) {
       fail(res, err, 'Saving project failed');
     }
   };
-  projectRouter.post('/', json, saveHandler('create'));
-  projectRouter.put('/:id', json, saveHandler('update'));
+  projectRouter.post('/', jsonProject, saveHandler('create'));
+  projectRouter.put('/:id', jsonProject, saveHandler('update'));
 
   projectRouter.get('/:id', async (req, res) => {
     try {
@@ -414,35 +476,86 @@ export function createApp(opts: AppOptions) {
     }
   });
 
-  app.post('/api/storage/upload-url', json, async (req, res) => {
-    const { projectId, kind, filename, contentType } = req.body ?? {};
-    if (!projectId || !KINDS.has(String(kind))) return res.status(400).json({ error: 'projectId and a valid kind are required.' });
-    const type = String(contentType || 'application/octet-stream');
-    const base = safeSegment(String(filename || 'file').replace(/\.[^.]+$/, ''));
-    const key = `${projectPrefix(req.user!.uid, projectId)}${kind}/${base}_${randomUUID().slice(0, 8)}.${extFor(type) === 'bin' ? safeSegment(String(filename).split('.').pop(), 'bin') : extFor(type)}`;
+  app.post('/api/storage/upload-url', jsonTiny, async (req, res) => {
     try {
+      const projectId = v.id('projectId', req.body?.projectId, { required: true })!;
+      const kind = v.oneOf('kind', req.body?.kind, UPLOAD_KINDS, { required: true })!;
+      const size = v.intInRange('size', req.body?.size, 1, UPLOAD_RULES[kind].maxBytes);
+      const filename = v.text('filename', req.body?.filename, 120);
+      const declared = checkDeclared(kind, String(req.body?.contentType || ''), size);
+      if (!declared.ok) throw new RequestError(declared.status, declared.error, declared.status === 413 ? 'payload_too_large' : 'unsupported_type');
+      const hash = typeof req.body?.contentHash === 'string' && /^[0-9a-f]{24}$/.test(req.body.contentHash) ? req.body.contentHash : null;
+      // The extension comes from the verified type, never from the user's file name.
+      const ext = extFor(declared.mime);
+      const base = safeSegment(filename.replace(/\.[^.]+$/, ''), 'file');
+      const key =
+        kind === 'assets' && hash
+          ? `${projectPrefix(req.user!.uid, projectId)}assets/${hash}.${ext}` // content-addressed: re-uploading the same bytes is harmless
+          : `${projectPrefix(req.user!.uid, projectId)}${kind}/${base}_${randomUUID().slice(0, 8)}.${ext}`;
       if (opts.signedUrls && store.signedUploadUrl) {
-        // Direct browser → GCS upload (no 32 MB Cloud Run request limit). Bucket needs CORS (deploy/cors.json).
-        const url = await store.signedUploadUrl(key, type, 15 * 60);
-        return res.json({ key, method: 'PUT', url, headers: { 'Content-Type': type }, direct: true, mediaUrl: `${MEDIA_ROUTE}${key}` });
+        // Direct browser -> GCS upload (no 32 MB Cloud Run limit). The URL only accepts this type and size range;
+        // the file is checked again by /api/storage/upload-complete. Bucket needs CORS (deploy/cors.json).
+        const url = await store.signedUploadUrl(key, declared.mime, 15 * 60, UPLOAD_RULES[kind].maxBytes);
+        return res.json({
+          key,
+          method: 'PUT',
+          url,
+          headers: { 'Content-Type': declared.mime, 'x-goog-content-length-range': `0,${UPLOAD_RULES[kind].maxBytes}` },
+          direct: true,
+          mediaUrl: `${MEDIA_ROUTE}${key}`,
+          maxBytes: UPLOAD_RULES[kind].maxBytes,
+        });
       }
-      res.json({ key, method: 'PUT', url: `/api/storage/upload/${key}`, headers: { 'Content-Type': type }, direct: false, mediaUrl: `${MEDIA_ROUTE}${key}` });
+      res.json({ key, method: 'PUT', url: `/api/storage/upload/${key}`, headers: { 'Content-Type': declared.mime }, direct: false, mediaUrl: `${MEDIA_ROUTE}${key}`, maxBytes: UPLOAD_RULES[kind].maxBytes });
     } catch (err) {
+      if (err instanceof RequestError) return res.status(err.status).json({ error: err.message, code: err.code });
       fail(res, err, 'Could not prepare upload');
     }
   });
 
-  // Upload through the server (≤ 30 MB, Cloud Run's request limit is 32 MB).
+  /** Folder name (images, videos, ...) of a user storage key: users/<uid>/projects/<id>/<kind>/<file>. */
+  const kindOfKey = (key: string): UploadKind | null => {
+    const k = key.split('/')[4];
+    return (UPLOAD_KINDS as string[]).includes(k) ? (k as UploadKind) : null;
+  };
+
+  // Upload through the server (≤ 30 MB, Cloud Run's request limit is 32 MB). Type, size and file signature are checked.
   app.put(/^\/api\/storage\/upload\/(.+)$/, express.raw({ type: () => true, limit: '30mb' }), async (req, res) => {
     const key = decodeURIComponent(String((req.params as Record<string, string>)[0] || ''));
     if (!ownsKey(req, key)) return res.status(403).json({ error: 'You can only upload into your own projects.' });
+    const kind = kindOfKey(key);
+    if (!kind) return res.status(400).json({ error: 'Upload path must be users/<you>/projects/<id>/<images|videos|zips|movies|assets|files>/<file>.' });
     const body = req.body as Buffer;
     if (!Buffer.isBuffer(body) || body.length === 0) return res.status(400).json({ error: 'Empty upload.' });
+    const check = checkFile(kind, String(req.headers['content-type'] || ''), body.subarray(0, 16), body.length);
+    if (!check.ok) return res.status(check.status).json({ error: check.error, code: check.status === 413 ? 'payload_too_large' : 'unsupported_type' });
     try {
-      await store.put(key, body, String(req.headers['content-type'] || 'application/octet-stream'));
+      await store.put(key, body, check.mime);
       res.status(201).json({ key, url: `${MEDIA_ROUTE}${key}`, size: body.length });
     } catch (err) {
       fail(res, err, 'Upload failed');
+    }
+  });
+
+  // After a direct (signed-URL) upload the browser calls this; invalid files are deleted again.
+  app.post('/api/storage/upload-complete', jsonTiny, async (req, res) => {
+    try {
+      const key = v.text('key', req.body?.key, 512, { required: true });
+      if (!ownsKey(req, key)) return res.status(404).json({ error: 'File not found.' });
+      const kind = kindOfKey(key);
+      const info = await store.stat(key);
+      if (!kind || !info) return res.status(404).json({ error: 'File not found.' });
+      const chunks: Buffer[] = [];
+      for await (const c of store.read(key, { start: 0, end: 15 })) chunks.push(Buffer.from(c as Buffer));
+      const check = checkFile(kind, info.contentType, Buffer.concat(chunks), info.size);
+      if (!check.ok) {
+        await store.delete(key);
+        return res.status(check.status).json({ error: check.error, code: 'rejected_and_deleted' });
+      }
+      res.json({ key, url: `${MEDIA_ROUTE}${key}`, size: info.size, contentType: check.mime });
+    } catch (err) {
+      if (err instanceof RequestError) return res.status(err.status).json({ error: err.message, code: err.code });
+      fail(res, err, 'Could not verify the upload');
     }
   });
 
@@ -458,90 +571,88 @@ export function createApp(opts: AppOptions) {
     }
   });
 
-  // ---------- AI ----------
-  const collectImages = (list: unknown, max: number): InlineImage[] => {
-    if (!Array.isArray(list)) return [];
-    const out: InlineImage[] = [];
-    for (const item of list) {
-      const parsed = typeof item === 'string' ? parseDataUrl(item) : null;
-      if (parsed) out.push(parsed);
-      if (out.length >= max) break;
-    }
-    return out;
-  };
-
-  app.post('/api/chat', json, requireProvider, async (req, res) => {
-    const { message, history, materialsBundle, projectTitle } = req.body ?? {};
-    if (typeof message !== 'string' || !message.trim()) return res.status(400).json({ error: 'message is required.' });
+  // ---------- AI (validate -> quota -> provider) ----------
+  app.post('/api/chat', jsonChat, requireProvider, async (req, res) => {
     try {
+      const message = v.text('message', req.body?.message, LIMITS.chatMessage, { required: true });
+      const projectTitle = v.text('projectTitle', req.body?.projectTitle, LIMITS.title);
+      const bundle = v.text('materialsBundle', req.body?.materialsBundle, LIMITS.bundle);
+      const history = v.chatHistory(req.body?.history);
+      await reserve(req, 'chat');
       const sys = [
         CHAT_SYSTEM_PROMPT,
         projectTitle ? `Project title: ${projectTitle}` : '',
-        typeof materialsBundle === 'string' && materialsBundle.trim()
-          ? `Latest Project Materials Bundle sent by the user:\n${materialsBundle.slice(0, 60000)}`
-          : 'The user has not sent a Project Materials Bundle yet.',
+        bundle ? `Latest Project Materials Bundle sent by the user:\n${bundle}` : 'The user has not sent a Project Materials Bundle yet.',
       ]
         .filter(Boolean)
         .join('\n\n');
-      const turns = Array.isArray(history)
-        ? history.filter((h) => h && (h.role === 'user' || h.role === 'assistant') && typeof h.text === 'string').slice(-12)
-        : [];
-      res.json({ replyText: await opts.provider!.generateText(sys, turns, message) });
+      res.json({ replyText: await opts.provider!.generateText(sys, history, message) });
     } catch (err) {
-      res.status(502).json({ error: err instanceof Error ? err.message : 'Gemini chat failed.' });
+      aiFail(res, err, 'Gemini chat failed');
     }
   });
 
-  app.post('/api/generate-character-ref', json, requireProvider, async (req, res) => {
-    const { characterInfo, slot, prompt, referenceImages } = req.body ?? {};
-    if (typeof prompt !== 'string' || !prompt.trim()) return res.status(400).json({ error: 'prompt is required.' });
-    const slotText: Record<string, string> = {
-      face: 'a close-up face portrait (head and shoulders), neutral expression, even studio light',
-      front: 'a full-body FRONT view, standing straight, head to toe visible, plain neutral background',
-      side: 'a full-body SIDE profile view, head to toe visible, plain neutral background',
-      back: 'a full-body BACK view, head to toe visible, plain neutral background',
-    };
-    const refs = collectImages(referenceImages, 3);
-    const fullPrompt = [
-      `Character reference sheet image: ${slotText[String(slot)] || 'character reference'}.`,
-      characterInfo ? `Character details:\n${String(characterInfo).slice(0, 4000)}` : '',
-      `Instructions: ${prompt}`,
-      refs.length ? 'Keep the exact same person (face, hair, body, clothing) as in the attached reference image(s).' : '',
-    ]
-      .filter(Boolean)
-      .join('\n\n');
+  app.post('/api/generate-character-ref', jsonRef, requireProvider, async (req, res) => {
     try {
+      const prompt = v.text('prompt', req.body?.prompt, LIMITS.prompt, { required: true });
+      const characterInfo = v.text('characterInfo', req.body?.characterInfo, LIMITS.characterInfo);
+      const slot = v.oneOf('slot', req.body?.slot, ['face', 'front', 'side', 'back'] as const, { required: true })!;
+      const projectId = v.id('projectId', req.body?.projectId);
+      const refs = v.imageDataUrls('referenceImages', req.body?.referenceImages, 3, LIMITS.imageBytes);
+      const slotText: Record<string, string> = {
+        face: 'a close-up face portrait (head and shoulders), neutral expression, even studio light',
+        front: 'a full-body FRONT view, standing straight, head to toe visible, plain neutral background',
+        side: 'a full-body SIDE profile view, head to toe visible, plain neutral background',
+        back: 'a full-body BACK view, head to toe visible, plain neutral background',
+      };
+      const fullPrompt = [
+        `Character reference sheet image: ${slotText[slot]}.`,
+        characterInfo ? `Character details:\n${characterInfo}` : '',
+        `Instructions: ${prompt}`,
+        refs.length ? 'Keep the exact same person (face, hair, body, clothing) as in the attached reference image(s).' : '',
+      ]
+        .filter(Boolean)
+        .join('\n\n');
+      await reserve(req, 'image', projectId);
       const img = await opts.provider!.generateImage(fullPrompt, refs, slot === 'face' ? '1:1' : '3:4');
-      res.json({ imageUrl: `data:${img.mimeType};base64,${img.base64}`, filename: `${safeSegment(slot, 'ref')}_generated.${extFor(img.mimeType)}` });
+      res.json({ imageUrl: `data:${img.mimeType};base64,${img.base64}`, filename: `${slot}_generated.${extFor(img.mimeType)}` });
     } catch (err) {
-      res.status(502).json({ error: err instanceof Error ? err.message : 'Image generation failed.' });
+      aiFail(res, err, 'Image generation failed');
     }
   });
 
-  app.post('/api/generate/shot-image', json, requireProvider, async (req, res) => {
-    const { sceneId, shotId, prompt, storyContext, characters, aspectRatio } = req.body ?? {};
-    if (typeof prompt !== 'string' || !prompt.trim()) return res.status(400).json({ error: 'prompt is required.' });
-    const chars = Array.isArray(characters) ? characters.slice(0, 4) : [];
-    const refs: InlineImage[] = [];
-    for (const c of chars) refs.push(...collectImages(c?.referenceImages, 3));
-    const fullPrompt = [
-      `Cinematic film still for Scene ${safeSegment(sceneId)} / Shot ${safeSegment(shotId)}.`,
-      `Shot description: ${prompt}`,
-      chars.length
-        ? `Characters in this shot (keep their appearance identical to the attached reference images):\n${chars
-            .map((c) => `- ${String(c?.info || '').slice(0, 1500)}`)
-            .join('\n')}`
-        : '',
-      typeof storyContext === 'string' && storyContext.trim() ? `Story context (for mood and continuity only):\n${storyContext.slice(0, 3000)}` : '',
-      'Photorealistic cinematic lighting, no text, no watermark, no subtitles.',
-    ]
-      .filter(Boolean)
-      .join('\n\n');
+  app.post('/api/generate/shot-image', jsonShotImage, requireProvider, async (req, res) => {
     try {
+      const sceneId = v.id('sceneId', req.body?.sceneId, { required: true })!;
+      const shotId = v.id('shotId', req.body?.shotId, { required: true })!;
+      const projectId = v.id('projectId', req.body?.projectId);
+      const prompt = v.text('prompt', req.body?.prompt, LIMITS.prompt, { required: true });
+      const storyContext = v.text('storyContext', req.body?.storyContext, LIMITS.storyContext);
+      const aspectRatio = v.oneOf('aspectRatio', req.body?.aspectRatio, v.ASPECT_RATIOS);
+      const rawChars = req.body?.characters;
+      if (rawChars !== undefined && (!Array.isArray(rawChars) || rawChars.length > 4)) throw new RequestError(400, 'characters must be a list of at most 4.');
+      const chars = (rawChars ?? []).map((c: Record<string, unknown>, i: number) => ({
+        info: v.text(`characters[${i}].info`, c?.info, 1500),
+        refs: v.imageDataUrls(`characters[${i}].referenceImages`, c?.referenceImages, 3, LIMITS.imageBytes),
+      }));
+      const refs: InlineImage[] = chars.flatMap((c: { refs: InlineImage[] }) => c.refs);
+      if (refs.length > LIMITS.imagesPerRequest) throw new RequestError(400, `At most ${LIMITS.imagesPerRequest} reference images per request.`);
+      const fullPrompt = [
+        `Cinematic film still for Scene ${sceneId} / Shot ${shotId}.`,
+        `Shot description: ${prompt}`,
+        chars.length
+          ? `Characters in this shot (keep their appearance identical to the attached reference images):\n${chars.map((c: { info: string }) => `- ${c.info}`).join('\n')}`
+          : '',
+        storyContext ? `Story context (for mood and continuity only):\n${storyContext}` : '',
+        'Photorealistic cinematic lighting, no text, no watermark, no subtitles.',
+      ]
+        .filter(Boolean)
+        .join('\n\n');
+      await reserve(req, 'image', projectId);
       const img = await opts.provider!.generateImage(fullPrompt, refs.slice(0, 8), aspectRatio);
       res.json({ sceneId, shotId, imageUrl: `data:${img.mimeType};base64,${img.base64}` });
     } catch (err) {
-      res.status(502).json({ error: err instanceof Error ? err.message : 'Shot image generation failed.' });
+      aiFail(res, err, 'Shot image generation failed');
     }
   });
 
@@ -556,42 +667,44 @@ export function createApp(opts: AppOptions) {
     mediaRoute: MEDIA_ROUTE,
     queue: opts.queue,
   });
-  const ID_RE = /^[A-Za-z0-9_-]{1,64}$/;
-  const IDEM_RE = /^[A-Za-z0-9_.:-]{8,128}$/;
 
-  app.post('/api/generate/shot-video', json, requireProvider, async (req, res) => {
-    const { projectId, sceneId, shotId, linkedImageKey, prompt, startImage, aspectRatio, resolution, durationSec, idempotencyKey, retryOf } = req.body ?? {};
-    if (typeof prompt !== 'string' || !prompt.trim()) return res.status(400).json({ error: 'prompt is required.' });
-    for (const [name, v] of [['projectId', projectId], ['sceneId', sceneId], ['shotId', shotId]] as const) {
-      if (typeof v !== 'string' || !ID_RE.test(v)) return res.status(400).json({ error: `${name} is required (letters, digits, _ and - only).` });
-    }
-    if (typeof idempotencyKey !== 'string' || !IDEM_RE.test(idempotencyKey)) {
-      return res.status(400).json({ error: 'idempotencyKey is required (8-128 characters). The same key never starts a second job.' });
-    }
-    const frame = typeof startImage === 'string' ? parseDataUrl(startImage) : null;
-    if (!frame) return res.status(400).json({ error: 'startImage (the shot image as a data URL) is required for image-to-video.' });
+  app.post('/api/generate/shot-video', jsonVideo, requireProvider, async (req, res) => {
     try {
+      const b = req.body ?? {};
+      const projectId = v.id('projectId', b.projectId, { required: true })!;
+      const sceneId = v.id('sceneId', b.sceneId, { required: true })!;
+      const shotId = v.id('shotId', b.shotId, { required: true })!;
+      const prompt = v.text('prompt', b.prompt, LIMITS.prompt, { required: true });
+      if (typeof b.idempotencyKey !== 'string' || !v.IDEMPOTENCY_RE.test(b.idempotencyKey)) {
+        throw new RequestError(400, 'idempotencyKey is required (8-128 characters). The same key never starts a second job.', 'idempotency_key_required');
+      }
+      const frame = v.imageDataUrl('startImage', b.startImage, LIMITS.frameBytes);
+      const aspectRatio = v.oneOf('aspectRatio', b.aspectRatio, v.ASPECT_RATIOS);
+      const resolution = v.oneOf('resolution', b.resolution, v.RESOLUTIONS);
+      const durationSec = v.intInRange('durationSec', b.durationSec, 1, 30);
+      const retryOf = v.id('retryOf', b.retryOf);
       const out = await startVideoJob(jobDeps(), {
         uid: req.user!.uid,
         projectId,
         sceneId,
         shotId,
-        linkedImageKey: typeof linkedImageKey === 'string' && ID_RE.test(linkedImageKey.replace(/[^A-Za-z0-9_-]/g, '_')) ? linkedImageKey.slice(0, 64) : `${sceneId}-${shotId}`,
-        idempotencyKey,
+        linkedImageKey: v.sceneShotKey(b.linkedImageKey, `${sceneId}-${shotId}`),
+        idempotencyKey: b.idempotencyKey,
         prompt,
         startFrame: frame,
-        aspectRatio: aspectRatio === '9:16' ? '9:16' : aspectRatio === '16:9' ? '16:9' : undefined,
-        resolution: typeof resolution === 'string' ? resolution : undefined,
-        durationSec: Number(durationSec) || undefined,
-        retryOf: typeof retryOf === 'string' && ID_RE.test(retryOf) ? retryOf : null,
+        aspectRatio: aspectRatio === '9:16' || aspectRatio === '16:9' ? aspectRatio : undefined, // Veo supports only these
+        resolution,
+        durationSec,
+        retryOf: retryOf ?? null,
+        // Only a NEW job costs quota; a reused/duplicate request is free.
+        reserve: () => reserve(req, 'video', projectId),
       });
       if (out.job.status === 'failed' && !out.reused) {
         return res.status(502).json({ ...publicJob(out.job), error: out.job.error?.message || 'Could not start video generation.' });
       }
       res.status(out.started ? 201 : 200).json({ ...publicJob(out.job), reused: out.reused ?? null });
     } catch (err) {
-      logError('shot-video failed', err);
-      res.status(502).json({ error: `Could not start video generation: ${safeErrorMessage(err)}` });
+      aiFail(res, err, 'Could not start video generation');
     }
   });
 
@@ -620,7 +733,7 @@ export function createApp(opts: AppOptions) {
 
   app.get('/api/generate/jobs', async (req, res) => {
     const projectId = String(req.query.projectId || '');
-    if (!ID_RE.test(projectId)) return res.status(400).json({ error: 'projectId is required.' });
+    if (!v.ID_RE.test(projectId)) return res.status(400).json({ error: 'projectId is required.' });
     try {
       res.json({ jobs: (await opts.jobStore.listByProject(req.user!.uid, projectId)).map(publicJob) });
     } catch (err) {
@@ -630,7 +743,7 @@ export function createApp(opts: AppOptions) {
   });
 
   // ---------- FFmpeg movie export ----------
-  app.post('/api/export/mp4', json, async (req, res) => {
+  app.post('/api/export/mp4', jsonTiny, async (req, res) => {
     const { projectId, clips } = req.body ?? {};
     if (!projectId || !Array.isArray(clips) || clips.length === 0) {
       return res.status(400).json({ error: 'projectId and clips[] (ordered by Scene/Shot) are required.' });
@@ -676,6 +789,17 @@ export function createApp(opts: AppOptions) {
   });
 
   app.use('/api', (_req, res) => res.status(404).json({ error: 'Unknown API endpoint.' }));
+
+  // Body-parser / unexpected errors: always JSON, never a stack trace.
+  app.use((err: unknown, _req: Request, res: Response, next: NextFunction) => {
+    if (res.headersSent) return next(err);
+    const e = err as { type?: string; status?: number };
+    if (e?.type === 'entity.too.large') return res.status(413).json({ error: 'The request is too large for this operation.', code: 'payload_too_large' });
+    if (e?.type === 'entity.parse.failed') return res.status(400).json({ error: 'The request body is not valid JSON.', code: 'bad_json' });
+    if (err instanceof RequestError) return res.status(err.status).json({ error: err.message, code: err.code });
+    logError('Unhandled request error', err);
+    res.status(500).json({ error: 'Internal server error.' });
+  });
 
   if (opts.staticDir && fs.existsSync(path.join(opts.staticDir, 'index.html'))) {
     app.use(express.static(opts.staticDir));

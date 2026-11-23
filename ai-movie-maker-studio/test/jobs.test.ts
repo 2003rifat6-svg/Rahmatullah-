@@ -12,6 +12,7 @@ import { after, before, describe, it } from 'node:test';
 import { createApp } from '../server/app';
 import { BlobStore, GcsBlobStore, LocalDiskBlobStore } from '../server/blobStore';
 import { BlobJobStore, FirestoreJobStore, JobStore } from '../server/jobStore';
+import { FirestoreUsageStore } from '../server/usage';
 import { FirestoreProjectStore } from '../server/projectStore';
 import { advanceJob, cancelJob, startVideoJob, StartVideoInput, VideoJobDeps } from '../server/videoJobs';
 import { Emulators, emulatorsAvailable, startEmulators } from './emulators';
@@ -232,6 +233,7 @@ describe('video jobs on Firestore + GCS emulators', { skip: missing ?? false }, 
       blobStore: blobs,
       projectStore: new FirestoreProjectStore(db, blobs),
       jobStore: new FirestoreJobStore(db),
+        usageStore: new FirestoreUsageStore(db),
       videoJobs: { pollIntervalMs: 0 },
       auth: { mode: 'google', googleClientId: 'test', verifier: testVerifier, sessionSecret: TEST_SESSION_SECRET, allowedEmails: ['alice@x.com', 'bob@x.com'] },
     });

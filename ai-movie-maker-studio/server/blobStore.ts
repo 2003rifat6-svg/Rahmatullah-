@@ -34,7 +34,7 @@ export interface BlobStore {
   deletePrefix(prefix: string): Promise<number>;
   /** V4 signed URLs (GCS only, needs iam.serviceAccounts.signBlob on Cloud Run). */
   signedReadUrl?(key: string, expiresInSec: number): Promise<string>;
-  signedUploadUrl?(key: string, contentType: string, expiresInSec: number): Promise<string>;
+  signedUploadUrl?(key: string, contentType: string, expiresInSec: number, maxBytes?: number): Promise<string>;
 }
 
 const SAFE_SEGMENT = /^[A-Za-z0-9._-]+$/;
@@ -111,12 +111,14 @@ export class GcsBlobStore implements BlobStore {
     const [url] = await this.bucket.file(key).getSignedUrl({ version: 'v4', action: 'read', expires: Date.now() + expiresInSec * 1000 });
     return url;
   }
-  async signedUploadUrl(key: string, contentType: string, expiresInSec: number) {
+  async signedUploadUrl(key: string, contentType: string, expiresInSec: number, maxBytes?: number) {
     const [url] = await this.bucket.file(key).getSignedUrl({
       version: 'v4',
       action: 'write',
       contentType,
       expires: Date.now() + expiresInSec * 1000,
+      // GCS rejects uploads outside this size range (the browser must send the same header).
+      ...(maxBytes ? { extensionHeaders: { 'x-goog-content-length-range': `0,${maxBytes}` } } : {}),
     });
     return url;
   }

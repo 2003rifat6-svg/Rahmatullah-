@@ -8,10 +8,12 @@ import { Firestore } from '@google-cloud/firestore';
 import { Storage } from '@google-cloud/storage';
 import { OAuth2Client } from 'google-auth-library';
 import assert from 'node:assert/strict';
+import fs from 'node:fs';
 import { after, before, describe, it } from 'node:test';
 import { createApp } from '../server/app';
 import { GcsBlobStore } from '../server/blobStore';
 import { FirestoreJobStore } from '../server/jobStore';
+import { FirestoreUsageStore } from '../server/usage';
 import { FirestoreProjectStore } from '../server/projectStore';
 import { Emulators, emulatorsAvailable, startEmulators } from './emulators';
 import { createStubProvider, listen, makeTestClip, tempDir, TEST_SESSION_SECRET, testVerifier, TINY_PNG_BASE64 } from './helpers';
@@ -19,6 +21,7 @@ import { createStubProvider, listen, makeTestClip, tempDir, TEST_SESSION_SECRET,
 const missing = emulatorsAvailable();
 const BUCKET = 'mms-test-bucket';
 const PNG = `data:image/png;base64,${TINY_PNG_BASE64}`;
+const mp4Bytes = fs.readFileSync(makeTestClip(tempDir('upl-'), 'u.mp4', 'red')); // a real MP4 (uploads are checked by file signature)
 const BIG_PNG = `data:image/png;base64,${Buffer.alloc(6000, 7).toString('base64')}`;
 
 class Client {
@@ -79,6 +82,7 @@ describe('Google Cloud integration (Firestore + GCS emulators)', { skip: missing
         blobStore,
         projectStore: new FirestoreProjectStore(db, blobStore),
         jobStore: new FirestoreJobStore(db),
+        usageStore: new FirestoreUsageStore(db),
         videoJobs: { pollIntervalMs: 0 },
         auth: { mode: 'google', googleClientId: 'test', verifier: testVerifier, sessionSecret: TEST_SESSION_SECRET, allowedEmails: ['alice@x.com', 'bob@x.com'] },
       })
@@ -190,7 +194,7 @@ describe('Google Cloud integration (Firestore + GCS emulators)', { skip: missing
     const uploaded: string[] = [];
     for (const [kind, filename, type, bytes] of [
       ['images', 'shot.png', 'image/png', Buffer.from(TINY_PNG_BASE64, 'base64')],
-      ['videos', 'clip.mp4', 'video/mp4', Buffer.alloc(1000, 1)],
+      ['videos', 'clip.mp4', 'video/mp4', mp4Bytes],
       ['zips', 'Movie_Videos.zip', 'application/zip', Buffer.from('PK\u0003\u0004 test zip')],
     ] as const) {
       const prep = await alice.json('POST', '/api/storage/upload-url', { projectId: 'proj_a', kind, filename, contentType: type });
@@ -205,7 +209,7 @@ describe('Google Cloud integration (Firestore + GCS emulators)', { skip: missing
 
     const ranged = await alice.req('GET', `/api/media/${uploaded[1]}`, undefined, { Range: 'bytes=10-19' });
     assert.equal(ranged.status, 206);
-    assert.equal(ranged.headers.get('content-range'), 'bytes 10-19/1000');
+    assert.equal(ranged.headers.get('content-range'), `bytes 10-19/${mp4Bytes.length}`);
 
     // Bob cannot upload into, list, or delete Alice's files
     assert.equal((await bob.req('PUT', `/api/storage/upload/${uploaded[0]}`, new Uint8Array([1]), { 'Content-Type': 'image/png' })).status, 403);

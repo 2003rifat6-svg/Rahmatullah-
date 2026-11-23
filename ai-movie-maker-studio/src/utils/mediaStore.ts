@@ -84,7 +84,7 @@ async function putMedia(db: IDBDatabase, mime: string, bytes: Uint8Array): Promi
   return id;
 }
 
-async function mapStringsAsync(value: unknown, fn: (s: string) => Promise<string>): Promise<unknown> {
+export async function mapStringsAsync(value: unknown, fn: (s: string) => Promise<string>): Promise<unknown> {
   if (typeof value === 'string') return fn(value);
   if (Array.isArray(value)) {
     const out: unknown[] = [];
@@ -266,24 +266,4 @@ export function _resetMediaCachesForTests() {
   dataUrlToId.clear();
   blobUrlToId.clear();
   idToBlobUrl.clear();
-}
-
-/**
- * Cloud save needs real data, not blob: URLs of this browser. Converts every blob: URL in a
- * project into a data: URL (cloud save then moves them to Cloud Storage).
- */
-export async function inlineBlobUrls<T>(value: T): Promise<T> {
-  return (await mapStringsAsync(value, async (s) => {
-    if (!s.startsWith('blob:')) return s;
-    try {
-      const blob = await (await fetch(s)).blob();
-      const buf = new Uint8Array(await blob.arrayBuffer());
-      let bin = '';
-      const chunk = 0x8000;
-      for (let i = 0; i < buf.length; i += chunk) bin += String.fromCharCode(...buf.subarray(i, i + chunk));
-      return `data:${blob.type || 'application/octet-stream'};base64,${btoa(bin)}`;
-    } catch {
-      return s;
-    }
-  })) as T;
 }

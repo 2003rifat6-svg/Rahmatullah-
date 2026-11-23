@@ -8,6 +8,7 @@
  */
 import { CloudBackendSettings, MovieProject } from '../types/studio';
 import { authHeaders, jsonHeaders, resolveBackendUrl } from './cloudApiInterfaces';
+import { MIN_EXTERNALIZE_CHARS, mapStringsAsync } from '../utils/mediaStore';
 
 export interface CloudUser {
   uid: string;
@@ -127,16 +128,17 @@ export const cloudFiles = {
   async upload(
     cloud: CloudBackendSettings,
     projectId: string,
-    kind: 'images' | 'videos' | 'zips' | 'movies' | 'files',
+    kind: 'images' | 'videos' | 'zips' | 'movies' | 'assets' | 'files',
     filename: string,
-    blob: Blob
+    blob: Blob,
+    contentHash?: string
   ): Promise<CloudResult<{ key: string; url: string }>> {
     const type = blob.type || 'application/octet-stream';
     const prep = await call<{ key: string; url: string; headers: Record<string, string>; direct: boolean; mediaUrl: string }>(
       cloud,
       'POST',
       '/api/storage/upload-url',
-      { projectId, kind, filename, contentType: type, size: blob.size }
+      { projectId, kind, filename, contentType: type, size: blob.size, ...(contentHash ? { contentHash } : {}) }
     );
     if (!prep.ok) return prep;
     if (!prep.data.direct && blob.size > 30 * 1024 * 1024) {
@@ -150,7 +152,15 @@ export const cloudFiles = {
         headers: prep.data.direct ? prep.data.headers : { ...authHeaders(cloud), ...prep.data.headers },
         body: blob,
       });
-      if (!res.ok) return { ok: false, status: res.status, error: `Upload failed (HTTP ${res.status}).` };
+      if (!res.ok) {
+        const detail = (await res.json().catch(() => ({}))) as { error?: string };
+        return { ok: false, status: res.status, error: detail.error || `Upload failed (HTTP ${res.status}).` };
+      }
+      if (prep.data.direct) {
+        // Direct uploads cannot be inspected on the way in; the server checks the stored file and deletes it if invalid.
+        const done = await call<{ url: string }>(cloud, 'POST', '/api/storage/upload-complete', { key: prep.data.key });
+        if (!done.ok) return done;
+      }
       return { ok: true, data: { key: prep.data.key, url: prep.data.mediaUrl } };
     } catch (err) {
       return { ok: false, status: 0, error: err instanceof Error ? err.message : 'Upload failed' };
@@ -161,3 +171,51 @@ export const cloudFiles = {
 
   downloadUrl: (cloud: CloudBackendSettings, url: string) => `${resolveBackendUrl(cloud, url)}?download=1`,
 };
+
+/** First 24 hex chars of SHA-256: same naming the server uses for content-addressed project media. */
+async function contentHash24(blob: Blob): Promise<string | undefined> {
+  const subtle = globalThis.crypto?.subtle;
+  if (!subtle) return undefined;
+  const digest = await subtle.digest('SHA-256', await blob.arrayBuffer());
+  return Array.from(new Uint8Array(digest), (b) => b.toString(16).padStart(2, '0')).join('').slice(0, 24);
+}
+
+/**
+ * Before a cloud save: uploads every image/video of the project (blob: or data: URL) to Cloud
+ * Storage and replaces it by its /api/media link. The project JSON sent afterwards is small, so
+ * any number of saved versions fits (a request is limited to 30 MB). Identical files are
+ * uploaded once. Returns an error instead of silently dropping a file.
+ */
+export async function uploadProjectMedia(
+  cloud: CloudBackendSettings,
+  project: MovieProject
+): Promise<{ ok: true; project: MovieProject; uploaded: number } | { ok: false; error: string; signInRequired?: boolean }> {
+  const cache = new Map<string, string>();
+  let uploaded = 0;
+  let failure: { error: string; signInRequired?: boolean } | null = null;
+  const result = (await mapStringsAsync(project, async (s) => {
+    if (failure) return s;
+    const isMedia = s.startsWith('blob:') || (s.startsWith('data:') && s.length >= MIN_EXTERNALIZE_CHARS);
+    if (!isMedia) return s;
+    const cached = cache.get(s);
+    if (cached) return cached;
+    let blob: Blob;
+    try {
+      blob = await (await fetch(s)).blob();
+    } catch {
+      failure = { error: 'A saved image/video could not be read from this browser (it may have been cleared).' };
+      return s;
+    }
+    const type = blob.type || 'application/octet-stream';
+    const ext = type.split('/')[1]?.replace('quicktime', 'mov') || 'bin';
+    const up = await cloudFiles.upload(cloud, project.id, 'assets', `media.${ext}`, blob, await contentHash24(blob));
+    if (!up.ok) {
+      failure = { error: `Could not upload a ${type} file (${Math.round(blob.size / 1024)} KB): ${up.error}`, signInRequired: up.signInRequired };
+      return s;
+    }
+    cache.set(s, up.data.url);
+    uploaded += 1;
+    return up.data.url;
+  })) as MovieProject;
+  return failure ? { ok: false, ...(failure as { error: string; signInRequired?: boolean }) } : { ok: true, project: result, uploaded };
+}

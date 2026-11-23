@@ -11,6 +11,7 @@ import path from 'node:path';
 import { AppOptions, createApp } from '../server/app';
 import { GcsBlobStore, LocalDiskBlobStore } from '../server/blobStore';
 import { BlobJobStore, FirestoreJobStore } from '../server/jobStore';
+import { BlobUsageStore, FirestoreUsageStore } from '../server/usage';
 import { FirestoreProjectStore } from '../server/projectStore';
 import { startEmulators } from './emulators';
 import { createStubProvider, makeTestClip, tempDir, TEST_SESSION_SECRET, testVerifier } from './helpers';
@@ -23,6 +24,7 @@ let opts: AppOptions = {
   blobStore: localBlobs,
   projectStore: null,
   jobStore: new BlobJobStore(localBlobs),
+  usageStore: new BlobUsageStore(localBlobs),
   videoJobs: { pollIntervalMs: 0 },
   auth: { mode: 'none' },
   staticDir: path.resolve('dist'),
@@ -44,6 +46,7 @@ if (process.env.STUB_CLOUD) {
     blobStore,
     projectStore: new FirestoreProjectStore(new Firestore({ projectId: 'demo-mms' }), blobStore),
     jobStore: new FirestoreJobStore(new Firestore({ projectId: 'demo-mms' })),
+    usageStore: new FirestoreUsageStore(new Firestore({ projectId: 'demo-mms' })),
     auth: { mode: 'google', googleClientId: 'test-client-id', verifier: testVerifier, sessionSecret: TEST_SESSION_SECRET, allowedEmails: ['alice@x.com', 'bob@x.com'] },
   };
 }

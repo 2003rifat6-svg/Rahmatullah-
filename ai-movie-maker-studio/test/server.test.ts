@@ -12,6 +12,7 @@ import { createApp, mediaKeyFromUrl } from '../server/app';
 import { readCookie, sessionCookie, signSession, verifySession } from '../server/auth';
 import { isSafeKey, LocalDiskBlobStore, projectPrefix } from '../server/blobStore';
 import { BlobJobStore } from '../server/jobStore';
+import { BlobUsageStore } from '../server/usage';
 import { buildOptionsFromEnv, ConfigError } from '../server/config';
 import { createGeminiProvider } from '../server/provider';
 import { createStubProvider, listen, makeTestClip, tempDir, TINY_PNG_BASE64 } from './helpers';
@@ -93,7 +94,7 @@ function devBlobs() {
 describe('local dev mode (no sign-in, local disk)', () => {
   let srv: { base: string; close: () => void };
   before(async () => {
-    srv = await listen(createApp({ provider: null, blobStore: devBlobs(), projectStore: null, jobStore: new BlobJobStore(devBlobs()), auth: { mode: 'none' } }));
+    srv = await listen(createApp({ provider: null, blobStore: devBlobs(), projectStore: null, jobStore: new BlobJobStore(devBlobs()), usageStore: new BlobUsageStore(devBlobs()), auth: { mode: 'none' } }));
   });
   after(() => srv.close());
 
@@ -135,6 +136,7 @@ describe('AI + FFmpeg with stub provider (local disk storage)', () => {
         blobStore: new LocalDiskBlobStore(mediaDir),
         projectStore: null,
         jobStore: new BlobJobStore(new LocalDiskBlobStore(mediaDir)),
+        usageStore: new BlobUsageStore(new LocalDiskBlobStore(mediaDir)),
         videoJobs: { pollIntervalMs: 0 },
         auth: { mode: 'none', accessToken: 'secret-token' },
       })
