@@ -1,5 +1,9 @@
 # পরিবর্তনের তালিকা (Changelog)
 
+## সংস্করণ ৩.২ — Final Release
+
+- Deploy স্ক্রিপ্ট: `ALLOWED_EMAILS` ফাঁকা বা না দিলে এখন পরিষ্কার বার্তা দিয়ে থামে (আগে `unbound variable` Error আসত; তখনও কিছু তৈরি হতো না)।
+
 ## সংস্করণ ৩.১ — Deploy-এর আগের সংশোধন
 
 - **বড় Project-এর Conflict-এ ক্ষতি বন্ধ:** আগে বড় Project সবসময় একই `project.json` ফাইলে লেখা হতো, Revision যাচাইয়ের আগেই। এখন প্রতি Save-এর জন্য নতুন ফাইল (`_body/<uuid>.json`) হয়; Firestore Commit সফল হলেই পুরোনোটা মোছে। Commit ব্যর্থ বা Conflict হলে নতুন ফাইলটিও মুছে যায়, পুরোনো কপি অক্ষত থাকে।
