@@ -15,6 +15,11 @@ set -euo pipefail
 
 : "${PROJECT_ID:?Set PROJECT_ID}"
 : "${OAUTH_CLIENT_ID:?Set OAUTH_CLIENT_ID (Google Cloud Console → APIs & Services → Credentials → OAuth client ID → Web)}"
+# Refuse to deploy an open server: ALLOWED_EMAILS is mandatory (protects the paid Gemini key).
+if [ -z "$ALLOWED_EMAILS" ]; then
+  echo "ERROR: ALLOWED_EMAILS is empty. Give a comma-separated list of Google accounts, e.g. ALLOWED_EMAILS=me@gmail.com,friend@gmail.com" >&2
+  exit 1
+fi
 REGION="${REGION:-asia-south1}"
 SERVICE="${SERVICE:-ai-movie-studio}"
 BUCKET="${BUCKET:-${PROJECT_ID}-movie-studio-media}"

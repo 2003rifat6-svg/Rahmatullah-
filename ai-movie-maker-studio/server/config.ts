@@ -33,19 +33,21 @@ export function buildOptionsFromEnv(env: NodeJS.ProcessEnv = process.env): AppOp
   if (clientId) {
     const secret = env.SESSION_SECRET || '';
     if (secret.length < 32) throw new ConfigError('SESSION_SECRET must be at least 32 characters when sign-in is enabled.');
+    const allowedEmails = (env.ALLOWED_EMAILS || '')
+      .split(',')
+      .map((e) => e.trim().toLowerCase())
+      .filter(Boolean);
+    // Mandatory: without it any Google account could sign in and spend the Gemini key.
+    if (!allowedEmails.length) {
+      throw new ConfigError('ALLOWED_EMAILS is required when sign-in is enabled (comma-separated Google accounts). Refusing to start open to every Google user.');
+    }
     auth = {
       mode: 'google',
       googleClientId: clientId,
       verifier: googleIdTokenVerifier(clientId),
       sessionSecret: secret,
-      allowedEmails: (env.ALLOWED_EMAILS || '')
-        .split(',')
-        .map((e) => e.trim().toLowerCase())
-        .filter(Boolean),
+      allowedEmails,
     };
-    if (!auth.allowedEmails?.length) {
-      warnings.push('ALLOWED_EMAILS is empty: any Google account can sign in and use your Gemini key (each user sees only their own projects).');
-    }
   } else if (onCloudRun) {
     throw new ConfigError('GOOGLE_OAUTH_CLIENT_ID and SESSION_SECRET are required on Cloud Run (user data must be protected).');
   } else {

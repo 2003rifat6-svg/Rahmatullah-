@@ -173,7 +173,9 @@ describe('Google Cloud integration (Firestore + GCS emulators)', { skip: missing
     const big = project('proj_big', 'Big', { story: { rawText: 'ক'.repeat(400_000), locked: false } });
     const res = await alice.json('POST', '/api/projects', { project: big });
     assert.equal(res.body.meta.bodyLocation, 'gcs');
-    assert.deepEqual(await gcsKeys('users/alice1/projects/proj_big/project.json'), ['users/alice1/projects/proj_big/project.json']);
+    const bodies = await gcsKeys('users/alice1/projects/proj_big/_body/');
+    assert.equal(bodies.length, 1, 'exactly one body object for the project');
+    assert.match(bodies[0], /\/_body\/[0-9a-f-]{36}\.json$/);
     const back = await alice.json('GET', '/api/projects/proj_big');
     assert.equal(back.body.project.story.rawText.length, 400_000);
   });

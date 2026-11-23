@@ -41,7 +41,8 @@ export type AuthOptions =
       verifier: IdTokenVerifier;
       sessionSecret: string;
       /** If set, only these Google accounts may sign in (protects the paid API). */
-      allowedEmails?: string[];
+      /** Required, non-empty: only these Google accounts may use the server. */
+      allowedEmails: string[];
     }
   | {
       /** Local development only: single user "local", optional shared token for /api. */
@@ -141,6 +142,9 @@ Never claim that an image or video has been generated — generation only happen
 Reply in the user's language (Bengali or English). Be concise and practical.`;
 
 export function createApp(opts: AppOptions) {
+  if (opts.auth.mode === 'google' && !opts.auth.allowedEmails.length) {
+    throw new Error('ALLOWED_EMAILS must list at least one Google account (refusing to run open to every Google user).');
+  }
   const app = express();
   const ffmpegPath = opts.ffmpegPath || 'ffmpeg';
   const jobs = new Map<string, VideoJob>();
@@ -166,7 +170,8 @@ export function createApp(opts: AppOptions) {
   const attachUser = (req: Request, _res: Response, next: NextFunction) => {
     if (auth.mode === 'google') {
       const u = verifySession(readCookie(req, SESSION_COOKIE), auth.sessionSecret);
-      if (u) req.user = u;
+      // Checked on every request: removing an email from ALLOWED_EMAILS ends its existing sessions.
+      if (u && auth.allowedEmails.includes(u.email)) req.user = u;
     } else {
       req.user = { uid: 'local', email: '' };
     }
@@ -238,7 +243,7 @@ export function createApp(opts: AppOptions) {
     if (typeof credential !== 'string' || credential.length < 10) return res.status(400).json({ error: 'credential is required.' });
     try {
       const user = await auth.verifier(credential);
-      if (auth.allowedEmails?.length && !auth.allowedEmails.includes(user.email)) {
+      if (!auth.allowedEmails.includes(user.email)) {
         return res.status(403).json({ error: `${user.email} is not allowed on this studio server.` });
       }
       const secure = req.secure || req.header('x-forwarded-proto') === 'https';
@@ -401,7 +406,7 @@ export function createApp(opts: AppOptions) {
       const files = await store.list(projectPrefix(req.user!.uid, projectId));
       res.json({
         files: files
-          .filter((f) => !f.key.endsWith('/project.json'))
+          .filter((f) => !f.key.includes('/_body/') && !f.key.endsWith('/project.json'))
           .map((f) => ({ ...f, url: `${MEDIA_ROUTE}${f.key}`, name: path.basename(f.key), kind: f.key.split('/')[4] })),
       });
     } catch (err) {

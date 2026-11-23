@@ -63,6 +63,11 @@ describe('config fails closed', () => {
     assert.throws(() => buildOptionsFromEnv({ K_SERVICE: 'svc', GCS_BUCKET: 'b' }), /GOOGLE_OAUTH_CLIENT_ID/);
     assert.throws(() => buildOptionsFromEnv({ GOOGLE_OAUTH_CLIENT_ID: 'id', SESSION_SECRET: 'short' }), /SESSION_SECRET/);
   });
+  it('sign-in without ALLOWED_EMAILS is refused (no open server)', () => {
+    const base = { GOOGLE_OAUTH_CLIENT_ID: 'id.apps.googleusercontent.com', SESSION_SECRET: 'z'.repeat(40) };
+    assert.throws(() => buildOptionsFromEnv({ ...base }), /ALLOWED_EMAILS is required/);
+    assert.throws(() => buildOptionsFromEnv({ ...base, ALLOWED_EMAILS: ' , ' }), /ALLOWED_EMAILS is required/);
+  });
   it('full Cloud Run config builds GCS + Firestore + Google sign-in', () => {
     const o = buildOptionsFromEnv({
       K_SERVICE: 'svc',

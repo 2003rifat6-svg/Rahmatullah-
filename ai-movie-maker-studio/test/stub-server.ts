@@ -47,7 +47,7 @@ if (process.env.STUB_CLOUD) {
     ...opts,
     blobStore,
     projectStore: new FirestoreProjectStore(new Firestore({ projectId: 'demo-mms' }), blobStore),
-    auth: { mode: 'google', googleClientId: 'test-client-id', verifier: testVerifier, sessionSecret: TEST_SESSION_SECRET },
+    auth: { mode: 'google', googleClientId: 'test-client-id', verifier: testVerifier, sessionSecret: TEST_SESSION_SECRET, allowedEmails: ['alice@x.com', 'bob@x.com'] },
   };
 }
 

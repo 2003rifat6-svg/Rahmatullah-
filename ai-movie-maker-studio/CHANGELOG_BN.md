@@ -1,5 +1,12 @@
 # পরিবর্তনের তালিকা (Changelog)
 
+## সংস্করণ ৩.১ — Deploy-এর আগের সংশোধন
+
+- **বড় Project-এর Conflict-এ ক্ষতি বন্ধ:** আগে বড় Project সবসময় একই `project.json` ফাইলে লেখা হতো, Revision যাচাইয়ের আগেই। এখন প্রতি Save-এর জন্য নতুন ফাইল (`_body/<uuid>.json`) হয়; Firestore Commit সফল হলেই পুরোনোটা মোছে। Commit ব্যর্থ বা Conflict হলে নতুন ফাইলটিও মুছে যায়, পুরোনো কপি অক্ষত থাকে।
+- **Data Integrity:** প্রতিটি বড় Project-এর SHA-256 রাখা হয়; মেলে না এমন ডেটা লোড হয় না, পরিষ্কার Error দেয়।
+- **ALLOWED_EMAILS বাধ্যতামূলক:** Sign-in চালু থাকলে ফাঁকা হলে Server চালু হয় না। Deploy স্ক্রিপ্টও ফাঁকা থাকলে শুরুতেই থেমে যায়। তালিকা থেকে সরালে সেই ইমেইলের চলমান Session-ও সাথে সাথে বন্ধ হয়।
+- **নতুন Integration Test:** বড় Project-এর Conflict, ব্যর্থ Commit, Checksum ভাঙা, দুই ব্যবহারকারীর নিরাপত্তা, ALLOWED_EMAILS বাদ দিলে Session বন্ধ — আসল Firestore ও GCS Emulator-এ (৯টি)।
+
 ## সংস্করণ ৩ — Google Cloud
 
 - **Sign in with Google:** Server Google ID Token যাচাই করে HttpOnly Cookie দেয়; CSRF সুরক্ষা; `ALLOWED_EMAILS` দিয়ে নির্দিষ্ট ইমেইল।
