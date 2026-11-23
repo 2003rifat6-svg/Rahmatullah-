@@ -13,26 +13,29 @@
 # Re-running is safe: existing resources are kept, the service is redeployed.
 set -euo pipefail
 
-: "${PROJECT_ID:?Set PROJECT_ID}"
-: "${OAUTH_CLIENT_ID:?Set OAUTH_CLIENT_ID (Google Cloud Console → APIs & Services → Credentials → OAuth client ID → Web)}"
-# Refuse to deploy an open server: ALLOWED_EMAILS is mandatory (protects the paid Gemini key).
-if [ -z "${ALLOWED_EMAILS:-}" ]; then
-  echo "ERROR: ALLOWED_EMAILS is empty. Give a comma-separated list of Google accounts, e.g. ALLOWED_EMAILS=me@gmail.com,friend@gmail.com" >&2
+# ---- 1. Validate EVERYTHING first. No Google Cloud command runs before this succeeds. ----
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+if ! command -v node >/dev/null 2>&1; then
+  echo "ERROR: Node.js 22+ is required to validate the configuration before deploying." >&2
   exit 1
 fi
+# Same rules as the backend (server/shared/config-rules.mjs); prints the cleaned-up email list.
+ALLOWED_EMAILS="$(node "$SCRIPT_DIR/validate-config.mjs" --print-emails)" || exit 1
+
+PROJECT_ID="${PROJECT_ID// /}"
+OAUTH_CLIENT_ID="${OAUTH_CLIENT_ID// /}"
 REGION="${REGION:-asia-south1}"
 SERVICE="${SERVICE:-ai-movie-studio}"
 BUCKET="${BUCKET:-${PROJECT_ID}-movie-studio-media}"
 SA_NAME="${SA_NAME:-movie-studio-run}"
 SA="${SA_NAME}@${PROJECT_ID}.iam.gserviceaccount.com"
-ALLOWED_EMAILS="${ALLOWED_EMAILS:-}"
 SIGNED_URLS="${SIGNED_URLS:-true}"
 
 cat <<INFO
 Project:  ${PROJECT_ID}      Region: ${REGION}
 Service:  ${SERVICE}         Bucket: gs://${BUCKET}
 Runs as:  ${SA}
-Sign-in:  ${OAUTH_CLIENT_ID}  Allowed: ${ALLOWED_EMAILS:-ANY Google account}
+Sign-in:  ${OAUTH_CLIENT_ID}  Allowed: ${ALLOWED_EMAILS}
 
 This will enable APIs and create/update billable resources in ${PROJECT_ID}.
 INFO

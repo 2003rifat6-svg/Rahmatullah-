@@ -12,6 +12,7 @@ import { BlobJobStore, FirestoreJobStore, JobStore } from './jobStore';
 import { InlineJobQueue, SUPPORTED_QUEUES } from './queue';
 import { BlobUsageStore, FirestoreUsageStore, quotaConfigFromEnv, UsageStore } from './usage';
 import { createGeminiProvider } from './provider';
+import { parseAllowedEmails, validateOAuthClientId } from './shared/config-rules.mjs';
 
 export class ConfigError extends Error {}
 
@@ -36,14 +37,12 @@ export function buildOptionsFromEnv(env: NodeJS.ProcessEnv = process.env): AppOp
   if (clientId) {
     const secret = env.SESSION_SECRET || '';
     if (secret.length < 32) throw new ConfigError('SESSION_SECRET must be at least 32 characters when sign-in is enabled.');
-    const allowedEmails = (env.ALLOWED_EMAILS || '')
-      .split(',')
-      .map((e) => e.trim().toLowerCase())
-      .filter(Boolean);
-    // Mandatory: without it any Google account could sign in and spend the Gemini key.
-    if (!allowedEmails.length) {
-      throw new ConfigError('ALLOWED_EMAILS is required when sign-in is enabled (comma-separated Google accounts). Refusing to start open to every Google user.');
-    }
+    // Same rules as the deployment script (server/shared/config-rules.mjs).
+    const idErrors = validateOAuthClientId(clientId);
+    if (idErrors.length) throw new ConfigError(idErrors.join(' ').replace('OAUTH_CLIENT_ID', 'GOOGLE_OAUTH_CLIENT_ID'));
+    const parsed = parseAllowedEmails(env.ALLOWED_EMAILS);
+    if (parsed.errors.length) throw new ConfigError(`${parsed.errors.join(' ')} Refusing to start open to every Google user.`);
+    const allowedEmails = parsed.emails;
     auth = {
       mode: 'google',
       googleClientId: clientId,
