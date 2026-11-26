@@ -1,0 +1,7 @@
+const { chromium } = require('playwright'); const http = require('http'), fs = require('fs'), path = require('path');
+const dir = __dirname; const html = `<!doctype html><script type="importmap">{"imports":{"three":"/node_modules/three/build/three.module.js","three/addons/":"/node_modules/three/examples/jsm/"}}</script><script type="module" src="/ep01.js"></script>`;
+const srv = http.createServer((q, r) => { const u = decodeURIComponent(q.url.split('?')[0]); if (u === '/') { r.writeHead(200, { 'content-type': 'text/html' }); return r.end(html); } const f = path.join(dir, path.normalize(u)); if (!fs.existsSync(f)) { r.writeHead(404); return r.end(); } r.writeHead(200, { 'content-type': u.endsWith('.js') ? 'text/javascript' : 'application/octet-stream' }); fs.createReadStream(f).pipe(r); }).listen(0, async () => {
+  const b = await chromium.launch({ args: ['--use-angle=swiftshader', '--enable-unsafe-swiftshader'] }); const p = await b.newPage({ viewport: { width: 1920, height: 1080 } });
+  p.on('pageerror', e => console.log('pageerror', e.message)); await p.goto(`http://127.0.0.1:${srv.address().port}/`); await p.waitForFunction(() => window.ready, null, { timeout: 90000 }); await p.evaluate(() => document.fonts.ready);
+  for (const v of ['A', 'B', 'C']) { const d = await p.evaluate(v => window.thumb(v), v); fs.writeFileSync(path.join(dir, `thumb_${v}.jpg`), Buffer.from(d.split(',')[1], 'base64')); }
+  await b.close(); srv.close(); });
