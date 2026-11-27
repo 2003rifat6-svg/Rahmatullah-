@@ -6,7 +6,7 @@ import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js'
 import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
 
 export { THREE };
-const VERT = new URLSearchParams(location.search).get('v') === '1';
+export const VERT = new URLSearchParams(location.search).get('v') === '1';
 export const W = VERT ? 1080 : 1920, H = VERT ? 1920 : 1080;
 export const clamp = (x, a = 0, b = 1) => Math.max(a, Math.min(b, x));
 export const lerp = (a, b, k) => a + (b - a) * k;

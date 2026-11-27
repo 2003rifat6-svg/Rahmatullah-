@@ -1,5 +1,5 @@
 // Brevane #01 — "Your Phone Has a Hidden Mode. Never Turn It On."  (no subtitles burned in)
-import { THREE, W, H, clamp, lerp, ease, easeOut, prog, V, Y, rng, renderer, scene, camera, composer, bloom, look, lightRig,
+import { VERT, THREE, W, H, clamp, lerp, ease, easeOut, prog, V, Y, rng, renderer, scene, camera, composer, bloom, look, lightRig,
   makeChar, poseChar, standPose, sitPose, setFace, makePhone, placePhone, TOGGLE_LOCAL } from './core.js';
 import { drawPhoneUI } from './ui.js';
 import { bedroom, school, street, store, house, highway, showSet } from './sets.js';
@@ -71,7 +71,7 @@ function phoneCU(t, k, ui, o = {}) {
   if (!focus && cards && !o.wide) { focus = ui.under ? V(0, -.028, 0) : ui.mode === 'notif' ? V(0, .02, 0) : V(0, .008, 0); d0 = .19; d1 = .16; }
   const n = phone.g.localToWorld(V(0, 0, 1)).sub(phone.g.position).normalize();
   const tgt = focus ? phone.g.localToWorld(focus.clone()) : phone.g.position.clone().add(o.aimOff || V(0, 0, 0));
-  const d = lerp(d0 ?? .3, d1 ?? .27, ease(k));
+  let d = lerp(d0 ?? .3, d1 ?? .27, ease(k)); if (VERT) d = Math.max(d, .27);
   const sh = o.shake ? V(Math.sin(t * 60), Math.cos(t * 50), 0).multiplyScalar(o.shake) : V(0, 0, 0);
   look(tgt.clone().add(n.multiplyScalar(d)).add(sh), tgt, o.fov || 34);
 }
@@ -291,7 +291,7 @@ function overlay(t) {
     og.save(); og.globalAlpha = a; og.textAlign = 'center'; og.textBaseline = 'middle'; og.font = '800 46px Inter'; og.fillStyle = '#00e5ff'; og.shadowColor = '#00e5ff'; og.shadowBlur = 25;
     og.fillText('B R E V A N E', W / 2, H / 2 - 20); og.shadowBlur = 0; og.font = '500 30px Inter'; og.fillStyle = '#9fb0c8'; og.fillText('Impossible ideas. Real consequences.', W / 2, H / 2 + 40); og.restore(); }
   if (t > DURATION - .8) { og.fillStyle = `rgba(0,0,0,${prog(t, DURATION - .8, DURATION)})`; og.fillRect(0, 0, W, H); }
-  if (window.SHORT_TITLE) { og.save(); og.textAlign = 'center'; og.textBaseline = 'middle'; og.font = '900 92px Inter'; og.lineJoin = 'round';
+  if (window.SHORT_TITLE) { og.save(); og.textAlign = 'center'; og.textBaseline = 'middle'; let fs = 92; og.font = `900 ${fs}px Inter`; while (og.measureText(window.SHORT_TITLE).width > W - 90 && fs > 40) { fs -= 4; og.font = `900 ${fs}px Inter`; } og.lineJoin = 'round';
     og.lineWidth = 16; og.strokeStyle = '#05070d'; og.strokeText(window.SHORT_TITLE, W / 2, 230); og.fillStyle = '#ffffff'; og.shadowColor = 'rgba(0,229,255,.7)'; og.shadowBlur = 25; og.fillText(window.SHORT_TITLE, W / 2, 230); og.restore(); }
   return out;
 }
