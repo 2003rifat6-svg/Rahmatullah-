@@ -15,14 +15,30 @@ Your Phone Has a Setting That Only Appears at 3:33 AM
 ```
 
 ## বিবরণ (Description)
-`[CHAPTERS]`-এর জায়গায় ফাইনাল রেন্ডারের পর আসা `chapters.txt` বসবে (সময়গুলো আসল কণ্ঠের সাথে মেলানো থাকবে)।
+`0:00 The setting that only appears at 3:33 AM
+0:35 A message from 12:41 PM
+1:10 The cafeteria test
+1:54 One perfect week
+2:46 The battery
+3:34 Messages from yourself
+4:08 Mom
+4:38 The car keys
+5:25 The update`-এর জায়গায় ফাইনাল রেন্ডারের পর আসা `chapters.txt` বসবে (সময়গুলো আসল কণ্ঠের সাথে মেলানো থাকবে)।
 ```
 What if your phone had a hidden setting that only appears at 3:33 AM... and it showed you notifications from tomorrow? You could fix every mistake before it happens. Dodge every disaster. Be the luckiest person alive... until you notice what every fix costs.
 
 This is Part 1 of 3.
 
 Chapters:
-[CHAPTERS]
+0:00 The setting that only appears at 3:33 AM
+0:35 A message from 12:41 PM
+1:10 The cafeteria test
+1:54 One perfect week
+2:46 The battery
+3:34 Messages from yourself
+4:08 Mom
+4:38 The car keys
+5:25 The update
 
 Which notification would YOU change first? Tell us in the comments.
 Subscribe to Brevane: impossible ideas, real consequences.
