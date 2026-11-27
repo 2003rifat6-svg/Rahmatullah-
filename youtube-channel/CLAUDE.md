@@ -30,3 +30,10 @@ Use `episodes/ep01-phone-hidden-mode.md` as the template: summary table, TTS nar
 ## Owner rule (2026-11-27)
 - **No Shorts.** Do not make or suggest Shorts anymore. Long videos only, every other day at 10 PM BD time.
 - Style: pastel 3D + top-right counter + labels + character dialogue voices; background music kept low (~16 dB under voice), master -14 LUFS.
+
+## Production rules from YouTube feedback on Ep1 v3 (apply to every new video)
+1. **Title cards never cover a face.** On-screen title or big text goes on an empty area (top third, or over a wide/establishing shot), never over a character close-up.
+2. **No static shot longer than ~4 s.** Long narration lines (e.g. reading a message) are split into 2–3 shots: slow push-in, then a reaction cut, then back. Every phone close-up gets slow motion (zoom/drift) at minimum.
+3. **End-screen space:** finish every video with a 12–15 s end card (soft music, logo, two empty boxes for "next video" + subscribe) so YouTube End Screen elements fit (they need 5–20 s).
+4. Keep what worked: clock/time hook in the first 10 s, top-right counter tied to the story, top-left time labels, music drop + SFX under big reveals, cliffhanger last line.
+5. Always upload the English .srt as captions (never burned in).

@@ -8,6 +8,9 @@ Your Phone Has a Hidden Mode. Never Turn It On.
 ```
 Test & Compare-এর বিকল্প:
 ```
+Never Turn On This Hidden Mode at 3:33 AM
+```
+```
 There's a Hidden Mode on Your Phone. Don't Find It.
 ```
 ```
@@ -67,3 +70,6 @@ Be honest: which notification would YOU change first? And would you stop at 1%?
 - Altered or synthetic content: **No** (স্পষ্টতই কার্টুন অ্যানিমেশন)
 - Playlist: `Brevane Stories`
 - Subtitles: Subtitles → Add language → English → Upload file → With timing → `.srt` ফাইল
+
+## End Screen
+ভিডিওর শেষে End Screen দাও (Ep2 আপলোড হলে): Best for viewer + Subscribe। Ep2 থেকে ভিডিওর শেষে ১২–১৫ সেকেন্ডের এন্ড কার্ড থাকবে।
