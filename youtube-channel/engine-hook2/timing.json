@@ -1,0 +1,44 @@
+[
+{
+"id": "n0",
+"start": 0.5,
+"end": 2.82,
+"file": "vt/n0.wav"
+},
+{
+"id": "n1",
+"start": 3.17,
+"end": 8.1,
+"file": "vt/n1.wav"
+},
+{
+"id": "mom",
+"start": 8.45,
+"end": 10.69,
+"file": "vt/mom.wav"
+},
+{
+"id": "n2",
+"start": 10.99,
+"end": 12.24,
+"file": "vt/n2.wav"
+},
+{
+"id": "teacher",
+"start": 12.59,
+"end": 13.28,
+"file": "vt/teacher.wav"
+},
+{
+"id": "kids",
+"start": 13.53,
+"end": 16.43,
+"file": "vt/kids.wav"
+},
+{
+"id": "n3",
+"start": 16.88,
+"end": 20.75,
+"file": "vt/n3.wav"
+}
+]
