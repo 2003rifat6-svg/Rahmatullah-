@@ -1,6 +1,6 @@
 # Brevane #01: আপলোড প্যাক
 
-ভিডিওর ভেতরে কোনো সাবটাইটেল নেই। সাবটাইটেল আলাদা ফাইলে: `Brevane_01_Hidden_Mode_v2.en.srt` (ফাইনাল রেন্ডারের পর এই ফোল্ডারে আসবে)।
+ভিডিওর ভেতরে কোনো সাবটাইটেল নেই। সাবটাইটেল আলাদা ফাইলে: `Brevane_01_Hidden_Mode_v3.en.srt` (v3 = ফাইনাল আপলোড ভার্সন)।
 
 ## টাইটেল
 ```
@@ -33,12 +33,12 @@ Chapters:
 0:00 The setting that only appears at 3:33 AM
 0:31 A message from 12:41 PM
 1:02 The cafeteria test
-1:43 One perfect week
-2:25 The battery
-3:13 Messages from yourself
-3:43 Mom
-4:21 The car keys
-4:53 The update
+1:47 One perfect week
+2:37 The battery
+3:25 Messages from yourself
+3:56 Mom
+4:33 The car keys
+5:10 The update
 
 Which notification would YOU change first? Tell us in the comments.
 Subscribe to Brevane: impossible ideas, real consequences.
@@ -67,9 +67,9 @@ Be honest: which notification would YOU change first? And would you stop at 1%?
 ## থাম্বনেইল (১২৮০×৭২০)
 | ফাইল | লেখা | কখন |
 |---|---|---|
-| `thumbnail_A_ITS_ON.jpg` | IT'S ON. | **প্রধান** (আপলোডের সময়) |
-| `thumbnail_B_333AM.jpg` | 3:33 AM | Test & Compare |
-| `thumbnail_C_1PERCENT.jpg` | 1% LEFT | Test & Compare |
+| `thumbnail_v3_A_DONT_TURN_IT_ON.jpg` | DON'T TURN IT ON !! | **প্রধান** (আপলোডের সময়) |
+| `thumbnail_v3_B_333AM.jpg` | 3:33 AM !! | Test & Compare |
+| `thumbnail_v3_C_1PERCENT.jpg` | 1% LEFT !! | Test & Compare |
 
 ## অন্য সেটিং
 - Category: Entertainment · Language: English (United States) · Not made for kids

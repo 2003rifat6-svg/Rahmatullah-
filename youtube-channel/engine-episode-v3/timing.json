@@ -1,0 +1,398 @@
+[
+{
+"start": 0.5,
+"end": 4.3,
+"text": "There's a setting on your phone you've never seen.",
+"file": "vo3/p00.wav"
+},
+{
+"start": 4.58,
+"end": 8.957,
+"text": "It only shows up at three thirty-three AM.",
+"file": "vo3/p01.wav"
+},
+{
+"start": 9.237,
+"end": 11.851,
+"text": "It's called... Hidden Mode.",
+"file": "vo3/p02.wav"
+},
+{
+"start": 12.131,
+"end": 16.62,
+"text": "And no matter what happens... never turn it on.",
+"file": "vo3/p03.wav"
+},
+{
+"start": 17.5,
+"end": 19.711,
+"text": "You turned it on.",
+"file": "vo3/p04.wav"
+},
+{
+"start": 19.991,
+"end": 24.74,
+"text": "At first, nothing happens. No sound. No pop-up.",
+"file": "vo3/p05.wav"
+},
+{
+"start": 25.02,
+"end": 28.586,
+"text": "Just a tiny blue dot, right next to your battery.",
+"file": "vo3/p06.wav"
+},
+{
+"start": 28.866,
+"end": 30.93,
+"text": "So you go back to sleep.",
+"file": "vo3/p07.wav"
+},
+{
+"start": 31.71,
+"end": 35.358,
+"text": "In the morning, you have one new notification.",
+"file": "vo3/p08.wav"
+},
+{
+"start": 35.638,
+"end": 37.489,
+"text": "It's from your best friend, Jake.",
+"file": "vo3/p09.wav"
+},
+{
+"start": 37.769,
+"end": 43.374,
+"text": "It says: \"Bro... I can't believe you fell in the cafeteria.\"",
+"file": "vo3/p10.wav"
+},
+{
+"start": 43.654,
+"end": 50.154,
+"text": "Which is weird. Because it's seven AM. And you haven't even left for school.",
+"file": "vo3/p11.wav"
+},
+{
+"start": 50.434,
+"end": 53.836,
+"text": "Then you see the time on the message.",
+"file": "vo3/p12.wav"
+},
+{
+"start": 54.116,
+"end": 56.883,
+"text": "Twelve forty-one PM. Today.",
+"file": "vo3/p13.wav"
+},
+{
+"start": 57.163,
+"end": 62.186,
+"text": "The message... hasn't been sent yet.",
+"file": "vo3/p14.wav"
+},
+{
+"start": 62.916,
+"end": 68.829,
+"text": "At twelve forty, you walk into the cafeteria. Very... slowly.",
+"file": "vo3/p15.wav"
+},
+{
+"start": 69.109,
+"end": 75.138,
+"text": "And there it is. A puddle of spilled milk. Right where you would have stepped.",
+"file": "vo3/p16.wav"
+},
+{
+"start": 75.418,
+"end": 77.173,
+"text": "You step over it.",
+"file": "vo3/p17.wav"
+},
+{
+"start": 81.703,
+"end": 85.518,
+"text": "Twelve forty-one. Jake doesn't send anything. Because nothing happened.",
+"file": "vo3/p18.wav"
+},
+{
+"start": 85.798,
+"end": 92.578,
+"text": "You check your phone. The notification is gone. Like it never existed.",
+"file": "vo3/p19.wav"
+},
+{
+"start": 92.858,
+"end": 96.389,
+"text": "And your battery? Ninety-nine percent.",
+"file": "vo3/p20.wav"
+},
+{
+"start": 96.669,
+"end": 103.815,
+"text": "Hidden Mode doesn't show you the future. It shows you notifications from the future.",
+"file": "vo3/p21.wav"
+},
+{
+"start": 104.095,
+"end": 106.927,
+"text": "And you just deleted one.",
+"file": "vo3/p22.wav"
+},
+{
+"start": 107.657,
+"end": 110.264,
+"text": "So, you start using it.",
+"file": "vo3/p23.wav"
+},
+{
+"start": 110.544,
+"end": 115.377,
+"text": "A text from your teacher: \"Pop quiz tomorrow. Chapter seven.\"",
+"file": "vo3/p24.wav"
+},
+{
+"start": 115.657,
+"end": 122.504,
+"text": "You read chapter seven. You get an A. Your teacher looks... suspicious.",
+"file": "vo3/p25.wav"
+},
+{
+"start": 127.806,
+"end": 131.761,
+"text": "A weather alert: \"Heavy rain at four fifteen.\"",
+"file": "vo3/p26.wav"
+},
+{
+"start": 132.041,
+"end": 136.548,
+"text": "You bring an umbrella. Everyone else gets soaked.",
+"file": "vo3/p27.wav"
+},
+{
+"start": 139.926,
+"end": 144.013,
+"text": "A message from your bank: \"Your card was declined.\"",
+"file": "vo3/p28.wav"
+},
+{
+"start": 144.293,
+"end": 146.019,
+"text": "You don't buy the sneakers.",
+"file": "vo3/p29.wav"
+},
+{
+"start": 146.299,
+"end": 151.528,
+"text": "For one whole week, you are the luckiest person alive.",
+"file": "vo3/p30.wav"
+},
+{
+"start": 151.808,
+"end": 156.807,
+"text": "Forty notifications changed. Forty little disasters... gone.",
+"file": "vo3/p31.wav"
+},
+{
+"start": 157.587,
+"end": 159.28,
+"text": "Then you notice your battery.",
+"file": "vo3/p32.wav"
+},
+{
+"start": 159.56,
+"end": 162.825,
+"text": "Sixty percent. And it's plugged in.",
+"file": "vo3/p33.wav"
+},
+{
+"start": 163.105,
+"end": 167.212,
+"text": "It doesn't charge anymore. It only goes down.",
+"file": "vo3/p34.wav"
+},
+{
+"start": 167.492,
+"end": 172.624,
+"text": "One percent... every time you change the future.",
+"file": "vo3/p35.wav"
+},
+{
+"start": 172.904,
+"end": 177.302,
+"text": "Fine. You'll just turn it off.",
+"file": "vo3/p36.wav"
+},
+{
+"start": 177.582,
+"end": 181.338,
+"text": "Except... the toggle is gone.",
+"file": "vo3/p37.wav"
+},
+{
+"start": 181.618,
+"end": 189.112,
+"text": "You restart the phone. You reset it. You even buy a new one.",
+"file": "vo3/p38.wav"
+},
+{
+"start": 189.392,
+"end": 193.443,
+"text": "The blue dot shows up on every phone you touch.",
+"file": "vo3/p39.wav"
+},
+{
+"start": 193.723,
+"end": 199.963,
+"text": "And the notifications keep coming. And you keep fixing them. Because how could you not?",
+"file": "vo3/p40.wav"
+},
+{
+"start": 200.243,
+"end": 203.221,
+"text": "Twenty percent. Ten. Five.",
+"file": "vo3/p41.wav"
+},
+{
+"start": 203.501,
+"end": 204.832,
+"text": "Three percent.",
+"file": "vo3/p42.wav"
+},
+{
+"start": 205.712,
+"end": 207.685,
+"text": "That's when they change.",
+"file": "vo3/p43.wav"
+},
+{
+"start": 207.965,
+"end": 214.562,
+"text": "They stop coming from your friends. They start coming from... you.",
+"file": "vo3/p44.wav"
+},
+{
+"start": 214.842,
+"end": 216.232,
+"text": "\"Stop changing things.\"",
+"file": "vo3/p45.wav"
+},
+{
+"start": 216.512,
+"end": 218.536,
+"text": "\"You don't know what you're using up.\"",
+"file": "vo3/p46.wav"
+},
+{
+"start": 218.816,
+"end": 223.201,
+"text": "\"Save the rest. You're going to need it.\"",
+"file": "vo3/p47.wav"
+},
+{
+"start": 223.481,
+"end": 225.12,
+"text": "So you stop.",
+"file": "vo3/p48.wav"
+},
+{
+"start": 225.4,
+"end": 231.156,
+"text": "You let everything happen. You trip in the cafeteria. You fail a quiz. You get soaked.",
+"file": "vo3/p49.wav"
+},
+{
+"start": 231.436,
+"end": 235.157,
+"text": "And your battery holds. Three percent.",
+"file": "vo3/p50.wav"
+},
+{
+"start": 236.237,
+"end": 243.24,
+"text": "Then, at three thirty-three AM... one last notification.",
+"file": "vo3/p51.wav"
+},
+{
+"start": 243.52,
+"end": 245.694,
+"text": "It's from your mom.",
+"file": "vo3/p52.wav"
+},
+{
+"start": 245.974,
+"end": 255.126,
+"text": "Sent tomorrow. Eight fourteen AM. \"Running late. Taking the highway. Love you.\"",
+"file": "vo3/p53.wav"
+},
+{
+"start": 255.406,
+"end": 261.812,
+"text": "That's all it says. But the screen around it... is shaking.",
+"file": "vo3/p54.wav"
+},
+{
+"start": 262.092,
+"end": 266.134,
+"text": "And suddenly, the messages from yourself make sense.",
+"file": "vo3/p55.wav"
+},
+{
+"start": 266.414,
+"end": 273.047,
+"text": "You weren't telling yourself to stop. You were saving the battery. For this.",
+"file": "vo3/p56.wav"
+},
+{
+"start": 273.727,
+"end": 277.211,
+"text": "In the morning, you hide her car keys.",
+"file": "vo3/p57.wav"
+},
+{
+"start": 281.041,
+"end": 285.284,
+"text": "She's late. She's furious. She takes the long way.",
+"file": "vo3/p58.wav"
+},
+{
+"start": 285.564,
+"end": 295.556,
+"text": "At eight fourteen, there's a huge crash on the highway. Your mom is twenty miles away, stuck behind a school bus, still yelling at you on the phone.",
+"file": "vo3/p59.wav"
+},
+{
+"start": 295.836,
+"end": 300.843,
+"text": "Battery: one percent. It cost you two.",
+"file": "vo3/p60.wav"
+},
+{
+"start": 301.123,
+"end": 308.381,
+"text": "That night, your mom hugs you a little longer than usual. She doesn't know why.",
+"file": "vo3/p61.wav"
+},
+{
+"start": 311.017,
+"end": 316.797,
+"text": "Then your phone lights up. A pop-up you've never seen before.",
+"file": "vo3/p62.wav"
+},
+{
+"start": 317.077,
+"end": 323.171,
+"text": "\"Hidden Mode update available. Install tonight at three thirty-three AM?\"",
+"file": "vo3/p63.wav"
+},
+{
+"start": 323.451,
+"end": 329.842,
+"text": "And under it... one more message. From you. Sent tomorrow.",
+"file": "vo3/p64.wav"
+},
+{
+"start": 330.622,
+"end": 334.166,
+"text": "\"Whatever you do... don't install it.\"",
+"file": "vo3/p65.wav"
+}
+]

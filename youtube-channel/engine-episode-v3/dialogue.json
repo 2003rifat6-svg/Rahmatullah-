@@ -1,0 +1,37 @@
+[
+{
+"id": "jake1",
+"after": 17,
+"start": 77.623,
+"end": 81.123,
+"file": "dlg/jake1.wav"
+},
+{
+"id": "teacher1",
+"after": 25,
+"start": 122.954,
+"end": 127.226,
+"file": "dlg/teacher1.wav"
+},
+{
+"id": "jake2",
+"after": 27,
+"start": 136.998,
+"end": 139.346,
+"file": "dlg/jake2.wav"
+},
+{
+"id": "mom1",
+"after": 57,
+"start": 277.661,
+"end": 280.461,
+"file": "dlg/mom1.wav"
+},
+{
+"id": "mom2",
+"after": 61,
+"start": 308.831,
+"end": 309.836,
+"file": "dlg/mom2.wav"
+}
+]
