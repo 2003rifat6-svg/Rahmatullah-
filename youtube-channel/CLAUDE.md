@@ -24,4 +24,9 @@ This folder is the complete plan for the owner's US-targeted animated YouTube ch
 - Production tools: the owner's app Ruvo (repo `2003rifat6-svg/Rahmatullah-`), CapCut, Canva.
 
 ## New episode files
-Use `episodes/ep01-phone-hidden-mode.md` as the template: summary table, TTS narration block, shot list (🎥 clips / 🖼️ stills), 3 thumbnails, upload pack, Short, one-line Ruvo studio start.
+Use `episodes/ep01-phone-hidden-mode.md` as the template: summary table, TTS narration block, shot list (🎥 clips / 🖼️ stills), 3 thumbnails, upload pack, one-line Ruvo studio start.
+
+
+## Owner rule (2026-11-27)
+- **No Shorts.** Do not make or suggest Shorts anymore. Long videos only, every other day at 10 PM BD time.
+- Style: pastel 3D + top-right counter + labels + character dialogue voices; background music kept low (~16 dB under voice), master -14 LUFS.
