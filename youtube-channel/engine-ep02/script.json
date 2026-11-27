@@ -1,65 +1,500 @@
 [
-["N","Seven-oh-two a.m. Your phone buzzes.","reuse:n0"],
-["N","Plus one dollar. Sender: unknown. Memo... your name.","reuse:n1"],
-["MOM","Nev! Breakfast!","reuse:mom"],
-["N","Ding. Another dollar.","reuse:n2"],
-["TEACH","Nev?","reuse:teacher"],
-["KIDS","Nev! Nev! Nev! Nev!","reuse:kids"],
-["N","So what if you earned one dollar... every time someone said your name?","reuse:n3"],
-["N","Okay. First, you test it.","NA"],
-["NEV","Nev. Nev... Nev!","NEV"],
-["N","Nothing. Your own voice doesn't count.","NA"],
-["N","Texting it doesn't count either. It has to be said out loud. By someone else.","NA"],
-["N","So you call the one person who will do anything for free food.","NA"],
-["JAKE","Wait. You'll buy me tacos if I just say your name? Nev. Nev. Nev! Nev, Nev, Nev!","JAKE"],
-["N","Six dollars.","NA"],
-["JAKE","Bro, this is the easiest job I've ever had! Nev! Nev-Nev-Nev! Hahaha!","JAKE"],
-["N","By lunch, Jake has said your name two hundred and forty times. You buy him three tacos. You're still up two hundred and thirty bucks.","NA"],
-["N","Day three. You figure out the real trick.","NA"],
-["N","Names spread.","NA"],
-["N","You sign up for the school talent show. Your act? You just... stand there.","NA"],
-["N","And the whole gym chants.","NA"],
-["KIDS","Nev! Nev! Nev! Nev!","reuse:kids"],
-["N","Four hundred kids. Ninety seconds. Plus... eleven thousand dollars.","NA"],
-["N","Somebody films it. By Friday, it's a trend.","NA"],
-["N","Hashtag Say Nev. Fourteen million views.","NA"],
-["N","Kids in Ohio. A grandma in Texas. A guy on a fishing boat in Alaska.","NA"],
-["N","Everybody is saying your name.","NA"],
-["N","And your phone... never stops buzzing.","NA"],
-["N","Day nine. One million, two hundred eighty-four thousand dollars.","NA"],
-["N","You buy your mom a new car. You buy Jake a lifetime supply of tacos.","NA"],
-["JAKE","I'm not crying. You're crying! Hahaha.","JAKE"],
-["N","Then, Monday morning... Jake doesn't laugh.","NB"],
-["JAKE","Bro... my bank account. It's empty. Like, zero. I had two hundred and forty dollars yesterday.","JAKE"],
-["N","Two hundred and forty dollars.","NB"],
-["N","The exact number of times he said your name.","NB"],
-["N","You check the transfers. Every single one has a sender. They're not coming from nowhere.","NB"],
-["N","Every time someone says your name... the dollar comes out of their pocket.","NB"],
-["MOM","Honey, my card got declined at the grocery store. That's weird, right?","MOM"],
-["N","She said your name eleven times this week. Calling you for dinner.","NB"],
-["N","Fourteen million people said Nev. Fourteen million people are one dollar poorer. And they're starting to notice.","NB"],
-["ANCHOR","Breaking news. Thousands of Americans report a mysterious one-dollar charge... every time they say one name.","ANCHOR"],
-["N","By Wednesday... nobody says your name anymore.","NB"],
-["TEACH","Student fourteen. Present?","TEACH"],
-["JAKE","Hey... dude. Hey, you. Uh... buddy.","JAKE"],
-["N","Your best friend won't say your name.","NB"],
-["N","Your mom calls you sweetheart now. Kiddo. Champ. Anything but Nev.","NB"],
-["N","The counter stops.","NB"],
-["N","And for the first time in your life... you realize how good it felt to just hear it.","NB"],
-["N","So you open the bank app. Fourteen million, two hundred thousand transfers.","NC"],
-["N","There's a button you never noticed. Return all.","NC"],
-["N","Your thumb shakes.","NC"],
-["N","It's every dollar you have.","NC"],
-["N","You press it.","NC"],
-["N","Across America, fourteen million phones buzz at once. Plus one dollar. Memo: sorry.","NC"],
-["MOM","Nev?","MOM"],
-["N","It's the first time in a week anyone has said it.","NC"],
-["N","Your phone doesn't buzz. Plus nothing. Minus nothing.","NC"],
-["N","It's just your name again.","NC"],
-["MOM","Nev! Dinner! Love you, kiddo.","MOM"],
-["JAKE","Nev! Nev! Nev! Bro, it's free now! I'm gonna say it all day! Hahaha!","JAKE"],
-["N","That night, at three thirty-three a.m., your phone lights up one last time.","NC"],
-["N","Plus one dollar. Sender: unknown. Memo... Jake.","NC"],
-["JAKE","Wait. Why did I just get a dollar?","JAKE"],
-["N","Whose name would YOU want to get paid for? Tell us in the comments.","NC"]
+[
+"N",
+"Seven-oh-two a.m. Your phone buzzes.",
+"reuse:n0",
+0
+],
+[
+"N",
+"Plus one dollar. Sender: unknown. Memo... your name.",
+"reuse:n1",
+1
+],
+[
+"MOM",
+"Nev! Breakfast!",
+"reuse:mom",
+2
+],
+[
+"N",
+"Ding. Another dollar.",
+"reuse:n2",
+3
+],
+[
+"TEACH",
+"Nev?",
+"reuse:teacher",
+4
+],
+[
+"KIDS",
+"Nev! Nev! Nev! Nev!",
+"reuse:kids",
+5
+],
+[
+"N",
+"So what if you earned one dollar... every time someone said your name?",
+"reuse:n3",
+6
+],
+[
+"N",
+"Okay. First, you test it.",
+"NA",
+7
+],
+[
+"NEV",
+"Nev. Nev... Nev!",
+"NEV",
+8
+],
+[
+"N",
+"Nothing. Your own voice doesn't count.",
+"NA",
+9
+],
+[
+"N",
+"Texting it doesn't count either. It has to be said out loud. By someone else.",
+"NA",
+10
+],
+[
+"N",
+"So you call the one person who will do anything for free food.",
+"NA",
+11
+],
+[
+"JAKE",
+"Wait. You'll buy me tacos if I just say your name? Nev. Nev. Nev! Nev, Nev, Nev!",
+"JAKE",
+12
+],
+[
+"N",
+"Six dollars.",
+"NA",
+13
+],
+[
+"JAKE",
+"Bro, this is the easiest job I've ever had! Nev! Nev-Nev-Nev! Hahaha!",
+"JAKE",
+14
+],
+[
+"N",
+"By lunch, Jake has said your name two hundred and forty times. You buy him three tacos. You're still up two hundred and thirty bucks.",
+"NA",
+15
+],
+[
+"N",
+"Then you learn the fine print.",
+"NX",
+"a1"
+],
+[
+"N",
+"Whispers count. Even a whisper is a full dollar.",
+"NX",
+"a2"
+],
+[
+"JAKE",
+"Nevvy? Nevster? Nev-a-licious? Hahaha!",
+"JX",
+"a3"
+],
+[
+"N",
+"Nicknames don't count. Only the real thing. N, E, V.",
+"NX",
+"a4"
+],
+[
+"N",
+"And recordings don't count. A video of someone saying your name, played a million times, pays you zero.",
+"NX",
+"a5"
+],
+[
+"N",
+"But a million people... saying it themselves?",
+"NX",
+"a6"
+],
+[
+"N",
+"Day three. You figure out the real trick.",
+"NA",
+16
+],
+[
+"N",
+"Names spread.",
+"NA",
+17
+],
+[
+"N",
+"You sign up for the school talent show. Your act? You just... stand there.",
+"NA",
+18
+],
+[
+"N",
+"And the whole gym chants.",
+"NA",
+19
+],
+[
+"KIDS",
+"Nev! Nev! Nev! Nev!",
+"reuse:kids",
+20
+],
+[
+"N",
+"Four hundred kids. Ninety seconds. Plus... eleven thousand dollars.",
+"NA",
+21
+],
+[
+"N",
+"Somebody films it. By Friday, it's a trend.",
+"NA",
+22
+],
+[
+"N",
+"Hashtag Say Nev. Fourteen million views.",
+"NA",
+23
+],
+[
+"N",
+"Kids in Ohio. A grandma in Texas. A guy on a fishing boat in Alaska.",
+"NA",
+24
+],
+[
+"N",
+"Everybody is saying your name.",
+"NA",
+25
+],
+[
+"N",
+"And your phone... never stops buzzing.",
+"NA",
+26
+],
+[
+"N",
+"Day nine. One million, two hundred eighty-four thousand dollars.",
+"NA",
+27
+],
+[
+"N",
+"You buy your mom a new car. You buy Jake a lifetime supply of tacos.",
+"NA",
+28
+],
+[
+"JAKE",
+"I'm not crying. You're crying! Hahaha.",
+"JAKE",
+29
+],
+[
+"N",
+"Then you start spending.",
+"NX",
+"b1"
+],
+[
+"N",
+"You pay off the house. Mom cries in the kitchen for twenty minutes.",
+"NX",
+"b2"
+],
+[
+"N",
+"You buy a gaming PC so big it needs its own fan... for its fan.",
+"NX",
+"b3"
+],
+[
+"N",
+"You tip a waitress one thousand dollars. She says, thank you, Nev. Plus one.",
+"NX",
+"b4"
+],
+[
+"JAKE",
+"Bro, we should start a business. I'll be the manager. You'll be... the name.",
+"JX",
+"b5"
+],
+[
+"N",
+"Jake prints T-shirts that just say NEV. He sells nine thousand of them. Everybody who reads one out loud... pays you.",
+"NX",
+"b6"
+],
+[
+"N",
+"Then, Monday morning... Jake doesn't laugh.",
+"NB",
+30
+],
+[
+"JAKE",
+"Bro... my bank account. It's empty. Like, zero. I had two hundred and forty dollars yesterday.",
+"JAKE",
+31
+],
+[
+"N",
+"Two hundred and forty dollars.",
+"NB",
+32
+],
+[
+"N",
+"The exact number of times he said your name.",
+"NB",
+33
+],
+[
+"N",
+"You check the transfers. Every single one has a sender. They're not coming from nowhere.",
+"NB",
+34
+],
+[
+"N",
+"Every time someone says your name... the dollar comes out of their pocket.",
+"NB",
+35
+],
+[
+"MOM",
+"Honey, my card got declined at the grocery store. That's weird, right?",
+"MOM",
+36
+],
+[
+"N",
+"She said your name eleven times this week. Calling you for dinner.",
+"NB",
+37
+],
+[
+"N",
+"Fourteen million people said Nev. Fourteen million people are one dollar poorer. And they're starting to notice.",
+"NB",
+38
+],
+[
+"N",
+"A bus driver in Ohio can't fill up his tank.",
+"NX",
+"c1"
+],
+[
+"N",
+"A grandma in Texas finds forty dollars missing from her pension. She said your name forty times. She thought it was cute.",
+"NX",
+"c2"
+],
+[
+"N",
+"People stop saying it. They point. They write it on paper. They call you, that kid.",
+"NX",
+"c3"
+],
+[
+"JAKE",
+"Bro, my mom grounded me for saying your name at dinner. She thinks I'm in a gang.",
+"JX",
+"c4"
+],
+[
+"ANCHOR",
+"Breaking news. Thousands of Americans report a mysterious one-dollar charge... every time they say one name.",
+"ANCHOR",
+39
+],
+[
+"N",
+"By Wednesday... nobody says your name anymore.",
+"NB",
+40
+],
+[
+"TEACH",
+"Student fourteen. Present?",
+"TEACH",
+41
+],
+[
+"JAKE",
+"Hey... dude. Hey, you. Uh... buddy.",
+"JAKE",
+42
+],
+[
+"N",
+"Your best friend won't say your name.",
+"NB",
+43
+],
+[
+"N",
+"Your mom calls you sweetheart now. Kiddo. Champ. Anything but Nev.",
+"NB",
+44
+],
+[
+"N",
+"The counter stops.",
+"NB",
+45
+],
+[
+"N",
+"And for the first time in your life... you realize how good it felt to just hear it.",
+"NB",
+46
+],
+[
+"N",
+"You try to make it stop.",
+"NX",
+"d1"
+],
+[
+"N",
+"You change your name. Online forms, a judge, the whole thing. Your new name is Steve.",
+"NX",
+"d2"
+],
+[
+"N",
+"Nothing changes. People still know you as Nev. And the money follows the name people say... not the name on the paper.",
+"NX",
+"d3"
+],
+[
+"JAKE",
+"Steve? Bro, you don't look like a Steve. You look like... yeah, I'm not saying it.",
+"JX",
+"d4"
+],
+[
+"N",
+"So you open the bank app. Fourteen million, two hundred thousand transfers.",
+"NC",
+47
+],
+[
+"N",
+"There's a button you never noticed. Return all.",
+"NC",
+48
+],
+[
+"N",
+"Your thumb shakes.",
+"NC",
+49
+],
+[
+"N",
+"It's every dollar you have.",
+"NC",
+50
+],
+[
+"N",
+"You press it.",
+"NC",
+51
+],
+[
+"N",
+"Across America, fourteen million phones buzz at once. Plus one dollar. Memo: sorry.",
+"NC",
+52
+],
+[
+"MOM",
+"Nev?",
+"MOM",
+53
+],
+[
+"N",
+"It's the first time in a week anyone has said it.",
+"NC",
+54
+],
+[
+"N",
+"Your phone doesn't buzz. Plus nothing. Minus nothing.",
+"NC",
+55
+],
+[
+"N",
+"It's just your name again.",
+"NC",
+56
+],
+[
+"MOM",
+"Nev! Dinner! Love you, kiddo.",
+"MOM",
+57
+],
+[
+"JAKE",
+"Nev! Nev! Nev! Bro, it's free now! I'm gonna say it all day! Hahaha!",
+"JAKE",
+58
+],
+[
+"N",
+"That night, at three thirty-three a.m., your phone lights up one last time.",
+"NC",
+59
+],
+[
+"N",
+"Plus one dollar. Sender: unknown. Memo... Jake.",
+"NC",
+60
+],
+[
+"JAKE",
+"Wait. Why did I just get a dollar?",
+"JAKE",
+61
+],
+[
+"N",
+"Whose name would YOU want to get paid for? Tell us in the comments.",
+"NC",
+62
+]
 ]

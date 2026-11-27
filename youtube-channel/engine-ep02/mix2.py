@@ -1,6 +1,6 @@
 import json, subprocess, numpy as np
-SR = 48000; T = json.load(open('timing.json')); ps = lambda i: T[i]['start']; pe = lambda i: T[i]['end']
-END0 = pe(len(T) - 1) + .7; DUR = END0 + 13; N = int(DUR * SR); t = np.arange(N) / SR; rnd = np.random.default_rng(9)
+SR = 48000; T = json.load(open('timing.json')); P = {x['id']: i for i, x in enumerate(T)}; ps = lambda i: T[P[i]]['start']; pe = lambda i: T[P[i]]['end']
+END0 = T[-1]['end'] + .7; DUR = END0 + 13; N = int(DUR * SR); t = np.arange(N) / SR; rnd = np.random.default_rng(9)
 def load(f, rate=1.0):
     af = f'asetrate={int(SR*rate)},aresample={SR}' if rate != 1 else f'aresample={SR}'
     return np.frombuffer(subprocess.run(['ffmpeg','-loglevel','error','-i',f,'-af',af,'-ac','1','-f','f32le','-'],capture_output=True).stdout, np.float32).astype(np.float64)
@@ -84,11 +84,12 @@ def amb(a, b, kind, g):
     elif kind == 'town': n = np.convolve(n, np.ones(200)/200, 'same')*4
     elif kind == 'water': n = np.convolve(n, np.ones(60)/60, 'same')*(.6+.4*np.sin(2*np.pi*.3*np.arange(L)/SR))
     put(sfx, n*env(L, .3, .3), a, g)
-W_ = lambda i: (ps(i)-.15, (ps(i+1)-.15) if i+1 < len(T) else END0)
+W_ = lambda i: (ps(i)-.15, (T[P[i]+1]['start']-.15) if P[i]+1 < len(T) else END0)
 LOC = {}
 for i in [5, 15]: LOC[i] = 'crowd'
-for i in [6, 16, 25, 28, 29, 35, 38, 52, 58, 62]: LOC[i] = 'town'
-for i in [17, 30, 31, 32, 33, 40, 42, 43]: LOC[i] = 'crowd_l'
+for i in [6, 16, 25, 28, 29, 35, 38, 52, 58, 62, 'b1', 'b4', 'b6', 'c2', 'd3']: LOC[i] = 'town'
+for i in [17, 30, 31, 32, 33, 40, 42, 43, 'c3', 'c4', 'd4']: LOC[i] = 'crowd_l'
+LOC['c1'] = 'town'
 for i in [18, 19, 20, 21, 22]: LOC[i] = 'gym'
 for i, kind in LOC.items():
     a, b = W_(i)
@@ -99,7 +100,7 @@ for i, kind in LOC.items():
     for x in np.arange(a+.3, b, 1.3):
         if kind == 'town': L = int(.12*SR); tt = np.arange(L)/SR; put(sfx, np.sin(2*np.pi*(3000+1500*tt/.12)*tt)*np.sin(np.pi*tt/.12), x + rnd.random()*.5, .03)
 a, b = W_(24); amb(a + 2*(b-a)/3, b, 'water', .08)
-for i in [0, 1, 3, 7, 8, 9, 10, 11, 13, 23, 26, 27, 34, 45, 46, 47, 48, 49, 50, 51, 55]: a, b = W_(i); amb(a, b, 'room', .015)
+for i in [0, 1, 3, 7, 8, 9, 10, 11, 13, 23, 26, 27, 34, 45, 46, 47, 48, 49, 50, 51, 55, 'a1', 'a4', 'a5', 'a6', 'b3', 'd1', 'd2']: a, b = W_(i); amb(a, b, 'room', .015)
 # cash register at money pile, car horn at the car, news sting, button press + boom, heartbeat
 L = int(.5*SR); tt = np.arange(L)/SR; put(sfx, (np.sin(2*np.pi*2637*tt)+np.sin(2*np.pi*3520*tt))*np.exp(-tt*8)*.5, ps(27)+.4, .25)
 L = int(.5*SR); tt = np.arange(L)/SR; put(sfx, np.sign(np.sin(2*np.pi*410*tt))*.3*env(L), ps(28)+.3, .12)

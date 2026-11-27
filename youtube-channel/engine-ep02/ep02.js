@@ -2,12 +2,13 @@
 import { VERT, THREE, W, H, clamp, lerp, ease, easeOut, prog, V, rng, renderer, scene, camera, composer, bloom, look, lightRig,
   makeChar, poseChar, standPose, sitPose, makePhone, placePhone } from './core.js';
 import { drawPhoneUI } from './ui.js';
-import { bedroom, school, street, store, house, showSet } from './sets.js';
+import { bedroom, school, street, store, house, highway, showSet } from './sets.js';
 import { town, gym, studio, lake, makeExtra } from './sets2.js';
 
 const TL = await (await fetch('/timing.json')).json();
-const ps = i => TL[i].start, pe = i => TL[i].end;
-const END0 = pe(TL.length - 1) + .7, ENDCARD = 13, DURATION = END0 + ENDCARD;
+const P = {}; TL.forEach((l, i) => P[l.id] = i);
+const ps = i => TL[P[i]].start, pe = i => TL[P[i]].end;
+const END0 = TL[TL.length - 1].end + .7, ENDCARD = 13, DURATION = END0 + ENDCARD;
 
 // pastel restyle
 const RECOLOR = { '46578a': '9d8cc9', '3a4466': 'c9b6a4', '2a3558': '7f6fae', '3c5aa0': '5fc7b4', '5a4a6a': 'c98f6a', '9cc7b4': '8fd1c2' };
@@ -25,12 +26,17 @@ const kids = ['#2f6fd6', '#f2b33d', '#9b5de5', '#e46b9a', '#4aa3a3', '#3fae6a', 
 const CAST = [nev, jake, teacher, mom, anchor, grandma, fisher, ...kids];
 const extras = ['#2f6fd6', '#f2b33d', '#9b5de5', '#e46b9a', '#4aa3a3', '#3fae6a', '#ff8c42', '#e23b3b', '#7a8599', '#5ac8e6', '#c98f6a', '#8a4fbf'].map(c => makeExtra(c, town.g));
 const phone = makePhone(), phone2 = makePhone();
+const shirt = new THREE.Mesh(new THREE.PlaneGeometry(.55, .5), new THREE.MeshBasicMaterial({ map: (() => { const c = document.createElement('canvas'); c.width = 256; c.height = 232; const g = c.getContext('2d'); g.fillStyle = '#fff'; g.fillRect(0, 0, 256, 232); g.fillStyle = '#D2512E'; g.font = '900 110px Inter'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText('NEV', 128, 120); const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; return t; })(), side: THREE.DoubleSide })); scene.add(shirt); shirt.visible = false;
 const setWorld = (o, p) => o.position.copy(p).sub(o.parent.position);
 // money stacks for the bedroom
 const cash = new THREE.Group(); bedroom.g.add(cash); const cashM = new THREE.MeshStandardMaterial({ color: '#6fbf73', roughness: .7 }), bandM = new THREE.MeshStandardMaterial({ color: '#f2e6b0', roughness: .6 });
 const stacks = []; { const r = rng(5); for (let i = 0; i < 90; i++) { const s = new THREE.Group(); cash.add(s); const b = new THREE.Mesh(new THREE.BoxGeometry(.16, .06, .08), cashM); s.add(b); const band = new THREE.Mesh(new THREE.BoxGeometry(.03, .062, .082), bandM); s.add(band);
   const ring = Math.floor(i / 18), a = r() * 6.28, rad = r() * (.9 - ring * .15); s.position.set(.55 + Math.cos(a) * rad, .56 + ring * .062, -.7 + Math.sin(a) * rad * .8); s.rotation.y = r() * 3; stacks.push(s); } }
 
+const pc = new THREE.Group(); bedroom.g.add(pc); pc.position.set(2.05, 0, -1.35);
+const pcBox = new THREE.Mesh(new THREE.BoxGeometry(.5, 1.25, .9), new THREE.MeshStandardMaterial({ color: '#15151f', roughness: .3, metalness: .4 })); pcBox.position.y = .63; pc.add(pcBox);
+const rgb = [0, 1, 2, 3].map(i => { const m = new THREE.Mesh(new THREE.BoxGeometry(.52, .04, .92), new THREE.MeshBasicMaterial({ color: '#ff00ff', toneMapped: false })); m.position.y = .2 + i * .3; pc.add(m); return m; });
+const fan = new THREE.Mesh(new THREE.TorusGeometry(.14, .03, 8, 24), new THREE.MeshBasicMaterial({ color: '#00e5ff', toneMapped: false })); fan.position.set(-.26, .9, 0); fan.rotation.y = Math.PI / 2; pc.add(fan); pc.visible = false;
 function ui(ph, s) { drawPhoneUI(ph.cv.getContext('2d'), s); ph.tex.needsUpdate = true; ph.g.visible = true; ph.light.intensity = s.light ?? .05; }
 // custom phone apps: bank, trend, call, rec
 function app(ph, s) { const g = ph.cv.getContext('2d'); ph.g.visible = true; ph.light.intensity = s.light ?? .06; ph.tex.needsUpdate = true;
@@ -59,6 +65,13 @@ function app(ph, s) { const g = ph.cv.getContext('2d'); ph.g.visible = true; ph.
     g.fillStyle = '#2a2034'; g.fillRect(0, 90, 600, 1110); g.fillStyle = '#5a3a6a'; g.fillRect(0, 760, 600, 440);
     g.fillStyle = '#fff'; g.beginPath(); g.arc(300, 560, 70, 0, 7); g.fill(); g.fillStyle = '#D2512E'; g.fillRect(240, 630, 120, 140);
     g.fillStyle = '#e23b3b'; g.beginPath(); g.arc(70, 150, 16, 0, 7); g.fill(); g.font = '800 36px Inter'; g.fillStyle = '#fff'; g.fillText('REC ' + (s.rec || '00:14'), 100, 152);
+  } else if (s.kind === 'notes') {
+    g.fillStyle = '#fdf6d8'; g.fillRect(0, 90, 600, 1110); g.font = '900 52px Inter'; g.fillStyle = '#2a2030'; g.fillText('THE RULES', 44, 170);
+    (s.items || []).forEach(([txt, ok], i) => { const y = 280 + i * 120; g.font = '700 40px Inter'; g.fillStyle = '#2a2030'; g.fillText(txt, 44, y); g.font = '900 52px Inter'; g.fillStyle = ok ? '#2bb36b' : '#e23b3b'; g.textAlign = 'right'; g.fillText(ok ? '$1' : '$0', 556, y); g.textAlign = 'left'; });
+  } else if (s.kind === 'form') {
+    g.fillStyle = '#eef2f8'; g.fillRect(0, 90, 600, 1110); g.font = '800 40px Inter'; g.fillStyle = '#22325a'; g.fillText('LEGAL NAME CHANGE', 44, 170);
+    g.font = '600 32px Inter'; g.fillStyle = '#5a6a8a'; g.fillText('Old name', 44, 280); g.fillText('New name', 44, 440); g.font = '900 64px Inter'; g.fillStyle = '#22325a'; g.fillText('Nev', 44, 350); g.fillText('STEVE', 44, 515);
+    if (s.ok) { g.save(); g.translate(300, 800); g.rotate(-.2); g.strokeStyle = '#2bb36b'; g.lineWidth = 10; g.strokeRect(-200, -70, 400, 140); g.font = '900 72px Inter'; g.fillStyle = '#2bb36b'; g.textAlign = 'center'; g.fillText('APPROVED', 0, 4); g.restore(); }
   } else if (s.kind === 'msg') {
     g.font = '700 36px Inter'; g.fillStyle = '#fff'; g.textAlign = 'center'; g.fillText('Jake', 300, 140); g.textAlign = 'left';
     g.fillStyle = '#2f6fd6'; rr(300, 900, 250, 90, 40); g.fill(); g.font = '700 44px Inter'; g.fillStyle = '#fff'; g.fillText(s.typed || 'Nev', 340, 946);
@@ -82,6 +95,7 @@ const LIGHT = {
   gym: () => { lightRig(V(360, 1, 0), { key: 1.6, keyCol: '#fff4e0', hemi: 2.0, sky: '#fff6ea', ground: '#8a7050', bg: '#cfd8ea', exposure: 1.2 }); gym.spot.intensity = 60; },
   studio: () => lightRig(V(420, 1, 0), { key: 2.4, keyCol: '#e6eeff', hemi: 2.0, sky: '#cfe0ff', ground: '#203050', bg: '#16264a', exposure: 1.25 }),
   lake: () => lightRig(V(480, 1, 0), { key: 2.6, keyCol: '#fff8ee', hemi: 2.6, sky: '#dff0ff', ground: '#5a8aa6', bg: '#bfe3ff', exposure: 1.2, keyOff: V(10, 20, 14) }),
+  highway: () => lightRig(V(220, 1, 0), { key: 2.6, hemi: 2.4, sky: '#d8ecff', ground: '#6a8a5a', bg: '#a9cfff', exposure: 1.2, keyOff: V(30, 60, 40) }),
   store: () => lightRig(V(90, 1, 0), { key: 2.0, hemi: 2.0, sky: '#fff8ee', ground: '#8a7a6a', bg: '#f1e4d0', exposure: 1.1 }),
 };
 
@@ -117,9 +131,9 @@ function money(t) { let m = DINGS.filter(d => t >= d).length; for (const [a, b, 
 { const base = 8 + 6 + 4; ramp(ps(15), pe(15), base, 248, 1); ramp(ps(16), pe(19), 248, 1027, 1); ramp(ps(20), pe(21), 1027, 12027, 1.2); ramp(ps(22), pe(26), 12027, 341500, 2.2);
   ramp(pe(26), ps(27) + .6, 341500, 1284000, 1); ramp(ps(28), pe(39), 1284000, 14100000, 1.4); ramp(pe(39), ps(45) + .2, 14100000, 14203117, .6);
   ramp(ps(52) + .2, ps(52) + 3.2, 14203117, 0, .5); }
-const LABELS = [[0, 'Day 1 · 7:02 AM'], [4, 'Day 1 · 8:15 AM'], [5, 'Day 1 · Lunch'], [6, ''], [7, 'Day 1 · After school'], [15, 'Day 2 · Lunch'], [16, 'Day 3'], [18, 'Day 5 · Talent show'], [22, 'Day 6'], [24, ''], [26, 'Day 8'], [27, 'Day 9'],
-  [30, 'Day 12 · Monday'], [36, 'Day 12 · 6:40 PM'], [38, 'Day 13'], [40, 'Day 14 · Wednesday'], [45, 'Day 16'], [47, 'Day 16 · 11:58 PM'], [53, 'Day 17'], [57, 'Day 17 · 7:00 PM'], [59, '3:33 AM'], [62, '']];
-const CAPS = { 9: 'Your voice = $0', 10: 'Texting = $0  ·  Out loud only', 13: '6 × "Nev" = $6', 15: 'Jake: 240 × "Nev"', 21: '400 kids × 90 seconds', 23: '#SayNev  ·  14.2M views', 35: 'Every $1 = someone else\'s $1', 37: 'Mom this week: 11 × "Nev"', 38: '14,000,000 people  ×  -$1', 52: '+$1  ·  Memo: "sorry"' };
+const LABELS = [[0, 'Day 1 · 7:02 AM'], [4, 'Day 1 · 8:15 AM'], [5, 'Day 1 · Lunch'], [6, ''], [7, 'Day 1 · After school'], [15, 'Day 2 · Lunch'], ['a1', 'Day 2 · Night'], [16, 'Day 3'], [18, 'Day 5 · Talent show'], [22, 'Day 6'], [24, ''], [26, 'Day 8'], [27, 'Day 9'], ['b1', 'Day 10'],
+  [30, 'Day 12 · Monday'], [36, 'Day 12 · 6:40 PM'], [38, 'Day 13'], [40, 'Day 14 · Wednesday'], [45, 'Day 16'], ['d1', 'Day 16 · 2:40 AM'], [47, 'Day 16 · 11:58 PM'], [53, 'Day 17'], [57, 'Day 17 · 7:00 PM'], [59, '3:33 AM'], [62, '']];
+const CAPS = { 9: 'Your voice = $0', 10: 'Texting = $0  ·  Out loud only', 13: '6 × "Nev" = $6', 15: 'Jake: 240 × "Nev"', 21: '400 kids × 90 seconds', 23: '#SayNev  ·  14.2M views', 35: 'Every $1 = someone else\'s $1', 37: 'Mom this week: 11 × "Nev"', 38: '14,000,000 people  ×  -$1', 52: '+$1  ·  Memo: "sorry"', a2: 'Whisper = $1', a4: 'Nicknames = $0', a5: 'Recordings = $0', b4: '$1,000 tip  →  +$1 back', b6: '9,000 shirts that say NEV', c1: 'Ohio: -$63 this week', c2: 'Grandma Doris: 40 × "Nev" = -$40', d2: 'Legal name: STEVE', d3: 'Money follows the spoken name' };
 const CAP_LINES = Object.keys(CAPS).map(Number);
 
 // ---------- shots ----------
@@ -297,7 +311,39 @@ S[62] = (t, k) => { LIGHT.town(300, true); showSet('town'); const wave = Math.si
   standPose(jake, V(301.3, 0, .6), V(0, 0, 1), { face: fb({ brow: -.4, mouth: 'smile' }, t), handL: V(300.95, 1.55 - wave, .75), handModeL: 'open', look: V(300.6, 1.4, 5) }); jake.root.visible = true;
   look(V(300.85, lerp(1.6, 1.8, k), lerp(4.2, 5.4, k)), V(300.85, 1.6, .6), 40); };
 
-const WINDOWS = TL.map((l, i) => ({ start: i === 0 ? 0 : l.start - .15, fn: S[i], i }));
+const RULES = [['Out loud only', 1], ['Whispers', 1], ['Nicknames', 0], ['Recordings', 0]];
+S.a1 = (t, k) => { LIGHT.night(); showSet('bedroom'); phoneCU(t, k, ph => app(ph, { kind: 'notes', items: RULES.slice(0, 1), time: '9:12' }), { d0: .26, d1: .21 }); };
+S.a2 = (t, k) => { LIGHT.kitchen(); showSet('house'); jakeHome(t, { brow: -.3, mouth: t > ps('a2') + 1.0 && t < ps('a2') + 1.6 ? 'o' : 'smirk' }, { look: V(121, 1.55, -.6) }); headCU(jake, k, V(-.6, -.05, .7), { push: .75 }); };
+S.a3 = (t, k) => { LIGHT.kitchen(); showSet('house'); if (k < .5) { jakeHome(t, { brow: -.5, mouth: talk(t, 'a3') || 'smile' }); headCU(jake, k / .5, V(-.45, -.05, .9)); } else { jakeHome(t, { brow: -.8, mouth: Math.sin(t * 12) > 0 ? 'yell' : 'smile' }, { up: 1, hop: 1 }); look(V(123.0, 1.55, 1.2), V(121.3, 1.3, -1.5), 40); } };
+S.a4 = (t, k) => { LIGHT.night(); showSet('bedroom'); phoneCU(t, k, ph => app(ph, { kind: 'notes', items: RULES.slice(0, 3), time: '9:14' }), { d0: .24, d1: .2 }); };
+S.a5 = (t, k) => { LIGHT.night(); showSet('bedroom'); phoneCU(t, k, ph => app(ph, { kind: 'notes', items: RULES, time: '9:15' }), { d0: .23, d1: .17, focus: V(0, .01, 0) }); };
+S.a6 = (t, k) => { LIGHT.night(); showSet('bedroom'); const i = holdSit(t, BED.seat, BED.fwd, { face: { brow: -.8, mouth: 'smirk', glow: .25 * ease(k) }, look: V(.2, 1.15, 1.5) }); app(phone, { kind: 'notes', items: RULES, light: .2 }); faceCU(i, k, { d0: 1.0, d1: .7 }); };
+S.b1 = (t, k) => { LIGHT.town(300, true); showSet('town'); const x = lerp(303, 307, k), b = V(x, 0, .4); standPose(nev, b, V(1, 0, 0), { phase: t * 4.5, stride: .2, face: fb(F.happy, t), look: V(x + 3, 1.3, 1), handL: b.clone().add(V(.05, .55, .3)), handR: b.clone().add(V(.05, .55, -.3)) }); nev.root.visible = true;
+  look(V(x - 1.2, 1.4, 3.3), b.clone().add(V(.3, 1.0, 0)), 38); };
+S.b2 = (t, k) => { LIGHT.kitchen(); showSet('house'); const b = V(120.9, 0, -1.4); standPose(mom, b, V(-.3, 0, 1), { face: fb({ brow: 1, mouth: Math.sin(t * 5) > 0 ? 'wavy' : 'smile' }, t), handL: mom.head.position.clone().add(V(-.12, -.08, .12)), handR: mom.head.position.clone().add(V(.12, -.08, .12)), handModeL: 'open', handModeR: 'open', look: V(120.5, 1.4, 1) }); mom.root.visible = true;
+  headCU(mom, k, V(-.3, -.05, 1.1)); };
+S.b3 = (t, k) => { LIGHT.night(); showSet('bedroom'); pc.visible = true; rgb.forEach((m, i) => m.material.color.setHSL(((t * .3 + i * .2) % 1), 1, .55)); fan.rotation.x = t * 20;
+  standPose(nev, V(1.3, 0, -.6), V(.4, 0, -1), { face: fb({ brow: -.4, mouth: 'o', wide: true }, t), look: V(2.05, 1.4, -1.35), handL: V(1.0, 1.45, -.6), handR: V(1.6, 1.45, -.6), handModeL: 'open', handModeR: 'open' }); nev.root.visible = true;
+  look(V(lerp(.2, .5, k), 1.4, lerp(1.6, 1.2, k)), V(1.75, .9, -1.1), 40); };
+S.b4 = (t, k) => { LIGHT.town(); showSet('town'); const wb = V(305.2, 0, 4.5); standPose(kids[3], wb, V(.5, 0, 1), { face: fb({ brow: -.4, mouth: t > pe('b4') - 1.6 && t < pe('b4') - .7 ? (Math.sin(t * 15) > 0 ? 'o' : 'smile') : 'o', wide: k < .5 }, t), look: V(306, 1.3, 5.6), handL: wb.clone().add(V(-.2, 1.25, .2)), handR: wb.clone().add(V(.2, 1.25, .2)), handModeL: 'open', handModeR: 'open' }); kids[3].root.visible = true;
+  standPose(nev, V(306, 0, 5.6), V(-.5, 0, -1), { face: fb(F.smug, t), look: kids[3].head.position.clone(), handL: V(305.8, 1.1, 5.2) }); nev.root.visible = true;
+  look(V(lerp(307.6, 307.3, k), 1.5, lerp(6.4, 6.1, k)), V(305.6, 1.25, 4.9), 36); };
+S.b5 = (t, k) => { LIGHT.kitchen(); showSet('house'); jakeHome(t, { brow: -.7, mouth: talk(t, 'b5') || 'smirk' }, { look: V(120.6, 1.45, 1.2) }); if (k < .55) headCU(jake, k / .55, V(-.55, -.05, .9)); else look(V(122.6, 1.4, .3), V(121.3, 1.25, -1.5), 36); };
+S.b6 = (t, k) => { LIGHT.town(); showSet('town'); townExtras(t, { talk: 1, face: 0 }); const b = V(297.2, 0, 1.4); standPose(jake, b, V(0, 0, 1), { face: fb({ brow: -.6, mouth: 'smile' }, t), handL: b.clone().add(V(-.3, 1.25, .35)), handR: b.clone().add(V(.3, 1.25, .35)), handModeL: 'open', handModeR: 'open', look: V(297.2, 1.4, 5) }); jake.root.visible = true;
+  shirt.visible = true; shirt.position.set(297.2, 1.25, 1.85); look(V(lerp(296, 298, k), 1.6, 6.3), V(297.4, 1.1, 0.6), 42); };
+S.c1 = (t, k) => { LIGHT.highway(); showSet('highway'); highway.bus.position.z = 6; highway.car.position.z = 30; look(V(lerp(226, 224, k), 4, lerp(16, 14, k)), V(220, 1.6, 6), 38); };
+S.c2 = (t, k) => { LIGHT.town(300, true); showSet('town'); const b = V(294, 0, -1.8); standPose(grandma, b, V(0, 0, 1), { face: fb(F.sad, t), handL: b.clone().add(V(-.12, 1.05, .3)), handR: b.clone().add(V(.12, 1.05, .3)), look: V(294, .9, -1.2) }); grandma.root.visible = true;
+  phone2.g.position.copy(b).add(V(0, 1.1, .32)); phone2.g.lookAt(b.clone().add(V(0, 1.55, 0))); phone2.g.updateMatrixWorld(true); app(phone2, { kind: 'bank', owner: 'Doris · pension', balance: '-$40.00', red: true, sub: '40 × "Nev"' });
+  if (k < .55) headCU(grandma, k / .55, V(-.7, -.05, 2.1)); else look(phone2.g.position.clone().add(V(0, .12, .2)), phone2.g.position, 34); };
+S.c3 = (t, k) => { LIGHT.school(14); showSet('school'); const z = lerp(15.5, 12.5, k), b = V(30, 0, z); standPose(nev, b, V(0, 0, -1), { phase: t * 3.6, stride: .14, face: fb(F.sad, t), look: V(30, 1.1, z - 3), lean: .1 }); nev.root.visible = true;
+  [[kids[2], -1.1, 12.3], [kids[3], 1.1, 12.8], [kids[6], -1.1, 13.6], [kids[1], 1.1, 14.2]].forEach(([c, x, zz]) => { const hp = nev.head.position.clone(); standPose(c, V(30 + x, 0, zz), V(-x, 0, .4), { face: fb({ brow: .2, mouth: 'flat' }, t), look: hp, handR: V(30 + x * .6, 1.3, zz + .3), handModeR: 'point', pointDirR: hp.clone().sub(V(30 + x, 1.3, zz)) }); c.root.visible = true; });
+  look(V(30.4, 1.45, z - 3.0), V(30, 1.1, z), 40); };
+S.c4 = (t, k) => { LIGHT.school(14); showSet('school'); const b = V(30.9, 0, 12.4); standPose(jake, b, V(-.6, 0, .8), { face: fb({ brow: 1, mouth: talk(t, 'c4') || 'frown' }, t), look: V(29.6, 1.3, 13.4), handL: b.clone().add(V(-.25, 1.0, .25)), handR: b.clone().add(V(.25, 1.0, .25)), handModeL: 'open', handModeR: 'open' }); jake.root.visible = true; headCU(jake, k, V(-.75, -.05, .9)); };
+S.d1 = (t, k) => { LIGHT.night(); showSet('bedroom'); const i = holdSit(t, BED.seat, BED.fwd, { face: fb({ brow: -.7, mouth: 'frown' }, t), look: V(0, 1.15, 1.5) }); app(phone, { kind: 'form', light: .15 }); look(V(lerp(1.4, 1.1, k), 1.2, lerp(1.6, 1.3, k)), V(0, .95, -.1), 36); };
+S.d2 = (t, k) => { LIGHT.night(); showSet('bedroom'); phoneCU(t, k, ph => app(ph, { kind: 'form', ok: k > .65, time: '2:40' }), { d0: .25, d1: .2, shake: k > .65 && k < .75 ? .002 : 0 }); };
+S.d3 = (t, k) => { LIGHT.town(); showSet('town'); townExtras(t, { talk: 1, face: 0 }); look(V(lerp(300, 302, k), 1.5, 6), V(lerp(300, 302, k), 1.0, 0), 42); };
+S.d4 = (t, k) => { LIGHT.school(14); showSet('school'); const b = V(30.9, 0, 12.4); standPose(jake, b, V(-.6, 0, .8), { face: fb({ brow: k < .6 ? -.6 : .7, mouth: talk(t, 'd4') || 'wavy' }, t), look: V(29.6, 1.3, 13.4), handL: b.clone().add(V(-.1, 1.45, .1)), handR: b.clone().add(V(.3, .9, .1)), handModeL: 'open' }); jake.root.visible = true; headCU(jake, k, V(-.6, -.05, .85)); };
+const WINDOWS = TL.map((l, i) => ({ start: i === 0 ? 0 : l.start - .15, fn: S[l.id], i: l.id }));
 WINDOWS.forEach((w, i) => { w.end = i + 1 < WINDOWS.length ? WINDOWS[i + 1].start : END0; });
 
 // ---------- overlay ----------
@@ -318,10 +364,10 @@ function overlay(t) {
   const v = og.createRadialGradient(W / 2, H / 2, H * .5, W / 2, H / 2, H * 1.05); v.addColorStop(0, 'rgba(0,0,0,0)'); v.addColorStop(1, 'rgba(0,0,0,.25)'); og.fillStyle = v; og.fillRect(0, 0, W, H);
   const w = WINDOWS.find(w => t >= w.start && t < w.end); const li = w ? w.i : -1;
   if (t < END0) {
-    if ([25, 35, 38].includes(li)) bubbles(t, extras, li === 25 ? 'NEV!' : '-$1', li === 25 ? 'white' : 'red');
+    if ([25, 35, 38, 'b6', 'd3'].includes(li)) bubbles(t, extras, [25, 'b6', 'd3'].includes(li) ? 'NEV!' : '-$1', [25, 'b6', 'd3'].includes(li) ? 'white' : 'red');
     if (li === 52) bubbles(t, extras, '+$1', 'white');
     // money counter
-    const m = money(t), last = DINGS.filter(d => t >= d).pop() ?? -9, pop = 1 + .22 * Math.max(0, 1 - (t - last) / .25), dropping = t > ps(52) + .2 && t < ps(52) + 3.4, frozen = li >= 45 && li <= 51;
+    const m = money(t), last = DINGS.filter(d => t >= d).pop() ?? -9, pop = 1 + .22 * Math.max(0, 1 - (t - last) / .25), dropping = t > ps(52) + .2 && t < ps(52) + 3.4, frozen = t >= ps(45) - .15 && t < ps(52) - .15;
     if (t > ps(1) && li !== 6) { const col = dropping ? '#ff6b6b' : frozen ? '#c9c9c9' : '#ffd34d', s = fmt(m); og.save(); og.translate(W - 60, 62); og.scale(pop, pop); og.font = '800 46px Inter'; const tw = og.measureText(s).width;
       og.beginPath(); og.arc(-tw - 34, 0, 15, 0, 7); og.lineWidth = 4; og.strokeStyle = col; og.stroke(); og.beginPath(); og.moveTo(-tw - 34, 0); og.lineTo(-tw - 34, -9); og.moveTo(-tw - 34, 0); og.lineTo(-tw - 27, 4); og.stroke(); og.restore();
       og.save(); og.translate(W - 60, 62); og.scale(pop, pop); txt(s, 0, 0, 46, col, 'right'); og.restore(); }
@@ -332,7 +378,7 @@ function overlay(t) {
     if (li === 24) { const k = (t - w.start) / (w.end - w.start); lab = ['Ohio', 'Texas', 'Alaska'][Math.min(2, Math.floor(k * 3))]; }
     if (lab) txt(lab, 60, 64, 38, '#ffffff');
     // captions
-    if (CAP_LINES.includes(li)) { const a = Math.min(easeOut(prog(t, w.start + .2, w.start + .5)), 1 - prog(t, w.end - .25, w.end)); og.save(); og.globalAlpha = a; txt(CAPS[li], W / 2, H - 90, 44, '#ffffff', 'center', 800, 9); og.restore(); }
+    if (CAPS[li] !== undefined) { const a = Math.min(easeOut(prog(t, w.start + .2, w.start + .5)), 1 - prog(t, w.end - .25, w.end)); og.save(); og.globalAlpha = a; txt(CAPS[li], W / 2, H - 90, 44, '#ffffff', 'center', 800, 9); og.restore(); }
     // title (upper third, over the wide establishing shot)
     if (li === 6) { const a = Math.min(easeOut(prog(t, ps(6) + .3, ps(6) + .9)), 1); goldTitle(['WHAT IF YOU EARNED $1 EVERY TIME', 'SOMEONE SAID YOUR NAME?'], H * .2, 84, a); }
     if (li === 48 && t > ps(48) + 1.2) { const a = easeOut(prog(t, ps(48) + 1.2, ps(48) + 1.6)); og.save(); og.globalAlpha = a; txt('RETURN ALL?', W / 2, H * .16, 70, '#ff6b6b', 'center', 900, 12); og.restore(); }
@@ -353,7 +399,7 @@ function overlay(t) {
 
 window.frame = (t, q = .92) => {
   for (const c of CAST) c.root.visible = false; for (const e of extras) e.g.visible = false;
-  phone.g.visible = phone2.g.visible = false; school.paper.visible = false; street.umb.visible = false; school.tray.position.set(0, -5, 0); cash.visible = false; gym.spot.intensity = 0; bloom.strength = .28;
+  phone.g.visible = phone2.g.visible = false; school.paper.visible = false; street.umb.visible = false; school.tray.position.set(0, -5, 0); cash.visible = false; pc.visible = false; shirt.visible = false; gym.spot.intensity = 0; bloom.strength = .28;
   if (t < END0) { const w = WINDOWS.find(w => t >= w.start && t < w.end) || WINDOWS[WINDOWS.length - 1]; w.fn(t, clamp((t - w.start) / (w.end - w.start))); }
   else { showSet('none'); }
   composer.render(); return overlay(t).toDataURL('image/jpeg', q);

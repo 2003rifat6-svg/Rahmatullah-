@@ -20,13 +20,16 @@ What if every time someone said your name... you got one dollar? Your mom calls 
 
 Chapters:
 0:00 Plus one dollar
-0:21 The rules
-1:04 The talent show trick
-1:28 #SayNev goes viral
-1:59 Where the money comes from
-3:07 Nobody says your name
-3:40 Return all
-4:28 3:33 AM
+0:22 The rules
+1:07 The fine print
+1:35 The talent show trick
+2:01 #SayNev goes viral
+2:32 The spending spree
+3:12 Where the money comes from
+4:47 Nobody says your name
+5:21 Becoming Steve
+5:45 Return all
+6:35 3:33 AM
 
 Whose name would YOU want to get paid for? Tell us in the comments.
 Subscribe to Brevane: impossible ideas, real consequences.
