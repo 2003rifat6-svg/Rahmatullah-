@@ -37,6 +37,27 @@ const pc = new THREE.Group(); bedroom.g.add(pc); pc.position.set(2.05, 0, -1.35)
 const pcBox = new THREE.Mesh(new THREE.BoxGeometry(.5, 1.25, .9), new THREE.MeshStandardMaterial({ color: '#15151f', roughness: .3, metalness: .4 })); pcBox.position.y = .63; pc.add(pcBox);
 const rgb = [0, 1, 2, 3].map(i => { const m = new THREE.Mesh(new THREE.BoxGeometry(.52, .04, .92), new THREE.MeshBasicMaterial({ color: '#ff00ff', toneMapped: false })); m.position.y = .2 + i * .3; pc.add(m); return m; });
 const fan = new THREE.Mesh(new THREE.TorusGeometry(.14, .03, 8, 24), new THREE.MeshBasicMaterial({ color: '#00e5ff', toneMapped: false })); fan.position.set(-.26, .9, 0); fan.rotation.y = Math.PI / 2; pc.add(fan); pc.visible = false;
+// ---------- Captain the parrot (Jake's kitchen) ----------
+const parrot = (() => { const g = new THREE.Group(); scene.add(g); const M = c => new THREE.MeshStandardMaterial({ color: c, roughness: .55 });
+  const sph = (r, c, p, s) => { const m = new THREE.Mesh(new THREE.SphereGeometry(r, 24, 18), M(c)); m.position.copy(p); if (s) m.scale.copy(s); return m; };
+  const body = new THREE.Group(); g.add(body);
+  body.add(sph(.1, '#2fbf5a', V(0, .16, 0), V(1, 1.45, .95)), sph(.075, '#ffd23d', V(0, .13, .04), V(1, 1.25, .8)));
+  const head = new THREE.Group(); head.position.set(0, .33, .01); body.add(head);
+  head.add(sph(.085, '#2fbf5a', V(0, 0, 0)), sph(.05, '#e23b3b', V(0, .055, -.02), V(1, .7, 1.2)));
+  for (const s of [-1, 1]) { head.add(sph(.026, '#ffffff', V(s * .045, .015, .06))); head.add(sph(.014, '#111111', V(s * .05, .017, .081))); }
+  const beakU = new THREE.Mesh(new THREE.ConeGeometry(.032, .085, 16), M('#f2a33d')); beakU.rotation.x = Math.PI / 2 + .5; beakU.position.set(0, -.012, .1); head.add(beakU);
+  const jaw = new THREE.Group(); jaw.position.set(0, -.035, .065); head.add(jaw); const beakL = new THREE.Mesh(new THREE.ConeGeometry(.022, .05, 12), M('#d98a2a')); beakL.rotation.x = Math.PI / 2; beakL.position.set(0, 0, .025); jaw.add(beakL);
+  const wings = [-1, 1].map(s => { const w = new THREE.Group(); w.position.set(s * .085, .24, -.01); body.add(w); w.add(sph(.06, '#1f9a4a', V(s * .015, -.07, 0), V(.35, 1.4, .9))); return w; });
+  const tail = sph(.05, '#2a7fd6', V(0, .02, -.09), V(.6, 1.8, .4)); tail.rotation.x = -.6; body.add(tail);
+  const perch = new THREE.Group(); scene.add(perch); const pole = new THREE.Mesh(new THREE.CylinderGeometry(.03, .03, 1.3, 12), M('#8a5a3a')); pole.position.y = .65; perch.add(pole);
+  const bar = new THREE.Mesh(new THREE.CylinderGeometry(.022, .022, .4, 12), M('#8a5a3a')); bar.rotation.z = Math.PI / 2; bar.position.y = 1.3; perch.add(bar);
+  const foot = new THREE.Mesh(new THREE.CylinderGeometry(.22, .25, .05, 20), M('#6a4a3a')); foot.position.y = .025; perch.add(foot);
+  const POS = V(122.25, 0, -1.25);
+  return { g, head, perch, set(t, o = {}) { g.visible = perch.visible = true; perch.position.copy(POS); g.position.copy(POS).add(V(0, 1.31, 0)); g.rotation.y = o.face ?? -.5;
+      const sq = o.squawk ?? 0; jaw.rotation.x = .1 + .55 * sq; head.rotation.x = -.25 * sq + Math.sin(t * 2.2) * .05; head.rotation.y = (o.turn ?? 0) + Math.sin(t * 1.3) * .15;
+      body.position.y = Math.abs(Math.sin(t * (o.bounce ? 9 : 2))) * (o.bounce ? .03 : .008); const f = o.flap ?? 0; wings.forEach((w, i) => { w.rotation.z = (i ? 1 : -1) * (.05 + f * (.6 + .5 * Math.sin(t * 28))); }); },
+    hide() { g.visible = perch.visible = false; }, headPos() { return head.getWorldPosition(V(0, 0, 0)); } };
+})();
 function ui(ph, s) { drawPhoneUI(ph.cv.getContext('2d'), s); ph.tex.needsUpdate = true; ph.g.visible = true; ph.light.intensity = s.light ?? .05; }
 // custom phone apps: bank, trend, call, rec
 function app(ph, s) { const g = ph.cv.getContext('2d'); ph.g.visible = true; ph.light.intensity = s.light ?? .06; ph.tex.needsUpdate = true;
@@ -126,14 +147,14 @@ function townExtras(t, o = {}) { extras.forEach((e, i) => { e.g.visible = true; 
 
 // ---------- money / labels / captions ----------
 const RAMPS = []; const ramp = (a, b, v0, v1, pw = 1) => RAMPS.push([a, b, v0, v1, pw]);
-const DINGS = [ps(1) + .25, ps(2) + .15, ps(4) + .1, ...[0, .55, 1.15, 1.75, 2.35].map(x => ps(5) + x), ...[0, 1, 2, 3, 4, 5].map(j => ps(12) + 3.2 + j * .8), ...[0, 1, 2, 3].map(j => ps(14) + 2.7 + j * .55)];
+const DINGS = [...[.13, .79, 1.59, 2.3].map(x => ps('e4') + x), ...[0, .78, 1.5].map(x => ps('e5') + x), ps(1) + .25, ps(2) + .15, ps(4) + .1, ...[0, .55, 1.15, 1.75, 2.35].map(x => ps(5) + x), ...[0, 1, 2, 3, 4, 5].map(j => ps(12) + 3.2 + j * .8), ...[0, 1, 2, 3].map(j => ps(14) + 2.7 + j * .55)];
 function money(t) { let m = DINGS.filter(d => t >= d).length; for (const [a, b, v0, v1, pw] of RAMPS) if (t >= a) m = t >= b ? v1 : Math.round(v0 + (v1 - v0) * Math.pow((t - a) / (b - a), pw)); return m; }
-{ const base = 8 + 6 + 4; ramp(ps(15), pe(15), base, 248, 1); ramp(ps(16), pe(19), 248, 1027, 1); ramp(ps(20), pe(21), 1027, 12027, 1.2); ramp(ps(22), pe(26), 12027, 341500, 2.2);
+{ const base = 8 + 6 + 4; ramp(ps(15), pe(15), base, 248, 1); { let v = 248; for (const d of [...[.13, .79, 1.59, 2.3].map(x => ps('e4') + x), ...[0, .78, 1.5].map(x => ps('e5') + x)]) { ramp(d, d + .01, v, v + 1); v++; } } ramp(ps('e6') + .5, pe('e6'), 255, 335, 1); ramp(ps(16), pe(19), 335, 1027, 1); ramp(ps(20), pe(21), 1027, 12027, 1.2); ramp(ps(22), pe(26), 12027, 341500, 2.2);
   ramp(pe(26), ps(27) + .6, 341500, 1284000, 1); ramp(ps(28), pe(39), 1284000, 14100000, 1.4); ramp(pe(39), ps(45) + .2, 14100000, 14203117, .6);
   ramp(ps(52) + .2, ps(52) + 3.2, 14203117, 0, .5); }
-const LABELS = [[0, 'Day 1 · 7:02 AM'], [4, 'Day 1 · 8:15 AM'], [5, 'Day 1 · Lunch'], [6, ''], [7, 'Day 1 · After school'], [15, 'Day 2 · Lunch'], ['a1', 'Day 2 · Night'], [16, 'Day 3'], [18, 'Day 5 · Talent show'], [22, 'Day 6'], [24, ''], [26, 'Day 8'], [27, 'Day 9'], ['b1', 'Day 10'],
+const LABELS = [[0, 'Day 1 · 7:02 AM'], [4, 'Day 1 · 8:15 AM'], [5, 'Day 1 · Lunch'], [6, ''], [7, 'Day 1 · After school'], [15, 'Day 2 · Lunch'], ['e1', 'Day 2 · After school'], ['e12', 'Day 2 · Night'], ['a1', 'Day 3 · 6:10 AM'], [16, 'Day 3'], [18, 'Day 5 · Talent show'], [22, 'Day 6'], [24, ''], [26, 'Day 8'], [27, 'Day 9'], ['b1', 'Day 10'],
   [30, 'Day 12 · Monday'], [36, 'Day 12 · 6:40 PM'], [38, 'Day 13'], [40, 'Day 14 · Wednesday'], [45, 'Day 16'], ['d1', 'Day 16 · 2:40 AM'], [47, 'Day 16 · 11:58 PM'], [53, 'Day 17'], [57, 'Day 17 · 7:00 PM'], [59, '3:33 AM'], [62, '']];
-const CAPS = { 9: 'Your voice = $0', 10: 'Texting = $0  ·  Out loud only', 13: '6 × "Nev" = $6', 15: 'Jake: 240 × "Nev"', 21: '400 kids × 90 seconds', 23: '#SayNev  ·  14.2M views', 35: 'Every $1 = someone else\'s $1', 37: 'Mom this week: 11 × "Nev"', 38: '14,000,000 people  ×  -$1', 52: '+$1  ·  Memo: "sorry"', a2: 'Whisper = $1', a4: 'Nicknames = $0', a5: 'Recordings = $0', b4: '$1,000 tip  →  +$1 back', b6: '9,000 shirts that say NEV', c1: 'Ohio: -$63 this week', c2: 'Grandma Doris: 40 × "Nev" = -$40', d2: 'Legal name: STEVE', d3: 'Money follows the spoken name' };
+const CAPS = { 9: 'Your voice = $0', 10: 'Texting = $0  ·  Out loud only', 13: '6 × "Nev" = $6', 15: 'Jake: 240 × "Nev"', 21: '400 kids × 90 seconds', 23: '#SayNev  ·  14.2M views', 35: 'Every $1 = someone else\'s $1', 37: 'Mom this week: 11 × "Nev"', 38: '14,000,000 people  ×  -$1', 52: '+$1  ·  Memo: "sorry"', a2: 'Whisper = $1', e5: 'Parrot = $1  ·  Birds count', e6: 'Captain: 87 × "Nev" = $87', e11: 'Echo = your own voice = $0', e13: '6 hours × "Nev" = $0', a4: 'Nicknames = $0', a5: 'Recordings = $0', b4: '$1,000 tip  →  +$1 back', b6: '9,000 shirts that say NEV', c1: 'Ohio: -$63 this week', c2: 'Grandma Doris: 40 × "Nev" = -$40', d2: 'Legal name: STEVE', d3: 'Money follows the spoken name' };
 const CAP_LINES = Object.keys(CAPS).map(Number);
 
 // ---------- shots ----------
@@ -312,11 +333,11 @@ S[62] = (t, k) => { LIGHT.town(300, true); showSet('town'); const wave = Math.si
   look(V(300.85, lerp(1.6, 1.8, k), lerp(4.2, 5.4, k)), V(300.85, 1.6, .6), 40); };
 
 const RULES = [['Out loud only', 1], ['Whispers', 1], ['Nicknames', 0], ['Recordings', 0]];
-S.a1 = (t, k) => { LIGHT.night(); showSet('bedroom'); phoneCU(t, k, ph => app(ph, { kind: 'notes', items: RULES.slice(0, 1), time: '9:12' }), { d0: .26, d1: .21 }); };
+S.a1 = (t, k) => { LIGHT.night(); showSet('bedroom'); phoneCU(t, k, ph => app(ph, { kind: 'notes', items: RULES.slice(0, 1), time: '6:12' }), { d0: .26, d1: .21 }); };
 S.a2 = (t, k) => { LIGHT.kitchen(); showSet('house'); jakeHome(t, { brow: -.3, mouth: t > ps('a2') + 1.0 && t < ps('a2') + 1.6 ? 'o' : 'smirk' }, { look: V(121, 1.55, -.6) }); headCU(jake, k, V(-.6, -.05, .7), { push: .75 }); };
 S.a3 = (t, k) => { LIGHT.kitchen(); showSet('house'); if (k < .5) { jakeHome(t, { brow: -.5, mouth: talk(t, 'a3') || 'smile' }); headCU(jake, k / .5, V(-.45, -.05, .9)); } else { jakeHome(t, { brow: -.8, mouth: Math.sin(t * 12) > 0 ? 'yell' : 'smile' }, { up: 1, hop: 1 }); look(V(123.0, 1.55, 1.2), V(121.3, 1.3, -1.5), 40); } };
-S.a4 = (t, k) => { LIGHT.night(); showSet('bedroom'); phoneCU(t, k, ph => app(ph, { kind: 'notes', items: RULES.slice(0, 3), time: '9:14' }), { d0: .24, d1: .2 }); };
-S.a5 = (t, k) => { LIGHT.night(); showSet('bedroom'); phoneCU(t, k, ph => app(ph, { kind: 'notes', items: RULES, time: '9:15' }), { d0: .23, d1: .17, focus: V(0, .01, 0) }); };
+S.a4 = (t, k) => { LIGHT.night(); showSet('bedroom'); phoneCU(t, k, ph => app(ph, { kind: 'notes', items: RULES.slice(0, 3), time: '6:14' }), { d0: .24, d1: .2 }); };
+S.a5 = (t, k) => { LIGHT.night(); showSet('bedroom'); phoneCU(t, k, ph => app(ph, { kind: 'notes', items: RULES, time: '6:15' }), { d0: .23, d1: .17, focus: V(0, .01, 0) }); };
 S.a6 = (t, k) => { LIGHT.night(); showSet('bedroom'); const i = holdSit(t, BED.seat, BED.fwd, { face: { brow: -.8, mouth: 'smirk', glow: .25 * ease(k) }, look: V(.2, 1.15, 1.5) }); app(phone, { kind: 'notes', items: RULES, light: .2 }); faceCU(i, k, { d0: 1.0, d1: .7 }); };
 S.b1 = (t, k) => { LIGHT.town(300, true); showSet('town'); const x = lerp(303, 307, k), b = V(x, 0, .4); standPose(nev, b, V(1, 0, 0), { phase: t * 4.5, stride: .2, face: fb(F.happy, t), look: V(x + 3, 1.3, 1), handL: b.clone().add(V(.05, .55, .3)), handR: b.clone().add(V(.05, .55, -.3)) }); nev.root.visible = true;
   look(V(x - 1.2, 1.4, 3.3), b.clone().add(V(.3, 1.0, 0)), 38); };
@@ -343,6 +364,36 @@ S.d1 = (t, k) => { LIGHT.night(); showSet('bedroom'); const i = holdSit(t, BED.s
 S.d2 = (t, k) => { LIGHT.night(); showSet('bedroom'); phoneCU(t, k, ph => app(ph, { kind: 'form', ok: k > .65, time: '2:40' }), { d0: .25, d1: .2, shake: k > .65 && k < .75 ? .002 : 0 }); };
 S.d3 = (t, k) => { LIGHT.town(); showSet('town'); townExtras(t, { talk: 1, face: 0 }); look(V(lerp(300, 302, k), 1.5, 6), V(lerp(300, 302, k), 1.0, 0), 42); };
 S.d4 = (t, k) => { LIGHT.school(14); showSet('school'); const b = V(30.9, 0, 12.4); standPose(jake, b, V(-.6, 0, .8), { face: fb({ brow: k < .6 ? -.6 : .7, mouth: talk(t, 'd4') || 'wavy' }, t), look: V(29.6, 1.3, 13.4), handL: b.clone().add(V(-.1, 1.45, .1)), handR: b.clone().add(V(.3, .9, .1)), handModeL: 'open' }); jake.root.visible = true; headCU(jake, k, V(-.6, -.05, .85)); };
+
+// LOOPHOLES
+const PB = () => V(121.4, 0, -1.6);
+S.e1 = (t, k) => S[16](t, k);
+S.e2 = (t, k) => { LIGHT.kitchen(); showSet('house'); parrot.set(t, { face: -.9, turn: Math.sin(t * .8) * .3 }); jakeHome(t, { brow: -.4, mouth: 'smile' }, { look: parrot.headPos() });
+  look(V(lerp(123.9, 123.5, ease(k)), lerp(1.6, 1.5, k), lerp(1.3, .9, ease(k))), V(121.9, 1.3, -1.45), 36); };
+S.e3 = (t, k) => { LIGHT.kitchen(); showSet('house'); parrot.set(t, { face: -1.4, turn: .2 }); jakeHome(t, { brow: .3, mouth: talk(t, 'e3') || 'smile' }, { look: parrot.headPos() });
+  if (k < .5) headCU(jake, k / .5, V(.55, -.05, .75)); else look(V(122.75, 1.62, -.55), parrot.headPos().add(V(-.05, -.05, 0)), 34); };
+const SQ = [.13, .79, 1.59, 2.3];
+S.e4 = (t, k) => { LIGHT.kitchen(); showSet('house'); const r = t - ps('e4'); const sq = SQ.some(x => r > x && r < x + .5) ? 1 : 0; parrot.set(t, { face: -.35, squawk: sq * (.6 + .4 * Math.abs(Math.sin(t * 30))), flap: sq, bounce: 1 }); jakeHome(t, { brow: -.6, mouth: 'smile' }, { look: parrot.headPos() });
+  const h = parrot.headPos(); look(h.clone().add(V(lerp(.5, .38, ease(k)), .04, lerp(.75, .55, ease(k)))).add(sq ? V(Math.sin(t * 70) * .006, Math.cos(t * 60) * .006, 0) : V(0, 0, 0)), h.clone().add(V(0, -.06, 0)), 30); };
+S.e5 = (t, k) => { LIGHT.kitchen(); showSet('house'); const n = 4 + Math.min(3, Math.floor((t - ps('e5')) / .75) + 1);
+  phoneCU(t, k, ph => app(ph, { kind: 'bank', balance: '$' + (248 + n) + '.00', sub: '+$' + n + ' from one bird', time: '4:18', rows: Array.from({ length: n }, () => ['Captain (parrot)', 'Memo: "Nev"', '+$1.00']) }), { d0: .24, d1: .19 }); };
+S.e6 = (t, k) => { LIGHT.kitchen(); showSet('house'); const late = k > .55; parrot.set(t, { face: -.9, flap: late ? .25 : 0, turn: late ? -.4 : .2 }); jakeHome(t, { brow: late ? .5 : -.3, mouth: late ? 'o' : 'smirk' }, { look: parrot.headPos() });
+  look(V(lerp(124.2, 123.4, ease(k)), 1.55, lerp(1.6, .8, ease(k))), V(121.9, 1.3, -1.45), 36); };
+S.e7 = (t, k) => { LIGHT.kitchen(); showSet('house'); const laugh = k > .7; parrot.set(t, { face: -.9, squawk: laugh ? Math.abs(Math.sin(t * 9)) * .5 : 0, flap: laugh ? .4 : 0 });
+  if (!laugh) { jakeHome(t, { brow: -.4, mouth: talk(t, 'e7') || 'smirk' }); headCU(jake, k / .7, V(-.5, -.05, .9)); }
+  else { jakeHome(t, { brow: -.8, mouth: Math.sin(t * 12) > 0 ? 'yell' : 'smile' }, { up: 1, hop: 1 }); look(V(123.4, 1.6, 1.0), V(121.8, 1.3, -1.5), 40); } };
+const emptyGym = () => { LIGHT.gym(); showSet('gym'); gym.spot.intensity = 0; gym.crowd.forEach(e => e.g.visible = false); };
+const GC = V(360, 0, -.5);
+S.e8 = (t, k) => { emptyGym(); const z = lerp(4, -.5, ease(prog(k, 0, .8))); const b = V(360, 0, z); standPose(nev, b, V(0, 0, -1), { phase: k < .8 ? t * 4.5 : 0, stride: k < .8 ? .2 : 0, face: fb({ brow: -.3, mouth: 'smirk' }, t), look: V(360, 2, -6) }); nev.root.visible = true;
+  look(V(lerp(366, 365, k), lerp(4.6, 4.2, k), lerp(8.5, 7.5, k)), V(360, 1, -1), 46); };
+S.e9 = (t, k) => { emptyGym(); const h = V(360, 1.62, -.5); standPose(nev, GC, V(0, 0, -1), { face: { brow: -.9, mouth: t < pe('e9') - 1.4 ? 'yell' : 'o', blink: 0 }, look: V(360, 3.2, -6), handL: h.clone().add(V(-.14, -.1, -.14)), handR: h.clone().add(V(.14, -.1, -.14)), handModeL: 'open', handModeR: 'open' }); nev.root.visible = true;
+  const sh = t < pe('e9') - 1.4 ? V(Math.sin(t * 60) * .01, Math.cos(t * 50) * .01, 0) : V(0, 0, 0); headCU(nev, k, V(.35, .02, -1.0).add(sh), { push: .8 }); };
+S.e10 = (t, k) => { emptyGym(); standPose(nev, GC, V(0, 0, -1), { face: fb({ brow: .4, mouth: 'flat' }, t), look: V(360 + Math.sin(t * 2) * 3, 3, -6) }); nev.root.visible = true;
+  look(V(lerp(360, 361, k), lerp(5.5, 7.5, ease(k)), lerp(6, 9.5, ease(k))), V(360, .8, -1.5), 50); };
+S.e11 = (t, k) => { emptyGym(); standPose(nev, GC, V(0, 0, 1), { face: fb({ ...F.sad }, t), look: V(360, 1.4, 3) }); nev.root.visible = true; headCU(nev, k, V(.15, -.05, 1.0), { push: .78 }); };
+S.e12 = (t, k) => { LIGHT.dark(); showSet('bedroom'); bedroom.setClock('2:14'); lieNev({ brow: .2, mouth: Math.sin(t * 5) > .3 ? 'o' : 'flat', blink: 1 });
+  look(V(lerp(1.5, 1.0, ease(k)), lerp(1.5, 1.25, k), lerp(1.9, 1.3, ease(k))), V(-.1, .7, -.8), 38); };
+S.e13 = (t, k) => { LIGHT.dark(); showSet('bedroom'); phoneCU(t, k, ph => app(ph, { kind: 'bank', balance: '$335.00', sub: 'No new transfers · 6 hours', time: '5:02', light: .3 }), { d0: .24, d1: .2 }); };
 const WINDOWS = TL.map((l, i) => ({ start: i === 0 ? 0 : l.start - .15, fn: S[l.id], i: l.id }));
 WINDOWS.forEach((w, i) => { w.end = i + 1 < WINDOWS.length ? WINDOWS[i + 1].start : END0; });
 
@@ -366,6 +417,8 @@ function overlay(t) {
   if (t < END0) {
     if ([25, 35, 38, 'b6', 'd3'].includes(li)) bubbles(t, extras, [25, 'b6', 'd3'].includes(li) ? 'NEV!' : '-$1', [25, 'b6', 'd3'].includes(li) ? 'white' : 'red');
     if (li === 52) bubbles(t, extras, '+$1', 'white');
+    if (li === 'e12') bubbles(t, [nev], 'nev...', 'white');
+    if (li === 'e10') { ['NEV...', 'nev...', 'nev..'].forEach((s, j) => { const a = t - ps('e10') - .2 - j * .55; if (a < 0) return; og.save(); og.globalAlpha = Math.max(0, 1 - a / 2.2) * (.9 - j * .2); txt(s, W / 2 + (j - 1) * 420, H * .32 + j * 40, 86 - j * 16, '#ffffff', 'center', 900, 10); og.restore(); }); }
     // money counter
     const m = money(t), last = DINGS.filter(d => t >= d).pop() ?? -9, pop = 1 + .22 * Math.max(0, 1 - (t - last) / .25), dropping = t > ps(52) + .2 && t < ps(52) + 3.4, frozen = t >= ps(45) - .15 && t < ps(52) - .15;
     if (t > ps(1) && li !== 6) { const col = dropping ? '#ff6b6b' : frozen ? '#c9c9c9' : '#ffd34d', s = fmt(m); og.save(); og.translate(W - 60, 62); og.scale(pop, pop); og.font = '800 46px Inter'; const tw = og.measureText(s).width;
@@ -399,7 +452,7 @@ function overlay(t) {
 
 window.frame = (t, q = .92) => {
   for (const c of CAST) c.root.visible = false; for (const e of extras) e.g.visible = false;
-  phone.g.visible = phone2.g.visible = false; school.paper.visible = false; street.umb.visible = false; school.tray.position.set(0, -5, 0); cash.visible = false; pc.visible = false; shirt.visible = false; gym.spot.intensity = 0; bloom.strength = .28;
+  phone.g.visible = phone2.g.visible = false; school.paper.visible = false; street.umb.visible = false; school.tray.position.set(0, -5, 0); cash.visible = false; pc.visible = false; shirt.visible = false; gym.spot.intensity = 0; bloom.strength = .28; parrot.hide(); gym.crowd.forEach(e => e.g.visible = true);
   if (t < END0) { const w = WINDOWS.find(w => t >= w.start && t < w.end) || WINDOWS[WINDOWS.length - 1]; w.fn(t, clamp((t - w.start) / (w.end - w.start))); }
   else { showSet('none'); }
   composer.render(); return overlay(t).toDataURL('image/jpeg', q);

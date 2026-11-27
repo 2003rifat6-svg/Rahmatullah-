@@ -42,3 +42,8 @@ Use `episodes/ep01-phone-hidden-mode.md` as the template: summary table, TTS nar
 - Voice must always be clearly heard. Music bed ~23 dB under voice (ducked to 22% while anyone speaks).
 - Whooshes on cuts, ambient beds (room/town/crowd/water), risers, booms, heartbeats: very low and ducked under voice.
 - On-time sync SFX stay audible: notification dings, coin counts, phone buzz, footsteps, cash register, horn, button clicks.
+
+## Voice line cutting rule (user feedback: words were cut mid-word)
+- Never split TTS by silence guessing alone. Force-align each group wav with pocketsphinx (offline, pip) to get word timings; cut in the gap between the last word of one line and the first word of the next, refined to the quietest 40 ms point.
+- Seek with `-ss <start> -t <dur>` BEFORE `-i` when slicing; output-side -ss/-to after atempo shifts the cut (this caused the Ep2 bug).
+- Verify every line file by re-aligning it to its own text; only laughter lines may fail.

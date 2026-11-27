@@ -1,331 +1,383 @@
 1
-00:00:00,500 --> 00:00:02,972
+00:00:00,500 --> 00:00:02,822
 7:02 a.m. Your phone buzzes.
 
 2
-00:00:03,342 --> 00:00:08,417
+00:00:03,462 --> 00:00:08,387
 Plus $1. Sender: unknown. Memo... your name.
 
 3
-00:00:08,787 --> 00:00:11,180
+00:00:09,027 --> 00:00:11,270
 MOM: Nev! Breakfast!
 
 4
-00:00:11,450 --> 00:00:12,846
+00:00:11,770 --> 00:00:13,016
 Ding. Another dollar.
 
 5
-00:00:13,216 --> 00:00:14,059
+00:00:13,656 --> 00:00:14,349
 MR. HALL: Nev?
 
 6
-00:00:14,329 --> 00:00:17,379
+00:00:14,849 --> 00:00:17,749
 KIDS: Nev! Nev! Nev! Nev!
 
 7
-00:00:17,649 --> 00:00:21,666
+00:00:18,249 --> 00:00:22,116
 So what if you earned $1... every time someone said your name?
 
 8
-00:00:22,936 --> 00:00:25,217
+00:00:23,656 --> 00:00:25,049
 Okay. First, you test it.
 
 9
-00:00:25,587 --> 00:00:29,889
+00:00:25,689 --> 00:00:29,841
 NEV: Nev. Nev... Nev!
 
 10
-00:00:30,159 --> 00:00:32,099
+00:00:30,341 --> 00:00:33,258
 Nothing. Your own voice doesn't count.
 
 11
-00:00:32,469 --> 00:00:37,349
+00:00:33,898 --> 00:00:38,749
 Texting it doesn't count either. It has to be said out loud. By someone else.
 
 12
-00:00:37,719 --> 00:00:41,687
+00:00:39,389 --> 00:00:42,763
 So you call the one person who will do anything for free food.
 
 13
-00:00:42,057 --> 00:00:50,604
+00:00:43,403 --> 00:00:51,291
 JAKE: Wait. You'll buy me tacos if I just say your name? Nev. Nev. Nev! Nev, Nev, Nev!
 
 14
-00:00:50,874 --> 00:00:51,836
+00:00:51,791 --> 00:00:52,297
 Six dollars.
 
 15
-00:00:52,206 --> 00:00:58,049
+00:00:52,937 --> 00:00:57,753
 JAKE: Bro, this is the easiest job I've ever had! Nev! Nev-Nev-Nev! Hahaha!
 
 16
-00:00:58,319 --> 00:01:06,832
+00:00:58,253 --> 00:01:04,224
 By lunch, Jake has said your name 240 times. You buy him three tacos. You're still up 230 bucks.
 
 17
-00:01:07,802 --> 00:01:09,770
-Then you learn the fine print.
+00:01:05,564 --> 00:01:07,445
+After school, you test a few loopholes.
 
 18
-00:01:10,140 --> 00:01:14,285
-Whispers count. Even a whisper is a full dollar.
+00:01:08,085 --> 00:01:12,224
+Loophole #1: Jake's parrot, Captain. He knows exactly one word.
 
 19
-00:01:14,655 --> 00:01:18,358
-JAKE: Nevvy? Nevster? Nev-a-licious? Hahaha!
+00:01:12,864 --> 00:01:16,649
+JAKE: Come on, Captain. Say it. Say it! Who's a good boy?
 
 20
-00:01:18,628 --> 00:01:23,917
-Nicknames don't count. Only the real thing. N, E, V.
+00:01:17,149 --> 00:01:20,091
+CAPTAIN: Nev! Nev! Nev! Nev!
 
 21
-00:01:24,287 --> 00:01:30,976
-And recordings don't count. A video of someone saying your name, played a million times, pays you zero.
+00:01:20,591 --> 00:01:24,090
++1. +1. +1. Birds count!
 
 22
-00:01:31,346 --> 00:01:34,663
-But a million people... saying it themselves?
+00:01:24,730 --> 00:01:28,677
+By dinner, Captain has made you $87... and he wants a cut.
 
 23
-00:01:35,933 --> 00:01:39,795
-Day three. You figure out the real trick.
+00:01:29,317 --> 00:01:34,285
+JAKE: Premium crackers, bro. He says it's in his contract. Hahaha!
 
 24
-00:01:40,165 --> 00:01:41,397
-Names spread.
+00:01:35,285 --> 00:01:38,393
+Loophole #2: you scream your own name in the empty school gym.
 
 25
-00:01:41,767 --> 00:01:49,031
-You sign up for the school talent show. Your act? You just... stand there.
+00:01:39,033 --> 00:01:44,807
+NEV: Neeeev!
 
 26
-00:01:49,401 --> 00:01:51,441
-And the whole gym chants.
+00:01:45,307 --> 00:01:48,421
+The echo screams it back. Nev... Nev... Nev...
 
 27
-00:01:51,811 --> 00:01:54,861
-KIDS: Nev! Nev! Nev! Nev!
+00:01:49,061 --> 00:01:52,949
+Zero dollars. An echo is just your own voice... bouncing off a wall.
 
 28
-00:01:55,131 --> 00:02:00,840
-400 kids. 90 seconds. Plus... $11,000.
+00:01:54,089 --> 00:01:57,957
+Loophole #3: that night, you sleep-talk your own name for six straight hours.
 
 29
-00:02:01,210 --> 00:02:04,384
-Somebody films it. By Friday, it's a trend.
+00:01:58,597 --> 00:02:02,781
+Six hours. Zero dollars. Your own voice still doesn't count.
 
 30
-00:02:04,754 --> 00:02:07,640
-#SayNev. 14 million views.
+00:02:04,021 --> 00:02:05,496
+Then you learn the fine print.
 
 31
-00:02:08,010 --> 00:02:14,985
-Kids in Ohio. A grandma in Texas. A guy on a fishing boat in Alaska.
+00:02:06,136 --> 00:02:09,372
+Whispers count. Even a whisper is a full dollar.
 
 32
-00:02:15,355 --> 00:02:17,498
-Everybody is saying your name.
+00:02:10,012 --> 00:02:17,140
+JAKE: Nevvy? Nevster? Nev-a-licious? Hahaha!
 
 33
-00:02:17,868 --> 00:02:22,481
-And your phone... never stops buzzing.
+00:02:17,640 --> 00:02:21,803
+Nicknames don't count. Only the real thing. N, E, V.
 
 34
-00:02:22,851 --> 00:02:25,636
-Day nine. $1,284,000.
+00:02:22,443 --> 00:02:27,834
+And recordings don't count. A video of someone saying your name, played a million times, pays you zero.
 
 35
-00:02:26,006 --> 00:02:28,352
-You buy your mom a new car. You buy Jake a lifetime supply of tacos.
+00:02:28,474 --> 00:02:30,653
+But a million people... saying it themselves?
 
 36
-00:02:28,722 --> 00:02:32,183
-JAKE: I'm not crying. You're crying! Hahaha.
+00:02:32,193 --> 00:02:34,331
+Day three. You figure out the real trick.
 
 37
-00:02:33,053 --> 00:02:34,916
-Then you start spending.
+00:02:34,971 --> 00:02:36,222
+Names spread.
 
 38
-00:02:35,286 --> 00:02:39,353
-You pay off the house. Mom cries in the kitchen for 20 minutes.
+00:02:36,862 --> 00:02:40,719
+You sign up for the school talent show. Your act? You just... stand there.
 
 39
-00:02:39,723 --> 00:02:44,557
-You buy a gaming PC so big it needs its own fan... for its fan.
+00:02:41,359 --> 00:02:42,958
+And the whole gym chants.
 
 40
-00:02:44,927 --> 00:02:50,420
-You tip a waitress $1,000. She says, thank you, Nev. Plus one.
+00:02:43,598 --> 00:02:46,498
+KIDS: Nev! Nev! Nev! Nev!
 
 41
-00:02:50,790 --> 00:03:01,332
-JAKE: Bro, we should start a business. I'll be the manager. You'll be... the name.
+00:02:46,998 --> 00:02:52,026
+400 kids. 90 seconds. Plus... $11,000.
 
 42
-00:03:01,602 --> 00:03:10,651
-Jake prints T-shirts that just say NEV. He sells 9,000 of them. Everybody who reads one out loud... pays you.
+00:02:52,666 --> 00:02:54,654
+Somebody films it. By Friday, it's a trend.
 
 43
-00:03:12,221 --> 00:03:17,283
-Then, Monday morning... Jake doesn't laugh.
+00:02:55,294 --> 00:02:58,648
+#SayNev. 14 million views.
 
 44
-00:03:17,653 --> 00:03:27,888
-JAKE: Bro... my bank account. It's empty. Like, zero. I had 240 dollars yesterday.
+00:02:59,288 --> 00:03:02,934
+Kids in Ohio. A grandma in Texas. A guy on a fishing boat in Alaska.
 
 45
-00:03:28,158 --> 00:03:31,702
-Two hundred and $40.
+00:03:03,574 --> 00:03:04,567
+Everybody is saying your name.
 
 46
-00:03:32,072 --> 00:03:35,835
-The exact number of times he said your name.
+00:03:05,207 --> 00:03:07,009
+And your phone... never stops buzzing.
 
 47
-00:03:36,205 --> 00:03:43,145
-You check the transfers. Every single one has a sender. They're not coming from nowhere.
+00:03:07,649 --> 00:03:11,588
+Day nine. $1,284,000.
 
 48
-00:03:43,515 --> 00:03:49,692
-Every time someone says your name... the dollar comes out of their pocket.
+00:03:12,228 --> 00:03:15,212
+You buy your mom a new car. You buy Jake a lifetime supply of tacos.
 
 49
-00:03:50,062 --> 00:03:56,112
-MOM: Honey, my card got declined at the grocery store. That's weird, right?
+00:03:15,852 --> 00:03:17,723
+JAKE: I'm not crying. You're crying! Hahaha.
 
 50
-00:03:56,382 --> 00:04:01,798
-She said your name eleven times this week. Calling you for dinner.
+00:03:18,823 --> 00:03:19,987
+Then you start spending.
 
 51
-00:04:02,168 --> 00:04:12,306
-14 million people said Nev. 14 million people are $1 poorer. And they're starting to notice.
+00:03:20,627 --> 00:03:23,758
+You pay off the house. Mom cries in the kitchen for 20 minutes.
 
 52
-00:04:13,276 --> 00:04:16,605
-A bus driver in Ohio can't fill up his tank.
+00:03:24,398 --> 00:03:28,352
+You buy a gaming PC so big it needs its own fan... for its fan.
 
 53
-00:04:16,975 --> 00:04:24,358
-A grandma in Texas finds $40 missing from her pension. She said your name 40 times. She thought it was cute.
+00:03:28,992 --> 00:03:33,387
+You tip a waitress $1,000. She says, thank you, Nev. Plus one.
 
 54
-00:04:24,728 --> 00:04:31,094
-People stop saying it. They point. They write it on paper. They call you, that kid.
+00:03:34,027 --> 00:03:38,949
+JAKE: Bro, we should start a business. I'll be the manager. You'll be... the name.
 
 55
-00:04:31,464 --> 00:04:38,166
-JAKE: Bro, my mom grounded me for saying your name at dinner. She thinks I'm in a gang.
+00:03:39,449 --> 00:03:47,089
+Jake prints T-shirts that just say NEV. He sells 9,000 of them. Everybody who reads one out loud... pays you.
 
 56
-00:04:38,436 --> 00:04:46,298
-NEWS ANCHOR: Breaking news. Thousands of Americans report a mysterious $1 charge... every time they say one name.
+00:03:48,929 --> 00:03:52,978
+Then, Monday morning... Jake doesn't laugh.
 
 57
-00:04:47,268 --> 00:04:51,947
-By Wednesday... nobody says your name anymore.
+00:03:53,618 --> 00:04:02,004
+JAKE: Bro... my bank account. It's empty. Like, zero. I had 240 dollars yesterday.
 
 58
-00:04:52,317 --> 00:04:55,405
-MR. HALL: Student 14. Present?
+00:04:02,504 --> 00:04:04,363
+Two hundred and $40.
 
 59
-00:04:55,675 --> 00:05:00,418
-JAKE: Hey... dude. Hey, you. Uh... buddy.
+00:04:05,003 --> 00:04:07,279
+The exact number of times he said your name.
 
 60
-00:05:00,688 --> 00:05:03,735
-Your best friend won't say your name.
+00:04:07,919 --> 00:04:13,370
+You check the transfers. Every single one has a sender. They're not coming from nowhere.
 
 61
-00:05:04,105 --> 00:05:08,425
-Your mom calls you sweetheart now. Kiddo. Champ. Anything but Nev.
+00:04:14,010 --> 00:04:18,676
+Every time someone says your name... the dollar comes out of their pocket.
 
 62
-00:05:08,795 --> 00:05:10,527
-The counter stops.
+00:04:19,316 --> 00:04:23,954
+MOM: Honey, my card got declined at the grocery store. That's weird, right?
 
 63
-00:05:10,897 --> 00:05:20,101
-And for the first time in your life... you realize how good it felt to just hear it.
+00:04:24,454 --> 00:04:28,110
+She said your name eleven times this week. Calling you for dinner.
 
 64
-00:05:21,271 --> 00:05:23,271
-You try to make it stop.
+00:04:28,750 --> 00:04:37,149
+14 million people said Nev. 14 million people are $1 poorer. And they're starting to notice.
 
 65
-00:05:23,641 --> 00:05:30,429
-You change your name. Online forms, a judge, the whole thing. Your new name is Steve.
+00:04:38,389 --> 00:04:40,622
+A bus driver in Ohio can't fill up his tank.
 
 66
-00:05:30,799 --> 00:05:37,731
-Nothing changes. People still know you as Nev. And the money follows the name people say... not the name on the paper.
+00:04:41,262 --> 00:04:47,446
+A grandma in Texas finds $40 missing from her pension. She said your name 40 times. She thought it was cute.
 
 67
-00:05:38,101 --> 00:05:44,079
-JAKE: Steve? Bro, you don't look like a Steve. You look like... yeah, I'm not saying it.
+00:04:48,086 --> 00:04:53,170
+People stop saying it. They point. They write it on paper. They call you, that kid.
 
 68
-00:05:45,449 --> 00:05:51,385
-So you open the bank app. 14,200,000 transfers.
+00:04:53,810 --> 00:04:58,679
+JAKE: Bro, my mom grounded me for saying your name at dinner. She thinks I'm in a gang.
 
 69
-00:05:51,755 --> 00:05:55,300
-There's a button you never noticed. Return all.
+00:04:59,179 --> 00:05:06,891
+NEWS ANCHOR: Breaking news. Thousands of Americans report a mysterious $1 charge... every time they say one name.
 
 70
-00:05:55,670 --> 00:05:57,692
-Your thumb shakes.
+00:05:08,091 --> 00:05:11,217
+By Wednesday... nobody says your name anymore.
 
 71
-00:05:58,062 --> 00:06:00,677
-It's every dollar you have.
+00:05:11,857 --> 00:05:14,795
+MR. HALL: Student 14. Present?
 
 72
-00:06:01,047 --> 00:06:03,083
-You press it.
+00:05:15,295 --> 00:05:18,706
+JAKE: Hey... dude. Hey, you. Uh... buddy.
 
 73
-00:06:03,453 --> 00:06:09,335
-Across America, 14 million phones buzz at once. Plus $1. Memo: sorry.
+00:05:19,206 --> 00:05:20,732
+Your best friend won't say your name.
 
 74
-00:06:09,705 --> 00:06:11,385
-MOM: Nev?
+00:05:21,372 --> 00:05:27,851
+Your mom calls you sweetheart now. Kiddo. Champ. Anything but Nev.
 
 75
-00:06:11,655 --> 00:06:16,519
-It's the first time in a week anyone has said it.
+00:05:28,491 --> 00:05:29,316
+The counter stops.
 
 76
-00:06:16,889 --> 00:06:21,598
-Your phone doesn't buzz. Plus nothing. Minus nothing.
+00:05:29,956 --> 00:05:34,313
+And for the first time in your life... you realize how good it felt to just hear it.
 
 77
-00:06:21,968 --> 00:06:24,329
-It's just your name again.
+00:05:35,753 --> 00:05:36,613
+You try to make it stop.
 
 78
-00:06:24,699 --> 00:06:27,112
-MOM: Nev! Dinner! Love you, kiddo.
+00:05:37,253 --> 00:05:42,669
+You change your name. Online forms, a judge, the whole thing. Your new name is Steve.
 
 79
-00:06:27,382 --> 00:06:34,424
-JAKE: Nev! Nev! Nev! Bro, it's free now! I'm gonna say it all day! Hahaha!
+00:05:43,309 --> 00:05:49,792
+Nothing changes. People still know you as Nev. And the money follows the name people say... not the name on the paper.
 
 80
-00:06:35,894 --> 00:06:41,401
-That night, at 3:33 a.m., your phone lights up one last time.
+00:05:50,432 --> 00:05:56,375
+JAKE: Steve? Bro, you don't look like a Steve. You look like... yeah, I'm not saying it.
 
 81
-00:06:41,771 --> 00:06:46,341
-Plus $1. Sender: unknown. Memo... Jake.
+00:05:57,975 --> 00:06:03,355
+So you open the bank app. 14,200,000 transfers.
 
 82
-00:06:46,711 --> 00:06:48,234
-JAKE: Wait. Why did I just get a dollar?
+00:06:03,995 --> 00:06:06,317
+There's a button you never noticed. Return all.
 
 83
-00:06:49,304 --> 00:06:52,824
+00:06:06,957 --> 00:06:07,907
+Your thumb shakes.
+
+84
+00:06:08,547 --> 00:06:09,944
+It's every dollar you have.
+
+85
+00:06:10,584 --> 00:06:11,038
+You press it.
+
+86
+00:06:11,678 --> 00:06:17,862
+Across America, 14 million phones buzz at once. Plus $1. Memo: sorry.
+
+87
+00:06:18,502 --> 00:06:18,869
+MOM: Nev?
+
+88
+00:06:19,369 --> 00:06:21,041
+It's the first time in a week anyone has said it.
+
+89
+00:06:21,681 --> 00:06:25,109
+Your phone doesn't buzz. Plus nothing. Minus nothing.
+
+90
+00:06:25,749 --> 00:06:26,783
+It's just your name again.
+
+91
+00:06:27,423 --> 00:06:29,988
+MOM: Nev! Dinner! Love you, kiddo.
+
+92
+00:06:30,488 --> 00:06:36,001
+JAKE: Nev! Nev! Nev! Bro, it's free now! I'm gonna say it all day! Hahaha!
+
+93
+00:06:37,701 --> 00:06:41,653
+That night, at 3:33 a.m., your phone lights up one last time.
+
+94
+00:06:42,293 --> 00:06:46,806
+Plus $1. Sender: unknown. Memo... Jake.
+
+95
+00:06:47,446 --> 00:06:49,669
+JAKE: Wait. Why did I just get a dollar?
+
+96
+00:06:50,969 --> 00:06:53,792
 Whose name would YOU want to get paid for? Tell us in the comments.

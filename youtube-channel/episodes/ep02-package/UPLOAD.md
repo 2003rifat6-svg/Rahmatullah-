@@ -16,20 +16,21 @@ I Got $1 Every Time Someone Said My Name
 
 ## ডেসক্রিপশন
 ```
-What if every time someone said your name... you got one dollar? Your mom calls you for breakfast: +$1. Roll call: +$1. Your best friend says it 240 times for three tacos. Then your name goes viral, 14 million people say it, and your phone never stops buzzing... until you find out where the money is coming from.
+What if every time someone said your name... you got one dollar? Your mom calls you for breakfast: +$1. Roll call: +$1. Your best friend says it 240 times for three tacos. His parrot makes you $87. Then your name goes viral, 14 million people say it, and your phone never stops buzzing... until you find out where the money is coming from.
 
 Chapters:
 0:00 Plus one dollar
-0:22 The rules
-1:07 The fine print
-1:35 The talent show trick
-2:01 #SayNev goes viral
-2:32 The spending spree
-3:12 Where the money comes from
-4:47 Nobody says your name
-5:21 Becoming Steve
-5:45 Return all
-6:35 3:33 AM
+0:23 The rules
+1:05 Testing loopholes (Captain the parrot)
+2:03 The fine print
+2:31 The talent show trick
+2:52 #SayNev goes viral
+3:18 The spending spree
+3:48 Where the money comes from
+5:07 Nobody says your name
+5:35 Becoming Steve
+5:57 Return all
+6:37 3:33 AM
 
 Whose name would YOU want to get paid for? Tell us in the comments.
 Subscribe to Brevane: impossible ideas, real consequences.

@@ -62,7 +62,7 @@ sfx = np.zeros(N); bg = np.zeros(N)
 def coin():
     tt = np.arange(int(.6*SR))/SR; return (np.where(tt<.07,np.sin(2*np.pi*1568*tt),0)*np.exp(-tt*25)+np.where(tt>=.07,np.sin(2*np.pi*2093*(tt-.07))+.3*np.sin(2*np.pi*4186*(tt-.07)),0)*np.exp(-np.maximum(tt-.07,0)*7))*np.minimum(1,tt*2000)
 COIN = coin()
-DINGS = [ps(1)+.25, ps(2)+.15, ps(4)+.1] + [ps(5)+x for x in [0,.55,1.15,1.75,2.35]] + [ps(12)+3.2+j*.8 for j in range(6)] + [ps(14)+2.7+j*.55 for j in range(4)]
+DINGS = [ps('e4')+x for x in [.13,.79,1.59,2.3]] + [ps('e5')+x for x in [0,.78,1.5]] + [ps(1)+.25, ps(2)+.15, ps(4)+.1] + [ps(5)+x for x in [0,.55,1.15,1.75,2.35]] + [ps(12)+3.2+j*.8 for j in range(6)] + [ps(14)+2.7+j*.55 for j in range(4)]
 for d in DINGS: put(sfx, COIN, d, .2)
 def ticks(a, b, step, g=.05):
     for x in np.arange(a, b, step): put(sfx, COIN[:int(.1*SR)], x, g)
@@ -100,7 +100,7 @@ for i, kind in LOC.items():
     for x in np.arange(a+.3, b, 1.3):
         if kind == 'town': L = int(.12*SR); tt = np.arange(L)/SR; put(sfx, np.sin(2*np.pi*(3000+1500*tt/.12)*tt)*np.sin(np.pi*tt/.12), x + rnd.random()*.5, .012)
 a, b = W_(24); amb(a + 2*(b-a)/3, b, 'water', .08)
-for i in [0, 1, 3, 7, 8, 9, 10, 11, 13, 23, 26, 27, 34, 45, 46, 47, 48, 49, 50, 51, 55, 'a1', 'a4', 'a5', 'a6', 'b3', 'd1', 'd2']: a, b = W_(i); amb(a, b, 'room', .015)
+for i in [0, 1, 3, 7, 8, 9, 10, 11, 13, 23, 26, 27, 34, 45, 46, 47, 48, 49, 50, 51, 55, 'a1', 'a4', 'a5', 'a6', 'b3', 'd1', 'd2', 'e2', 'e3', 'e4', 'e5', 'e6', 'e7', 'e12', 'e13']: a, b = W_(i); amb(a, b, 'room', .015)
 # cash register at money pile, car horn at the car, news sting, button press + boom, heartbeat
 L = int(.5*SR); tt = np.arange(L)/SR; put(sfx, (np.sin(2*np.pi*2637*tt)+np.sin(2*np.pi*3520*tt))*np.exp(-tt*8)*.5, ps(27)+.4, .25)
 L = int(.5*SR); tt = np.arange(L)/SR; put(sfx, np.sign(np.sin(2*np.pi*410*tt))*.3*env(L), ps(28)+.3, .12)

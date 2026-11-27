@@ -97,6 +97,84 @@
 ],
 [
 "N",
+"After school, you test a few loopholes.",
+"NE",
+"e1"
+],
+[
+"N",
+"Loophole one: Jake's parrot, Captain. He knows exactly one word.",
+"NE",
+"e2"
+],
+[
+"JAKE",
+"Come on, Captain. Say it. Say it! Who's a good boy?",
+"JE",
+"e3"
+],
+[
+"PAR",
+"Nev! Nev! Nev! Nev!",
+"PAR",
+"e4"
+],
+[
+"N",
+"Plus one. Plus one. Plus one. Birds count!",
+"NE",
+"e5"
+],
+[
+"N",
+"By dinner, Captain has made you eighty-seven dollars... and he wants a cut.",
+"NE",
+"e6"
+],
+[
+"JAKE",
+"Premium crackers, bro. He says it's in his contract. Hahaha!",
+"JE",
+"e7"
+],
+[
+"N",
+"Loophole two: you scream your own name in the empty school gym.",
+"NE",
+"e8"
+],
+[
+"NEV",
+"Neeeev!",
+"NEVE",
+"e9"
+],
+[
+"N",
+"The echo screams it back. Nev... Nev... Nev...",
+"NE",
+"e10"
+],
+[
+"N",
+"Zero dollars. An echo is just your own voice... bouncing off a wall.",
+"NE",
+"e11"
+],
+[
+"N",
+"Loophole three: that night, you sleep-talk your own name for six straight hours.",
+"NE",
+"e12"
+],
+[
+"N",
+"Six hours. Zero dollars. Your own voice still doesn't count.",
+"NE",
+"e13"
+],
+[
+"N",
 "Then you learn the fine print.",
 "NX",
 "a1"
