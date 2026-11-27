@@ -1,0 +1,443 @@
+[
+{
+"start": 0.5,
+"end": 2.822,
+"who": "N",
+"text": "Seven-oh-two a.m. Your phone buzzes.",
+"file": "../hook2/vt/n0.wav"
+},
+{
+"start": 3.142,
+"end": 8.067,
+"who": "N",
+"text": "Plus one dollar. Sender: unknown. Memo... your name.",
+"file": "../hook2/vt/n1.wav"
+},
+{
+"start": 8.387,
+"end": 10.63,
+"who": "MOM",
+"text": "Nev! Breakfast!",
+"file": "../hook2/vt/mom.wav"
+},
+{
+"start": 10.88,
+"end": 12.126,
+"who": "N",
+"text": "Ding. Another dollar.",
+"file": "../hook2/vt/n2.wav"
+},
+{
+"start": 12.446,
+"end": 13.139,
+"who": "TEACH",
+"text": "Nev?",
+"file": "../hook2/vt/teacher.wav"
+},
+{
+"start": 13.389,
+"end": 16.289,
+"who": "KIDS",
+"text": "Nev! Nev! Nev! Nev!",
+"file": "../hook2/vt/kids.wav"
+},
+{
+"start": 16.539,
+"end": 20.406,
+"who": "N",
+"text": "So what if you earned one dollar... every time someone said your name?",
+"file": "../hook2/vt/n3.wav"
+},
+{
+"start": 21.626,
+"end": 23.757,
+"who": "N",
+"text": "Okay. First, you test it.",
+"file": "lines/L07.wav"
+},
+{
+"start": 24.077,
+"end": 28.229,
+"who": "NEV",
+"text": "Nev. Nev... Nev!",
+"file": "lines/L08.wav"
+},
+{
+"start": 28.479,
+"end": 30.269,
+"who": "N",
+"text": "Nothing. Your own voice doesn't count.",
+"file": "lines/L09.wav"
+},
+{
+"start": 30.589,
+"end": 35.319,
+"who": "N",
+"text": "Texting it doesn't count either. It has to be said out loud. By someone else.",
+"file": "lines/L10.wav"
+},
+{
+"start": 35.639,
+"end": 39.457,
+"who": "N",
+"text": "So you call the one person who will do anything for free food.",
+"file": "lines/L11.wav"
+},
+{
+"start": 39.777,
+"end": 48.174,
+"who": "JAKE",
+"text": "Wait. You'll buy me tacos if I just say your name? Nev. Nev. Nev! Nev, Nev, Nev!",
+"file": "lines/L12.wav"
+},
+{
+"start": 48.424,
+"end": 49.236,
+"who": "N",
+"text": "Six dollars.",
+"file": "lines/L13.wav"
+},
+{
+"start": 49.556,
+"end": 55.249,
+"who": "JAKE",
+"text": "Bro, this is the easiest job I've ever had! Nev! Nev-Nev-Nev! Hahaha!",
+"file": "lines/L14.wav"
+},
+{
+"start": 55.499,
+"end": 63.862,
+"who": "N",
+"text": "By lunch, Jake has said your name two hundred and forty times. You buy him three tacos. You're still up two hundred and thirty bucks.",
+"file": "lines/L15.wav"
+},
+{
+"start": 65.082,
+"end": 68.794,
+"who": "N",
+"text": "Day three. You figure out the real trick.",
+"file": "lines/L16.wav"
+},
+{
+"start": 69.114,
+"end": 70.196,
+"who": "N",
+"text": "Names spread.",
+"file": "lines/L17.wav"
+},
+{
+"start": 70.516,
+"end": 77.63,
+"who": "N",
+"text": "You sign up for the school talent show. Your act? You just... stand there.",
+"file": "lines/L18.wav"
+},
+{
+"start": 77.95,
+"end": 79.84,
+"who": "N",
+"text": "And the whole gym chants.",
+"file": "lines/L19.wav"
+},
+{
+"start": 80.16,
+"end": 83.06,
+"who": "KIDS",
+"text": "Nev! Nev! Nev! Nev!",
+"file": "../hook2/vt/kids.wav"
+},
+{
+"start": 83.31,
+"end": 88.869,
+"who": "N",
+"text": "Four hundred kids. Ninety seconds. Plus... eleven thousand dollars.",
+"file": "lines/L21.wav"
+},
+{
+"start": 89.189,
+"end": 92.213,
+"who": "N",
+"text": "Somebody films it. By Friday, it's a trend.",
+"file": "lines/L22.wav"
+},
+{
+"start": 92.533,
+"end": 95.269,
+"who": "N",
+"text": "Hashtag Say Nev. Fourteen million views.",
+"file": "lines/L23.wav"
+},
+{
+"start": 95.589,
+"end": 102.414,
+"who": "N",
+"text": "Kids in Ohio. A grandma in Texas. A guy on a fishing boat in Alaska.",
+"file": "lines/L24.wav"
+},
+{
+"start": 102.734,
+"end": 104.727,
+"who": "N",
+"text": "Everybody is saying your name.",
+"file": "lines/L25.wav"
+},
+{
+"start": 105.047,
+"end": 109.51,
+"who": "N",
+"text": "And your phone... never stops buzzing.",
+"file": "lines/L26.wav"
+},
+{
+"start": 109.83,
+"end": 112.465,
+"who": "N",
+"text": "Day nine. One million, two hundred eighty-four thousand dollars.",
+"file": "lines/L27.wav"
+},
+{
+"start": 112.785,
+"end": 114.981,
+"who": "N",
+"text": "You buy your mom a new car. You buy Jake a lifetime supply of tacos.",
+"file": "lines/L28.wav"
+},
+{
+"start": 115.301,
+"end": 118.612,
+"who": "JAKE",
+"text": "I'm not crying. You're crying! Hahaha.",
+"file": "lines/L29.wav"
+},
+{
+"start": 120.062,
+"end": 124.974,
+"who": "N",
+"text": "Then, Monday morning... Jake doesn't laugh.",
+"file": "lines/L30.wav"
+},
+{
+"start": 125.294,
+"end": 135.379,
+"who": "JAKE",
+"text": "Bro... my bank account. It's empty. Like, zero. I had two hundred and forty dollars yesterday.",
+"file": "lines/L31.wav"
+},
+{
+"start": 135.629,
+"end": 139.023,
+"who": "N",
+"text": "Two hundred and forty dollars.",
+"file": "lines/L32.wav"
+},
+{
+"start": 139.343,
+"end": 142.956,
+"who": "N",
+"text": "The exact number of times he said your name.",
+"file": "lines/L33.wav"
+},
+{
+"start": 143.276,
+"end": 150.066,
+"who": "N",
+"text": "You check the transfers. Every single one has a sender. They're not coming from nowhere.",
+"file": "lines/L34.wav"
+},
+{
+"start": 150.386,
+"end": 156.413,
+"who": "N",
+"text": "Every time someone says your name... the dollar comes out of their pocket.",
+"file": "lines/L35.wav"
+},
+{
+"start": 156.733,
+"end": 162.633,
+"who": "MOM",
+"text": "Honey, my card got declined at the grocery store. That's weird, right?",
+"file": "lines/L36.wav"
+},
+{
+"start": 162.883,
+"end": 168.149,
+"who": "N",
+"text": "She said your name eleven times this week. Calling you for dinner.",
+"file": "lines/L37.wav"
+},
+{
+"start": 168.469,
+"end": 178.457,
+"who": "N",
+"text": "Fourteen million people said Nev. Fourteen million people are one dollar poorer. And they're starting to notice.",
+"file": "lines/L38.wav"
+},
+{
+"start": 178.777,
+"end": 186.489,
+"who": "ANCHOR",
+"text": "Breaking news. Thousands of Americans report a mysterious one-dollar charge... every time they say one name.",
+"file": "lines/L39.wav"
+},
+{
+"start": 187.439,
+"end": 191.968,
+"who": "N",
+"text": "By Wednesday... nobody says your name anymore.",
+"file": "lines/L40.wav"
+},
+{
+"start": 192.288,
+"end": 195.226,
+"who": "TEACH",
+"text": "Student fourteen. Present?",
+"file": "lines/L41.wav"
+},
+{
+"start": 195.476,
+"end": 200.069,
+"who": "JAKE",
+"text": "Hey... dude. Hey, you. Uh... buddy.",
+"file": "lines/L42.wav"
+},
+{
+"start": 200.319,
+"end": 203.216,
+"who": "N",
+"text": "Your best friend won't say your name.",
+"file": "lines/L43.wav"
+},
+{
+"start": 203.536,
+"end": 207.706,
+"who": "N",
+"text": "Your mom calls you sweetheart now. Kiddo. Champ. Anything but Nev.",
+"file": "lines/L44.wav"
+},
+{
+"start": 208.026,
+"end": 209.608,
+"who": "N",
+"text": "The counter stops.",
+"file": "lines/L45.wav"
+},
+{
+"start": 209.928,
+"end": 218.982,
+"who": "N",
+"text": "And for the first time in your life... you realize how good it felt to just hear it.",
+"file": "lines/L46.wav"
+},
+{
+"start": 220.402,
+"end": 226.188,
+"who": "N",
+"text": "So you open the bank app. Fourteen million, two hundred thousand transfers.",
+"file": "lines/L47.wav"
+},
+{
+"start": 226.508,
+"end": 229.903,
+"who": "N",
+"text": "There's a button you never noticed. Return all.",
+"file": "lines/L48.wav"
+},
+{
+"start": 230.223,
+"end": 232.095,
+"who": "N",
+"text": "Your thumb shakes.",
+"file": "lines/L49.wav"
+},
+{
+"start": 232.415,
+"end": 234.88,
+"who": "N",
+"text": "It's every dollar you have.",
+"file": "lines/L50.wav"
+},
+{
+"start": 235.2,
+"end": 237.086,
+"who": "N",
+"text": "You press it.",
+"file": "lines/L51.wav"
+},
+{
+"start": 237.406,
+"end": 243.138,
+"who": "N",
+"text": "Across America, fourteen million phones buzz at once. Plus one dollar. Memo: sorry.",
+"file": "lines/L52.wav"
+},
+{
+"start": 243.458,
+"end": 244.988,
+"who": "MOM",
+"text": "Nev?",
+"file": "lines/L53.wav"
+},
+{
+"start": 245.238,
+"end": 249.952,
+"who": "N",
+"text": "It's the first time in a week anyone has said it.",
+"file": "lines/L54.wav"
+},
+{
+"start": 250.272,
+"end": 254.831,
+"who": "N",
+"text": "Your phone doesn't buzz. Plus nothing. Minus nothing.",
+"file": "lines/L55.wav"
+},
+{
+"start": 255.151,
+"end": 257.362,
+"who": "N",
+"text": "It's just your name again.",
+"file": "lines/L56.wav"
+},
+{
+"start": 257.682,
+"end": 259.945,
+"who": "MOM",
+"text": "Nev! Dinner! Love you, kiddo.",
+"file": "lines/L57.wav"
+},
+{
+"start": 260.195,
+"end": 267.087,
+"who": "JAKE",
+"text": "Nev! Nev! Nev! Bro, it's free now! I'm gonna say it all day! Hahaha!",
+"file": "lines/L58.wav"
+},
+{
+"start": 268.537,
+"end": 273.894,
+"who": "N",
+"text": "That night, at three thirty-three a.m., your phone lights up one last time.",
+"file": "lines/L59.wav"
+},
+{
+"start": 274.214,
+"end": 278.634,
+"who": "N",
+"text": "Plus one dollar. Sender: unknown. Memo... Jake.",
+"file": "lines/L60.wav"
+},
+{
+"start": 278.954,
+"end": 280.327,
+"who": "JAKE",
+"text": "Wait. Why did I just get a dollar?",
+"file": "lines/L61.wav"
+},
+{
+"start": 281.377,
+"end": 284.747,
+"who": "N",
+"text": "Whose name would YOU want to get paid for? Tell us in the comments.",
+"file": "lines/L62.wav"
+}
+]
