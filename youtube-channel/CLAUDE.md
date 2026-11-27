@@ -47,3 +47,13 @@ Use `episodes/ep01-phone-hidden-mode.md` as the template: summary table, TTS nar
 - Never split TTS by silence guessing alone. Force-align each group wav with pocketsphinx (offline, pip) to get word timings; cut in the gap between the last word of one line and the first word of the next, refined to the quietest 40 ms point.
 - Seek with `-ss <start> -t <dur>` BEFORE `-i` when slicing; output-side -ss/-to after atempo shifts the cut (this caused the Ep2 bug).
 - Verify every line file by re-aligning it to its own text; only laughter lines may fail.
+
+## Ep2 YouTube review fixes (2026-11-27), apply to every new video
+- **No empty frames, ever.** Before final render, check every shot at 2+ points (`preview2.js` with `FR=.2,.5,.9`). Ep2 bug: the camera was inside a car (the grandma stood on the driveway car's spot) and showed a blank wall for 4 s. Before placing a character in a set, check the set's prop positions (sets2.js) so nothing overlaps.
+- After the full render, look at a 1 frame/sec contact sheet of the whole video, not only a 1 per 18 s sheet.
+- **Money-rush sections:** notification dings must speed up (gap 0.5 s → 0.13 s, slight pitch variation), plus phone buzz every ~1 s.
+- **Big button moments** (e.g. "Return all"): a reverse whoosh that builds into the press, then a heavy low thump + mechanical click + boom, landing on the frame where the finger hits.
+- Description: first 2 lines = story hook in plain words (who + what + twist tease). Hashtags: #3DAnimation #AnimatedStory #WhatIf #Storytime #Brevane. Tags: the exact title phrase first.
+- The owner makes thumbnails now; only deliver the video, SRT and UPLOAD.md.
+- Fixing one shot: re-render only that time range (`node render.js segN.mp4 30 - a b`), cut the old video into pieces one by one (not one big filter, it runs out of memory), and join them with the concat demuxer.
+- Full editing playbook: `EDITING_PLAYBOOK.md`.

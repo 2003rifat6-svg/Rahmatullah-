@@ -13,10 +13,15 @@ What If Everyone Paid You $1 to Say Your Name?
 ```
 I Got $1 Every Time Someone Said My Name
 ```
+```
+Every Time Someone Says My Name, They Lose $1
+```
 
 ## ডেসক্রিপশন
 ```
-What if every time someone said your name... you got one dollar? Your mom calls you for breakfast: +$1. Roll call: +$1. Your best friend says it 240 times for three tacos. His parrot makes you $87. Then your name goes viral, 14 million people say it, and your phone never stops buzzing... until you find out where the money is coming from.
+Nev wakes up to find he earns $1 every time someone says his name out loud. At first it feels like an infinite money glitch... until he discovers where the money is actually coming from.
+
+Your mom calls you for breakfast: +$1. Roll call: +$1. Your best friend says it 240 times for three tacos. His parrot makes you $87. Then your name goes viral, 14 million people say it, and your phone never stops buzzing.
 
 Chapters:
 0:00 Plus one dollar
@@ -38,17 +43,17 @@ Subscribe to Brevane: impossible ideas, real consequences.
 Reality check: names can't move money (yet). Viral challenges really can reach millions of people in days; the rest is ours.
 This is a work of fiction. Voices are AI-generated; the story, characters and animation are made by Brevane.
 
-#brevane #whatif #animation
+#3DAnimation #AnimatedStory #WhatIf #Storytime #Brevane
 ```
 
 ## ট্যাগ
 ```
-brevane, what if, what if animation, earned $1 every time, $1 every time someone said your name, say my name, what if you got paid, animated story, 3d animation, money what if, viral challenge story, best friend story
+what if you earned 1 dollar every time someone said your name, brevane, what if, what if scenario, animated story, 3d animation storytime, money glitch story, stickman animation story, what if animation, earned $1 every time, $1 every time someone said your name, say my name, what if you got paid, 3d animation, money what if, viral challenge story, best friend story
 ```
 
 ## হ্যাশট্যাগ
 ```
-#brevane #whatif #animation
+#3DAnimation #AnimatedStory #WhatIf #Storytime #Brevane
 ```
 
 ## পিন কমেন্ট

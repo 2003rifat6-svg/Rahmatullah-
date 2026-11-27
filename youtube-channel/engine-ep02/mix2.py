@@ -62,8 +62,16 @@ sfx = np.zeros(N); bg = np.zeros(N)
 def coin():
     tt = np.arange(int(.6*SR))/SR; return (np.where(tt<.07,np.sin(2*np.pi*1568*tt),0)*np.exp(-tt*25)+np.where(tt>=.07,np.sin(2*np.pi*2093*(tt-.07))+.3*np.sin(2*np.pi*4186*(tt-.07)),0)*np.exp(-np.maximum(tt-.07,0)*7))*np.minimum(1,tt*2000)
 COIN = coin()
+_CC = {}
+def load_coin(r):
+    if r not in _CC: idx = np.arange(0, len(COIN) - 1, r); _CC[r] = np.interp(idx, np.arange(len(COIN)), COIN)
+    return _CC[r]
 DINGS = [ps('e4')+x for x in [.13,.79,1.59,2.3]] + [ps('e5')+x for x in [0,.78,1.5]] + [ps(1)+.25, ps(2)+.15, ps(4)+.1] + [ps(5)+x for x in [0,.55,1.15,1.75,2.35]] + [ps(12)+3.2+j*.8 for j in range(6)] + [ps(14)+2.7+j*.55 for j in range(4)]
 for d in DINGS: put(sfx, COIN, d, .2)
+# viral run (#SayNev → Day 9): dings accelerate, phone keeps vibrating
+x, gap, j = ps(22), .5, 0
+while x < pe(25):
+    put(sfx, load_coin(1 + .06 * (j % 4)), x, .17); x += gap; gap = max(.13, gap * .93); j += 1
 def ticks(a, b, step, g=.05):
     for x in np.arange(a, b, step): put(sfx, COIN[:int(.1*SR)], x, g)
 ticks(ps(15), pe(15), .2); ticks(ps(20), pe(21), .09, .05); ticks(ps(22), pe(26), .07, .035); ticks(ps(28), pe(39), .25, .025)
@@ -73,6 +81,7 @@ def buzz(at, L=.32, g=.25):
     tt = np.arange(int(L*SR))/SR; put(sfx, np.sin(2*np.pi*150*tt)**3*np.minimum(1,(L-tt)*30)*np.minimum(1,tt*60), at, g)
 for b in [1.6, 2.05]: buzz(b)
 for x in np.arange(ps(26)-.1, pe(26), .5): buzz(x, .3, .2)
+for x in np.arange(ps(23), pe(25), 1.1): buzz(x, .28, .16)
 for x in np.arange(ps(55), ps(55)+.1, 1): pass
 def whoosh(L=.45):
     n = rnd.standard_normal(int(L*SR)); n = np.convolve(n, np.ones(30)/30, 'same'); tt = np.arange(len(n))/len(n); return n*np.sin(np.pi*tt)**2
@@ -106,7 +115,13 @@ L = int(.5*SR); tt = np.arange(L)/SR; put(sfx, (np.sin(2*np.pi*2637*tt)+np.sin(2
 L = int(.5*SR); tt = np.arange(L)/SR; put(sfx, np.sign(np.sin(2*np.pi*410*tt))*.3*env(L), ps(28)+.3, .12)
 for j, f in enumerate([523, 659, 784, 1046]): L = int(.25*SR); tt = np.arange(L)/SR; put(sfx, np.sin(2*np.pi*f*tt)*np.exp(-tt*6), ps(39)-.1+j*.12, .12)
 kt = np.arange(int(1.2*SR))/SR; BOOM = np.sin(2*np.pi*(45+60*np.exp(-kt*12))*kt)*np.exp(-kt*3.5)
-put(sfx, np.sin(2*np.pi*2200*np.arange(int(.06*SR))/SR)*np.exp(-np.arange(int(.06*SR))/SR*120), ps(51)+.95, .4); put(sfx, BOOM, ps(51)+.95, .3)
+HIT = ps(51) + .4  # thumb lands on RETURN ALL (S[51] k=.5)
+# reverse whoosh building into the press
+rw = whoosh(.7)[::-1] * np.linspace(0, 1, int(.7*SR))**2; put(sfx, rw, HIT - .7, .09)
+# heavy button: low thump + mechanical click
+tt = np.arange(int(.25*SR))/SR; put(sfx, np.sin(2*np.pi*(90 - 40*tt)*tt)*np.exp(-tt*22), HIT, .55)
+tt = np.arange(int(.04*SR))/SR; put(sfx, rnd.standard_normal(len(tt))*np.exp(-tt*180), HIT, .3); put(sfx, np.sin(2*np.pi*2200*tt)*np.exp(-tt*120), HIT, .35)
+put(sfx, BOOM, HIT + .05, .3)
 for x in np.arange(ps(49)-.1, pe(50), .85):
     ht = np.arange(int(.2*SR))/SR; hb = np.sin(2*np.pi*50*ht)*np.exp(-ht*18); put(sfx, hb, x, .15); put(sfx, hb, x + .28, .1)
 put(sfx, BOOM, ps(6)+.3, .25); put(sfx, BOOM, ps(30)-.1, .15); put(sfx, BOOM, ps(59)+.1, .15)
