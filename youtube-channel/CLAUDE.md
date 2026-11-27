@@ -37,3 +37,8 @@ Use `episodes/ep01-phone-hidden-mode.md` as the template: summary table, TTS nar
 3. **End-screen space:** finish every video with a 12–15 s end card (soft music, logo, two empty boxes for "next video" + subscribe) so YouTube End Screen elements fit (they need 5–20 s).
 4. Keep what worked: clock/time hook in the first 10 s, top-right counter tied to the story, top-left time labels, music drop + SFX under big reveals, cliffhanger last line.
 5. Always upload the English .srt as captions (never burned in).
+
+## Audio mix rule (user feedback after Ep2)
+- Voice must always be clearly heard. Music bed ~23 dB under voice (ducked to 22% while anyone speaks).
+- Whooshes on cuts, ambient beds (room/town/crowd/water), risers, booms, heartbeats: very low and ducked under voice.
+- On-time sync SFX stay audible: notification dings, coin counts, phone buzz, footsteps, cash register, horn, button clicks.

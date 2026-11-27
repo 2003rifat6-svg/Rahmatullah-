@@ -51,14 +51,14 @@ section(ps(30) - .6, ps(47) - .8, 84, Am, 'tense'); section(ps(47) - .8, ps(52) 
 section(ps(52) - .2, ps(59) - .5, 76, W, 'warm', 1.0); section(ps(59) - .5, ps(62) - .2, 70, Am, 'spooky')
 section(ps(62) - .2, DUR - .5, 112, C, 'play', .9)
 g = np.ones(N)
-for x in T: a, b = int((x['start']-.15)*SR), int((x['end']+.2)*SR); g[a:b] = .5
+for x in T: a, b = int((x['start']-.15)*SR), int((x['end']+.2)*SR); g[a:b] = .22
 g = np.convolve(g, np.ones(4800)/4800, 'same'); mus *= g
 for a in [ps(30)-.6, ps(47)-.8, ps(52)-.2, ps(59)-.5, ps(62)-.2]:
     i = int(a*SR); w = int(.8*SR); mus[max(0,i-w):i] *= np.linspace(1,.3,min(w,i)); mus[i:i+w] *= np.linspace(.3,1,w)[:len(mus[i:i+w])]
 mus *= np.clip((DUR - t)/1.5, 0, 1)
-mus = mus/np.abs(mus).max()*.32
+mus = mus/np.abs(mus).max()*.2
 # ---- SFX
-sfx = np.zeros(N)
+sfx = np.zeros(N); bg = np.zeros(N)
 def coin():
     tt = np.arange(int(.6*SR))/SR; return (np.where(tt<.07,np.sin(2*np.pi*1568*tt),0)*np.exp(-tt*25)+np.where(tt>=.07,np.sin(2*np.pi*2093*(tt-.07))+.3*np.sin(2*np.pi*4186*(tt-.07)),0)*np.exp(-np.maximum(tt-.07,0)*7))*np.minimum(1,tt*2000)
 COIN = coin()
@@ -76,14 +76,14 @@ for x in np.arange(ps(26)-.1, pe(26), .5): buzz(x, .3, .2)
 for x in np.arange(ps(55), ps(55)+.1, 1): pass
 def whoosh(L=.45):
     n = rnd.standard_normal(int(L*SR)); n = np.convolve(n, np.ones(30)/30, 'same'); tt = np.arange(len(n))/len(n); return n*np.sin(np.pi*tt)**2
-for i in range(1, len(T)): put(sfx, whoosh(), T[i]['start'] - .35, .12)
+for i in range(1, len(T)): put(bg, whoosh(), T[i]['start'] - .35, .025)
 def amb(a, b, kind, g):
     L = int((b-a)*SR); n = rnd.standard_normal(L)
     if kind == 'crowd': n = (np.convolve(n, np.ones(12)/12, 'same') - np.convolve(n, np.ones(90)/90, 'same')); tt = np.arange(L)/SR; n *= (.6+.4*np.sin(2*np.pi*3.1*tt)*np.sin(2*np.pi*.7*tt))
     elif kind == 'room': n = np.convolve(n, np.ones(400)/400, 'same')*6
     elif kind == 'town': n = np.convolve(n, np.ones(200)/200, 'same')*4
     elif kind == 'water': n = np.convolve(n, np.ones(60)/60, 'same')*(.6+.4*np.sin(2*np.pi*.3*np.arange(L)/SR))
-    put(sfx, n*env(L, .3, .3), a, g)
+    put(bg, n*env(L, .3, .3), a, g*.35)
 W_ = lambda i: (ps(i)-.15, (T[P[i]+1]['start']-.15) if P[i]+1 < len(T) else END0)
 LOC = {}
 for i in [5, 15]: LOC[i] = 'crowd'
@@ -98,7 +98,7 @@ for i, kind in LOC.items():
     elif kind == 'gym': amb(a, b, 'crowd', .12 if i in [18, 19] else .3)
     elif kind == 'town': amb(a, b, 'town', .05)
     for x in np.arange(a+.3, b, 1.3):
-        if kind == 'town': L = int(.12*SR); tt = np.arange(L)/SR; put(sfx, np.sin(2*np.pi*(3000+1500*tt/.12)*tt)*np.sin(np.pi*tt/.12), x + rnd.random()*.5, .03)
+        if kind == 'town': L = int(.12*SR); tt = np.arange(L)/SR; put(sfx, np.sin(2*np.pi*(3000+1500*tt/.12)*tt)*np.sin(np.pi*tt/.12), x + rnd.random()*.5, .012)
 a, b = W_(24); amb(a + 2*(b-a)/3, b, 'water', .08)
 for i in [0, 1, 3, 7, 8, 9, 10, 11, 13, 23, 26, 27, 34, 45, 46, 47, 48, 49, 50, 51, 55, 'a1', 'a4', 'a5', 'a6', 'b3', 'd1', 'd2']: a, b = W_(i); amb(a, b, 'room', .015)
 # cash register at money pile, car horn at the car, news sting, button press + boom, heartbeat
@@ -106,13 +106,14 @@ L = int(.5*SR); tt = np.arange(L)/SR; put(sfx, (np.sin(2*np.pi*2637*tt)+np.sin(2
 L = int(.5*SR); tt = np.arange(L)/SR; put(sfx, np.sign(np.sin(2*np.pi*410*tt))*.3*env(L), ps(28)+.3, .12)
 for j, f in enumerate([523, 659, 784, 1046]): L = int(.25*SR); tt = np.arange(L)/SR; put(sfx, np.sin(2*np.pi*f*tt)*np.exp(-tt*6), ps(39)-.1+j*.12, .12)
 kt = np.arange(int(1.2*SR))/SR; BOOM = np.sin(2*np.pi*(45+60*np.exp(-kt*12))*kt)*np.exp(-kt*3.5)
-put(sfx, np.sin(2*np.pi*2200*np.arange(int(.06*SR))/SR)*np.exp(-np.arange(int(.06*SR))/SR*120), ps(51)+.95, .4); put(sfx, BOOM, ps(51)+.95, .55)
+put(sfx, np.sin(2*np.pi*2200*np.arange(int(.06*SR))/SR)*np.exp(-np.arange(int(.06*SR))/SR*120), ps(51)+.95, .4); put(sfx, BOOM, ps(51)+.95, .3)
 for x in np.arange(ps(49)-.1, pe(50), .85):
-    ht = np.arange(int(.2*SR))/SR; hb = np.sin(2*np.pi*50*ht)*np.exp(-ht*18); put(sfx, hb, x, .35); put(sfx, hb, x + .28, .22)
-put(sfx, BOOM, ps(6)+.3, .45); put(sfx, BOOM, ps(30)-.1, .3); put(sfx, BOOM, ps(59)+.1, .3)
-ri = int(1.2*SR); r = rnd.standard_normal(ri); r = np.convolve(r, np.ones(8)/8, 'same')*(np.arange(ri)/ri)**2; put(sfx, r, ps(6)-.9, .15)
+    ht = np.arange(int(.2*SR))/SR; hb = np.sin(2*np.pi*50*ht)*np.exp(-ht*18); put(sfx, hb, x, .15); put(sfx, hb, x + .28, .1)
+put(sfx, BOOM, ps(6)+.3, .25); put(sfx, BOOM, ps(30)-.1, .15); put(sfx, BOOM, ps(59)+.1, .15)
+ri = int(1.2*SR); r = rnd.standard_normal(ri); r = np.convolve(r, np.ones(8)/8, 'same')*(np.arange(ri)/ri)**2; put(sfx, r, ps(6)-.9, .04)
 for b in [ps(59)+.9]: buzz(b, .32, .2); buzz(b + .45, .32, .2)
-mix = voice + mus*1.0 + sfx
+bg *= g
+mix = voice + mus*1.0 + sfx + bg
 mix = np.tanh(mix*1.1)/1.1*.9; mix *= np.minimum(1, np.minimum(t/.2, (DUR-t)/.5))
 mix.astype(np.float32).tofile('mix.f32')
 subprocess.run(['ffmpeg','-y','-loglevel','error','-f','f32le','-ar',str(SR),'-ac','1','-i','mix.f32','-af','loudnorm=I=-14:TP=-1.5:LRA=11','-ar','48000','-ac','2','audio.wav'], check=True)
