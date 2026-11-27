@@ -1,410 +1,398 @@
 [
 {
-"start": 0.6,
-"end": 4.71,
+"start": 0.5,
+"end": 4.3,
 "text": "There's a setting on your phone you've never seen.",
-"file": "vo/p00.wav"
+"file": "vo3/p00.wav"
 },
 {
-"start": 5.13,
-"end": 9.831,
+"start": 4.58,
+"end": 8.957,
 "text": "It only shows up at three thirty-three AM.",
-"file": "vo/p01.wav"
+"file": "vo3/p01.wav"
 },
 {
-"start": 10.251,
-"end": 13.066,
+"start": 9.237,
+"end": 11.851,
 "text": "It's called... Hidden Mode.",
-"file": "vo/p02.wav"
+"file": "vo3/p02.wav"
 },
 {
-"start": 13.486,
-"end": 18.313,
+"start": 12.131,
+"end": 16.62,
 "text": "And no matter what happens... never turn it on.",
-"file": "vo/p03.wav"
+"file": "vo3/p03.wav"
 },
 {
-"start": 19.633,
-"end": 22.008,
+"start": 17.5,
+"end": 19.711,
 "text": "You turned it on.",
-"file": "vo/p04.wav"
+"file": "vo3/p04.wav"
 },
 {
-"start": 22.428,
-"end": 25.195,
+"start": 19.991,
+"end": 24.74,
 "text": "At first, nothing happens. No sound. No pop-up.",
-"file": "vo/p05.wav"
+"file": "vo3/p05.wav"
 },
 {
-"start": 25.615,
-"end": 31.807,
+"start": 25.02,
+"end": 28.586,
 "text": "Just a tiny blue dot, right next to your battery.",
-"file": "vo/p06.wav"
+"file": "vo3/p06.wav"
 },
 {
-"start": 32.227,
-"end": 34.444,
+"start": 28.866,
+"end": 30.93,
 "text": "So you go back to sleep.",
-"file": "vo/p07.wav"
+"file": "vo3/p07.wav"
 },
 {
-"start": 35.664,
-"end": 39.601,
+"start": 31.71,
+"end": 35.358,
 "text": "In the morning, you have one new notification.",
-"file": "vo/p08.wav"
+"file": "vo3/p08.wav"
 },
 {
-"start": 40.021,
-"end": 41.966,
+"start": 35.638,
+"end": 37.489,
 "text": "It's from your best friend, Jake.",
-"file": "vo/p09.wav"
+"file": "vo3/p09.wav"
 },
 {
-"start": 42.386,
-"end": 48.437,
+"start": 37.769,
+"end": 43.374,
 "text": "It says: \"Bro... I can't believe you fell in the cafeteria.\"",
-"file": "vo/p10.wav"
+"file": "vo3/p10.wav"
 },
 {
-"start": 48.857,
-"end": 55.907,
+"start": 43.654,
+"end": 50.154,
 "text": "Which is weird. Because it's seven AM. And you haven't even left for school.",
-"file": "vo/p11.wav"
+"file": "vo3/p11.wav"
 },
 {
-"start": 56.327,
-"end": 59.939,
+"start": 50.434,
+"end": 53.836,
 "text": "Then you see the time on the message.",
-"file": "vo/p12.wav"
+"file": "vo3/p12.wav"
 },
 {
-"start": 60.359,
-"end": 64.897,
+"start": 54.116,
+"end": 56.883,
 "text": "Twelve forty-one PM. Today.",
-"file": "vo/p13.wav"
+"file": "vo3/p13.wav"
 },
 {
-"start": 65.317,
-"end": 69.184,
+"start": 57.163,
+"end": 62.186,
 "text": "The message... hasn't been sent yet.",
-"file": "vo/p14.wav"
+"file": "vo3/p14.wav"
 },
 {
-"start": 70.304,
-"end": 76.698,
+"start": 62.916,
+"end": 68.829,
 "text": "At twelve forty, you walk into the cafeteria. Very... slowly.",
-"file": "vo/p15.wav"
+"file": "vo3/p15.wav"
 },
 {
-"start": 77.118,
-"end": 83.6,
+"start": 69.109,
+"end": 75.138,
 "text": "And there it is. A puddle of spilled milk. Right where you would have stepped.",
-"file": "vo/p16.wav"
+"file": "vo3/p16.wav"
 },
 {
-"start": 84.02,
-"end": 85.911,
+"start": 75.418,
+"end": 77.173,
 "text": "You step over it.",
-"file": "vo/p17.wav"
+"file": "vo3/p17.wav"
 },
 {
-"start": 86.331,
-"end": 96.139,
+"start": 77.453,
+"end": 81.268,
 "text": "Twelve forty-one. Jake doesn't send anything. Because nothing happened.",
-"file": "vo/p18.wav"
+"file": "vo3/p18.wav"
 },
 {
-"start": 96.559,
-"end": 98.141,
+"start": 81.548,
+"end": 88.328,
 "text": "You check your phone. The notification is gone. Like it never existed.",
-"file": "vo/p19.wav"
+"file": "vo3/p19.wav"
 },
 {
-"start": 98.561,
-"end": 102.367,
+"start": 88.608,
+"end": 92.139,
 "text": "And your battery? Ninety-nine percent.",
-"file": "vo/p20.wav"
+"file": "vo3/p20.wav"
 },
 {
-"start": 102.787,
-"end": 110.49,
+"start": 92.419,
+"end": 99.565,
 "text": "Hidden Mode doesn't show you the future. It shows you notifications from the future.",
-"file": "vo/p21.wav"
+"file": "vo3/p21.wav"
 },
 {
-"start": 110.91,
-"end": 113.658,
+"start": 99.845,
+"end": 102.677,
 "text": "And you just deleted one.",
-"file": "vo/p22.wav"
+"file": "vo3/p22.wav"
 },
 {
-"start": 114.778,
-"end": 117.886,
+"start": 103.407,
+"end": 106.014,
 "text": "So, you start using it.",
-"file": "vo/p23.wav"
+"file": "vo3/p23.wav"
 },
 {
-"start": 118.306,
-"end": 123.509,
+"start": 106.294,
+"end": 111.127,
 "text": "A text from your teacher: \"Pop quiz tomorrow. Chapter seven.\"",
-"file": "vo/p24.wav"
+"file": "vo3/p24.wav"
 },
 {
-"start": 123.929,
-"end": 131.318,
+"start": 111.407,
+"end": 118.254,
 "text": "You read chapter seven. You get an A. Your teacher looks... suspicious.",
-"file": "vo/p25.wav"
+"file": "vo3/p25.wav"
 },
 {
-"start": 131.738,
-"end": 135.982,
+"start": 118.534,
+"end": 122.489,
 "text": "A weather alert: \"Heavy rain at four fifteen.\"",
-"file": "vo/p26.wav"
+"file": "vo3/p26.wav"
 },
 {
-"start": 136.402,
-"end": 141.269,
+"start": 122.769,
+"end": 127.276,
 "text": "You bring an umbrella. Everyone else gets soaked.",
-"file": "vo/p27.wav"
+"file": "vo3/p27.wav"
 },
 {
-"start": 141.689,
-"end": 146.087,
+"start": 127.556,
+"end": 131.643,
 "text": "A message from your bank: \"Your card was declined.\"",
-"file": "vo/p28.wav"
+"file": "vo3/p28.wav"
 },
 {
-"start": 146.507,
-"end": 148.32,
+"start": 131.923,
+"end": 133.649,
 "text": "You don't buy the sneakers.",
-"file": "vo/p29.wav"
+"file": "vo3/p29.wav"
 },
 {
-"start": 148.74,
-"end": 161.577,
+"start": 133.929,
+"end": 139.158,
 "text": "For one whole week, you are the luckiest person alive.",
-"file": "vo/p30.wav"
+"file": "vo3/p30.wav"
 },
 {
-"start": 161.997,
-"end": 165.502,
+"start": 139.438,
+"end": 144.437,
 "text": "Forty notifications changed. Forty little disasters... gone.",
-"file": "vo/p31.wav"
+"file": "vo3/p31.wav"
 },
 {
-"start": 166.722,
-"end": 171.188,
+"start": 145.217,
+"end": 146.91,
 "text": "Then you notice your battery.",
-"file": "vo/p32.wav"
+"file": "vo3/p32.wav"
 },
 {
-"start": 171.608,
-"end": 174.149,
+"start": 147.19,
+"end": 150.455,
 "text": "Sixty percent. And it's plugged in.",
-"file": "vo/p33.wav"
+"file": "vo3/p33.wav"
 },
 {
-"start": 174.569,
-"end": 177.514,
+"start": 150.735,
+"end": 154.842,
 "text": "It doesn't charge anymore. It only goes down.",
-"file": "vo/p34.wav"
+"file": "vo3/p34.wav"
 },
 {
-"start": 177.934,
-"end": 182.682,
+"start": 155.122,
+"end": 160.254,
 "text": "One percent... every time you change the future.",
-"file": "vo/p35.wav"
+"file": "vo3/p35.wav"
 },
 {
-"start": 183.102,
-"end": 185.851,
+"start": 160.534,
+"end": 164.932,
 "text": "Fine. You'll just turn it off.",
-"file": "vo/p36.wav"
+"file": "vo3/p36.wav"
 },
 {
-"start": 186.271,
-"end": 190.118,
+"start": 165.212,
+"end": 168.968,
 "text": "Except... the toggle is gone.",
-"file": "vo/p37.wav"
+"file": "vo3/p37.wav"
 },
 {
-"start": 190.538,
-"end": 196.074,
+"start": 169.248,
+"end": 176.742,
 "text": "You restart the phone. You reset it. You even buy a new one.",
-"file": "vo/p38.wav"
+"file": "vo3/p38.wav"
 },
 {
-"start": 196.494,
-"end": 200.812,
+"start": 177.022,
+"end": 181.073,
 "text": "The blue dot shows up on every phone you touch.",
-"file": "vo/p39.wav"
+"file": "vo3/p39.wav"
 },
 {
-"start": 201.232,
-"end": 207.956,
+"start": 181.353,
+"end": 187.593,
 "text": "And the notifications keep coming. And you keep fixing them. Because how could you not?",
-"file": "vo/p40.wav"
+"file": "vo3/p40.wav"
 },
 {
-"start": 208.376,
-"end": 210.292,
+"start": 187.873,
+"end": 190.851,
 "text": "Twenty percent. Ten. Five.",
-"file": "vo/p41.wav"
+"file": "vo3/p41.wav"
 },
 {
-"start": 210.712,
-"end": 213.43,
+"start": 191.131,
+"end": 192.462,
 "text": "Three percent.",
-"file": "vo/p42.wav"
+"file": "vo3/p42.wav"
 },
 {
-"start": 214.75,
-"end": 216.849,
+"start": 193.342,
+"end": 195.315,
 "text": "That's when they change.",
-"file": "vo/p43.wav"
+"file": "vo3/p43.wav"
 },
 {
-"start": 217.269,
-"end": 220.017,
+"start": 195.595,
+"end": 202.192,
 "text": "They stop coming from your friends. They start coming from... you.",
-"file": "vo/p44.wav"
+"file": "vo3/p44.wav"
 },
 {
-"start": 220.437,
-"end": 226.293,
+"start": 202.472,
+"end": 203.862,
 "text": "\"Stop changing things.\"",
-"file": "vo/p45.wav"
+"file": "vo3/p45.wav"
 },
 {
-"start": 226.713,
-"end": 228.883,
+"start": 204.142,
+"end": 206.166,
 "text": "\"You don't know what you're using up.\"",
-"file": "vo/p46.wav"
+"file": "vo3/p46.wav"
 },
 {
-"start": 229.303,
-"end": 234.037,
+"start": 206.446,
+"end": 210.831,
 "text": "\"Save the rest. You're going to need it.\"",
-"file": "vo/p47.wav"
+"file": "vo3/p47.wav"
 },
 {
-"start": 234.457,
-"end": 236.206,
+"start": 211.111,
+"end": 212.75,
 "text": "So you stop.",
-"file": "vo/p48.wav"
+"file": "vo3/p48.wav"
 },
 {
-"start": 236.626,
-"end": 242.829,
+"start": 213.03,
+"end": 218.786,
 "text": "You let everything happen. You trip in the cafeteria. You fail a quiz. You get soaked.",
-"file": "vo/p49.wav"
+"file": "vo3/p49.wav"
 },
 {
-"start": 243.249,
-"end": 247.268,
+"start": 219.066,
+"end": 222.787,
 "text": "And your battery holds. Three percent.",
-"file": "vo/p50.wav"
+"file": "vo3/p50.wav"
 },
 {
-"start": 248.688,
-"end": 256.224,
+"start": 223.867,
+"end": 230.87,
 "text": "Then, at three thirty-three AM... one last notification.",
-"file": "vo/p51.wav"
+"file": "vo3/p51.wav"
 },
 {
-"start": 256.644,
-"end": 258.972,
+"start": 231.15,
+"end": 233.324,
 "text": "It's from your mom.",
-"file": "vo/p52.wav"
+"file": "vo3/p52.wav"
 },
 {
-"start": 259.392,
-"end": 264.101,
+"start": 233.604,
+"end": 242.756,
 "text": "Sent tomorrow. Eight fourteen AM. \"Running late. Taking the highway. Love you.\"",
-"file": "vo/p53.wav"
+"file": "vo3/p53.wav"
 },
 {
-"start": 264.521,
-"end": 269.681,
+"start": 243.036,
+"end": 249.442,
 "text": "That's all it says. But the screen around it... is shaking.",
-"file": "vo/p54.wav"
+"file": "vo3/p54.wav"
 },
 {
-"start": 270.101,
-"end": 274.879,
+"start": 249.722,
+"end": 253.764,
 "text": "And suddenly, the messages from yourself make sense.",
-"file": "vo/p55.wav"
+"file": "vo3/p55.wav"
 },
 {
-"start": 275.299,
-"end": 277.429,
+"start": 254.044,
+"end": 260.677,
 "text": "You weren't telling yourself to stop. You were saving the battery. For this.",
-"file": "vo/p56.wav"
+"file": "vo3/p56.wav"
 },
 {
-"start": 278.549,
-"end": 290.058,
+"start": 261.357,
+"end": 264.841,
 "text": "In the morning, you hide her car keys.",
-"file": "vo/p57.wav"
+"file": "vo3/p57.wav"
 },
 {
-"start": 290.478,
-"end": 298.795,
+"start": 265.121,
+"end": 269.364,
 "text": "She's late. She's furious. She takes the long way.",
-"file": "vo/p58.wav"
+"file": "vo3/p58.wav"
 },
 {
-"start": 299.215,
-"end": 309.95,
+"start": 269.644,
+"end": 279.636,
 "text": "At eight fourteen, there's a huge crash on the highway. Your mom is twenty miles away, stuck behind a school bus, still yelling at you on the phone.",
-"file": "vo/p59.wav"
+"file": "vo3/p59.wav"
 },
 {
-"start": 310.37,
-"end": 315.768,
+"start": 279.916,
+"end": 284.923,
 "text": "Battery: one percent. It cost you two.",
-"file": "vo/p60.wav"
+"file": "vo3/p60.wav"
 },
 {
-"start": 316.188,
-"end": 324.025,
+"start": 285.203,
+"end": 292.461,
 "text": "That night, your mom hugs you a little longer than usual. She doesn't know why.",
-"file": "vo/p61.wav"
+"file": "vo3/p61.wav"
 },
 {
-"start": 325.345,
-"end": 331.573,
+"start": 293.341,
+"end": 299.121,
 "text": "Then your phone lights up. A pop-up you've never seen before.",
-"file": "vo/p62.wav"
+"file": "vo3/p62.wav"
 },
 {
-"start": 331.993,
-"end": 338.58,
+"start": 299.401,
+"end": 305.495,
 "text": "\"Hidden Mode update available. Install tonight at three thirty-three AM?\"",
-"file": "vo/p63.wav"
+"file": "vo3/p63.wav"
 },
 {
-"start": 339.0,
-"end": 345.885,
+"start": 305.775,
+"end": 312.166,
 "text": "And under it... one more message. From you. Sent tomorrow.",
-"file": "vo/p64.wav"
+"file": "vo3/p64.wav"
 },
 {
-"start": 347.105,
-"end": 350.928,
+"start": 312.946,
+"end": 316.49,
 "text": "\"Whatever you do... don't install it.\"",
-"file": "vo/p65.wav"
-},
-{
-"start": 352.948,
-"end": 356.403,
-"text": "So... would you have turned it on? Tell me in the comments.",
-"file": "vo/p66.wav"
-},
-{
-"start": 356.823,
-"end": 361.824,
-"text": "And subscribe... before the update.",
-"file": "vo/p67.wav"
+"file": "vo3/p65.wav"
 }
 ]

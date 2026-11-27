@@ -1,6 +1,6 @@
 # Brevane #01: আপলোড প্যাক
 
-ভিডিওর ভেতরে কোনো সাবটাইটেল নেই। সাবটাইটেল আলাদা ফাইলে: `Brevane_01_Hidden_Mode.en.srt` (ফাইনাল রেন্ডারের পর এই ফোল্ডারে আসবে)।
+ভিডিওর ভেতরে কোনো সাবটাইটেল নেই। সাবটাইটেল আলাদা ফাইলে: `Brevane_01_Hidden_Mode_v2.en.srt` (ফাইনাল রেন্ডারের পর এই ফোল্ডারে আসবে)।
 
 ## টাইটেল
 ```
@@ -31,14 +31,14 @@ This is Part 1 of 3.
 
 Chapters:
 0:00 The setting that only appears at 3:33 AM
-0:35 A message from 12:41 PM
-1:10 The cafeteria test
-1:54 One perfect week
-2:46 The battery
-3:34 Messages from yourself
-4:08 Mom
-4:38 The car keys
-5:25 The update
+0:31 A message from 12:41 PM
+1:02 The cafeteria test
+1:43 One perfect week
+2:25 The battery
+3:13 Messages from yourself
+3:43 Mom
+4:21 The car keys
+4:53 The update
 
 Which notification would YOU change first? Tell us in the comments.
 Subscribe to Brevane: impossible ideas, real consequences.

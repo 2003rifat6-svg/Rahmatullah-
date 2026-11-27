@@ -85,6 +85,7 @@ export function drawPhoneUI(g, s) {
     if (s.plugged) { g.font = '800 70px Inter'; g.fillStyle = '#f2b33d'; g.fillText('⚡', 300, 620); }
     if (s.delta) { g.font = '900 80px Inter'; g.fillStyle = '#ff4d4d'; g.globalAlpha = s.deltaA ?? 1; g.fillText(s.delta, 300, 1120); g.globalAlpha = 1; }
     if (s.label) { g.font = '700 34px Inter'; g.fillStyle = '#9fb0c8'; g.fillText(s.label, 300, 200); }
+    if (s.alert) { g.save(); g.strokeStyle = 'rgba(255,60,60,.9)'; g.lineWidth = 22; g.shadowColor = '#ff3b3b'; g.shadowBlur = 40; g.strokeRect(11, 11, 578, 1178); g.restore(); }
     g.textAlign = 'left';
   } else if (mode === 'popup') {
     const grd = g.createLinearGradient(0, 0, 0, 1200); grd.addColorStop(0, '#081624'); grd.addColorStop(1, '#0c2a36'); g.fillStyle = grd; g.fillRect(0, 0, 600, 1200); status(g, s);
