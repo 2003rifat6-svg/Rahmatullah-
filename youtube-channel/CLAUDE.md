@@ -57,3 +57,7 @@ Use `episodes/ep01-phone-hidden-mode.md` as the template: summary table, TTS nar
 - The owner makes thumbnails now; only deliver the video, SRT and UPLOAD.md.
 - Fixing one shot: re-render only that time range (`node render.js segN.mp4 30 - a b`), cut the old video into pieces one by one (not one big filter, it runs out of memory), and join them with the concat demuxer.
 - Full editing playbook: `EDITING_PLAYBOOK.md`.
+
+## Subtitle rule (user feedback: Ep2 SRT had problems)
+- Build the SRT with `engine-ep02/make_srt.py timing.json <draft.srt> <out.srt>`: caption standard, at most 2 lines × 42 chars per cue, long lines split into several cues at the real word times (pocketsphinx), line breaks at punctuation, speaker label (JAKE:, MOM:) only on the first cue of a line, cue ends ≤ next line start.
+- Never deliver one-line cues longer than 42 chars.
