@@ -76,3 +76,6 @@ User complaint: "everything is white" — white heads vanished on white/cream wa
 - Set backgrounds (`bg` in lightRig) must be mid-tone, never near-white: school #7cb8a6, gym #8798c8, kitchen #d8a06a, library #c4946a, morning #9f88d6.
 - Frozen-time filter: saturate(0.78), not 0.55 (0.55 greyed everything out).
 - QA check: in every contact-sheet frame, the white head must clearly separate from what's behind it.
+
+## Story variety (user request after Ep3) — read `STORY_VARIETY.md` before writing ANY new episode
+Same cast, but rotate opening type / location / power source / structure / color mood. No bedroom-morning-phone openings for Ep4–Ep6. Avoid YouTube "generic or repetitive content" demonetization.
