@@ -56,3 +56,33 @@ what if your snooze button could freeze time, brevane, what if, what if scenario
 ```
 Be honest: how many times would YOU have pressed snooze? ⏸️
 ```
+
+## থাম্বনেইল আইডিয়া (তুমি বানাবে)
+| | লেখা (বড়, ২–৪ শব্দ) | ছবি |
+|---|---|---|
+| **A (প্রধান)** | **+900 HOURS** | Nev-এর হাত স্নুজ বাটনে, ঘড়িতে 6:59, পেছনের সবকিছু নীলচে আর জমে থাকা |
+| B (Test) | **TIME FROZEN** | বাতাসে জমে থাকা জুস আর পাখি, Nev অবাক মুখে |
+| C (Test) | **WHY AM I OLDER?** | দরজার উচ্চতার দাগ আর Nev-এর গোঁফ |
+
+- মুখ বড় করে রাখো। মুখের চারপাশে গাঢ় বর্ডার থাকবে, পেছনটা রঙিন (সাদা নয়)।
+- লেখা হলুদ বা সাদা, চারপাশে মোটা কালো বর্ডার। লেখা মুখ ঢাকবে না।
+- সাইজ 1280×720, JPG, 2 MB-এর কম।
+
+## YouTube Studio সেটিং
+- Category: Entertainment
+- Language: English (United States), Caption language: English
+- Audience: **No, it's not made for kids**
+- Altered or synthetic content: No (কার্টুন অ্যানিমেশন, বাস্তব মানুষ নয়)
+- Playlist: Brevane Stories
+- License: Standard YouTube License; Allow embedding চালু
+- Comments: On; উপরের পিন কমেন্ট দিয়ে পিন করে দাও
+
+## আপলোডের ধাপ
+1. `Brevane_03_Snooze.mp4` আপলোড করো।
+2. টাইটেল, ডেসক্রিপশন, ট্যাগ উপরে থেকে কপি-পেস্ট করো।
+3. থাম্বনেইল A দাও। B আর C দিয়ে **Test & Compare** চালু করো (টাইটেলও Test করতে পারো)।
+4. **Subtitles → Add → Upload file → With timing** → `Brevane_03_Snooze.en.srt`।
+5. **End screen:** শেষের ১৩ সেকেন্ডে বামে "Best for viewer" ভিডিও, ডানে Subscribe।
+6. **Cards:** 2:26 (900 extra hours) সময়ে আগের এপিসোডের একটা card দাও।
+7. Visibility → **Schedule: রাত ১০টা (বাংলাদেশ সময়)**।
+8. আপলোডের পর প্রথম ১ ঘণ্টা কমেন্টের উত্তর দাও।
