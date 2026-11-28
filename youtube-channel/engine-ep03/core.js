@@ -93,7 +93,7 @@ export function makeChar(o = {}) {
   c.strings = [-1, 1].map(() => mesh(root, new THREE.CylinderGeometry(.007, .007, .12, 8), std(o.string || '#00e5ff', .5, { emissive: o.string || '#00e5ff', emissiveIntensity: .5 })));
   c.neck = mesh(root, new THREE.CylinderGeometry(.045, .05, .1, 16), SKIN);
   c.legs = [-1, 1].map(s => ({ th: limb(root, .065, pants), sh: limb(root, .055, pants), foot: mesh(root, new THREE.SphereGeometry(.07, 20, 12), shoe), s }));
-  c.arms = [-1, 1].map(s => ({ up: limb(root, .05, hoodie), fo: limb(root, .038, o.sleeveFull ? hoodie : SKIN), hand: makeHand(root), s }));
+  c.arms = [-1, 1].map(s => ({ up: limb(root, .05, hoodie), fo: limb(root, .038, (o.sleeveFull ?? true) ? hoodie : SKIN), hand: makeHand(root), s }));
   // head
   const head = new THREE.Group(); root.add(head); c.head = head;
   mesh(head, new THREE.SphereGeometry(HR, 48, 32), SKIN);
@@ -171,7 +171,13 @@ export function poseChar(c, p) {
   // arms
   for (const A of c.arms) {
     const sh = neck.clone().sub(up.clone().multiplyScalar(.06)).add(x.clone().multiplyScalar(-A.s * .17));
-    const target = A.s < 0 ? p.handL : p.handR;
+    let target = (A.s < 0 ? p.handL : p.handR).clone();
+    { // anti-clip: push hand target out of torso capsule and head sphere
+      const a0 = hip.clone().add(up.clone().multiplyScalar(.02)), a1 = hip.clone().add(up.clone().multiplyScalar(.40)), ab = a1.clone().sub(a0);
+      const tt = clamp(target.clone().sub(a0).dot(ab) / ab.lengthSq(), 0, 1), cp = a0.clone().add(ab.multiplyScalar(tt)), d = target.clone().sub(cp); const R = .215;
+      if (d.length() < R) { if (d.length() < 1e-3) d.copy(x).multiplyScalar(-A.s); d.normalize(); target = cp.add(d.multiplyScalar(R)); }
+      const hc0 = neck.clone().add(up.clone().multiplyScalar(.17)), dh = target.clone().sub(hc0), RH = HR + .06;
+      if (dh.length() < RH) { if (dh.length() < 1e-3) dh.copy(z); dh.normalize(); target = hc0.add(dh.multiplyScalar(RH)); } }
     const pole = p.elbowPole ? p.elbowPole(A.s, sh) : sh.clone().sub(fwd.clone().multiplyScalar(.25)).sub(up.clone().multiplyScalar(.5)).add(x.clone().multiplyScalar(-A.s * .35));
     const r = ik(sh, target, .26, .25, pole);
     setLimb(A.up, sh, r.mid); setLimb(A.fo, r.mid, r.end);
@@ -197,8 +203,8 @@ export function standPose(c, base, fwd, o = {}) {
   const footR = base.clone().add(r.clone().multiplyScalar(.1)).add(f.clone().multiplyScalar(-Math.sin(ph) * stride)).add(V(0, .1 + Math.max(0, -Math.cos(ph)) * stride * .35, 0));
   const shY = hip.y + .37;
   const swing = stride ? Math.sin(ph) * stride * .7 : 0;
-  const handL = o.handL || base.clone().add(V(0, shY - .5, 0)).add(r.clone().multiplyScalar(-.21)).add(f.clone().multiplyScalar(-swing + .04));
-  const handR = o.handR || base.clone().add(V(0, shY - .5, 0)).add(r.clone().multiplyScalar(.21)).add(f.clone().multiplyScalar(swing + .04));
+  const handL = o.handL || base.clone().add(V(0, shY - .5, 0)).add(r.clone().multiplyScalar(-.24)).add(f.clone().multiplyScalar(-swing + .04));
+  const handR = o.handR || base.clone().add(V(0, shY - .5, 0)).add(r.clone().multiplyScalar(.24)).add(f.clone().multiplyScalar(swing + .04));
   return poseChar(c, { hip, fwd: f, lean: o.lean ?? .04, footL, footR, handL, handR, look: o.look, face: o.face, handModeL: o.handModeL || 'grip', handModeR: o.handModeR || 'grip',
     handTargetL: o.handTargetL, handTargetR: o.handTargetR, pointDirR: o.pointDirR, side: o.side, hide: o.hide, elbowPole: o.elbowPole });
 }

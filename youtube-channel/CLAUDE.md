@@ -79,3 +79,18 @@ User complaint: "everything is white" — white heads vanished on white/cream wa
 
 ## Story variety (user request after Ep3) — read `STORY_VARIETY.md` before writing ANY new episode
 Same cast, but rotate opening type / location / power source / structure / color mood. No bedroom-morning-phone openings for Ep4–Ep6. Avoid YouTube "generic or repetitive content" demonetization.
+
+## Ep3 review v3 fixes (Gemini + owner review) — apply to every episode
+- **Anti-clip (core.js poseChar):** hand targets are pushed out of the torso capsule (r .215) and head sphere (HR+.06). Never let hands/forearms pass through body, face or props.
+- **Sleeves:** forearms use the hoodie colour by default (`sleeveFull ?? true`); white tube forearms read as "cut" limbs.
+- **Reaching props (snooze button etc.):** target ≥ .10 above the prop top and raise the elbow with `elbowPole`, so the arm comes from above, not through the object.
+- **Lying in bed:** always show a blanket over the body (capsule, pink) so a lone head never reads as a ball.
+- **Sitting:** hands rest on the seat beside the hips (`sideHand`), not crossing the body.
+- **Background crowds:** frozen extras get natural walk/wave arm poses. Never use T-pose (arms horizontal).
+- **Two-person dialogue:** place the pair side-on to camera (profiles, slightly turned in). Camera never behind the speaker's head.
+- **Body-detail shots (short jeans etc.):** still frame the full body with the head; no legs-only shot on empty background.
+- **Face props (mustache):** offset off the skin (≥ radius) and `userData.noOutline = true`.
+- **Eating close-ups:** no hand-to-mouth motion in a face close-up (the arm covers the face).
+- **Audio:** every line gets a 60 ms fade-out and a light room tail (7 %), so voices never stop dead. Speech ducking 0.32 and frozen ducking 45 %; music never vanishes.
+- **Mood:** the realisation beat gets its own 'sad' music section (slow, low pads + long piano). Big moments get layered SFX: ticks, pitch-drop whoom and ring at the freeze; spark crackle and hum at the plug pull; louder snooze click.
+- Target loudness −14 LUFS (check after limiter; adjust gain).

@@ -12,9 +12,13 @@ env = lambda L, a=.005, r=.05: np.minimum(1, np.minimum(np.arange(L) / (a * SR +
 # ---- voices
 voice = np.zeros(N)
 for i, x in enumerate(T):
-    a = load(x['file']); put(voice, a, x['start'], .8 if x['who'] == 'KIDS' else 1.0)
+    a = load(x['file']); fo = int(.06*SR); a[-fo:] *= np.linspace(1, 0, fo)**.7; fi = int(.008*SR); a[:fi] *= np.linspace(0, 1, fi)
+    put(voice, a, x['start'], .8 if x['who'] == 'KIDS' else 1.0)
     if x['who'] == 'KIDS':
         for r, d, g in [(.9, .035, .5), (1.1, .06, .45), (.82, .09, .4), (1.2, .02, .35), (.95, .12, .35)]: put(voice, load(x['file'], r), x['start'] + d, g)
+ir = rnd.standard_normal(int(.45*SR))*np.exp(-np.arange(int(.45*SR))/SR*11); ir = np.convolve(ir, np.ones(8)/8, 'same'); ir[:int(.012*SR)] = 0
+wet = np.fft.irfft(np.fft.rfft(voice, 2**int(np.ceil(np.log2(len(voice)+len(ir))))) * np.fft.rfft(ir, 2**int(np.ceil(np.log2(len(voice)+len(ir))))))[:len(voice)]
+voice = voice + wet/np.abs(wet).max()*np.abs(voice).max()*.07
 # ---- music bed (low, ducked)
 mus = np.zeros(N)
 def pluck(f, L=.35, dec=9):
@@ -42,6 +46,12 @@ def section(a, b, bpm, ch, mode, g=1.0):
             if i % 8 == 0:
                 for f in c: put(mus, pad(f, min(4*beat, b-tt)), tt, .05*g)
             if i % 2 == 0: put(mus, pluck(c[[0,1,2,1][(i//2)%4]]*2, .6, 5), tt, .1*g)
+        elif mode == 'sad':
+            if i % 8 == 0:
+                for f in c: put(mus, pad(f*.5, min(4*beat, b-tt)), tt, .06*g)
+                put(mus, pad(c[0]*.25, min(4*beat, b-tt)), tt, .07*g)
+            if i % 4 == 0: put(mus, pluck(c[[2,1,0,1][(i//4)%4]]*2, 1.6, 2.2), tt, .11*g)
+            if i % 8 == 6: put(mus, pluck(c[1]*4, 1.2, 3), tt, .04*g)
         elif mode == 'spooky':
             if i % 8 == 0: put(mus, pad(c[0]*.5, min(4*beat, b-tt)), tt, .07*g); put(mus, pad(c[1]*1.06, min(4*beat, b-tt)), tt, .03*g)
             if i % 4 == 0: put(mus, pluck(c[2]*4, .5, 6), tt, .05*g)
@@ -49,7 +59,7 @@ def section(a, b, bpm, ch, mode, g=1.0):
 
 # ---- Ep3 music: playful -> tense twist -> lonely -> warm -> spooky ending
 section(.3, ps(7) - .2, 112, C, 'play', .8); section(ps(7) - .2, ps(39) - .6, 112, C, 'play', 1.0)
-section(ps(39) - .6, ps(56) - .5, 84, Am, 'tense'); section(ps(56) - .5, ps(62) - .3, 66, Am, 'warm', .7)
+section(ps(39) - .6, ps(47) - .3, 84, Am, 'tense'); section(ps(47) - .3, ps(56) - .5, 58, Am, 'sad', 1.2); section(ps(56) - .5, ps(62) - .3, 66, Am, 'warm', .7)
 section(ps(62) - .3, ps(72) - .4, 84, Am, 'tense', .8); section(ps(72) - .4, ps(81) - .5, 92, W, 'warm', 1.0)
 section(ps(81) - .5, ps(85) + .4, 70, Am, 'spooky'); section(ps(85) + .4, DUR - .5, 66, Am, 'spooky', 1.2)
 FROZEN = [(pe(3)-.08, ps(8)+.5), (ps(11), pe(11)), (ps(13), pe(17)), (ps(19), pe(19)), (ps(21), pe(23)), (ps(24), pe(24)), (ps(27), pe(30)), (ps(31), pe(33)), (ps(37), ps(37)+1.4), (ps(50), pe(51)), (ps(56), pe(61)), (ps(85)+.4, END0)]
@@ -57,9 +67,9 @@ fz = np.zeros(N)
 for a, b in FROZEN: fz[int((a-.1)*SR):int((b+.1)*SR)] = 1
 fz = np.convolve(fz, np.ones(4800)/4800, 'same')
 g = np.ones(N)
-for x in T: a, b = int((x['start']-.15)*SR), int((x['end']+.2)*SR); g[a:b] = .22
-g = np.convolve(g, np.ones(4800)/4800, 'same'); mus *= g * (1 - .7*fz)
-for a in [ps(39)-.6, ps(56)-.5, ps(62)-.3, ps(72)-.4, ps(81)-.5]:
+for x in T: a, b = int((x['start']-.15)*SR), int((x['end']+.2)*SR); g[a:b] = .32
+g = np.convolve(g, np.ones(4800)/4800, 'same'); mus *= g * (1 - .45*fz)
+for a in [ps(39)-.6, ps(47)-.3, ps(56)-.5, ps(62)-.3, ps(72)-.4, ps(81)-.5]:
     i = int(a*SR); w = int(.8*SR); mus[max(0,i-w):i] *= np.linspace(1,.3,min(w,i)); mus[i:i+w] *= np.linspace(.3,1,w)[:len(mus[i:i+w])]
 mus *= np.clip((DUR - t)/1.5, 0, 1)
 mus = mus/np.abs(mus).max()*.2
@@ -74,6 +84,10 @@ sh = np.zeros(N); tt = t; sh = (np.sin(2*np.pi*1318*tt)+.6*np.sin(2*np.pi*1760*t
 for a, b in FROZEN:
     rw = whoosh(.6)[::-1]*np.linspace(0,1,int(.6*SR))**2; put(sfx, rw, a-.6, .06); put(sfx, BOOM, a, .18); put(sfx, tone(2637, .8, 5), a, .03)
     if b < END0 - 1: put(sfx, whoosh(.35), b-.05, .05)
+F0 = pe(3)-.08
+for j, d in enumerate([-.9, -.55, -.25]): put(sfx, rnd.standard_normal(int(.02*SR))*np.exp(-np.arange(int(.02*SR))/SR*260), F0 + d, .16 + j*.04)
+dn = np.arange(int(1.1*SR))/SR; put(sfx, np.sin(2*np.pi*np.cumsum(220*np.exp(-dn*2.2)+40)/SR)*np.exp(-dn*2.5)*np.minimum(1, dn*60), F0, .22)
+put(sfx, tone(3520, 1.4, 3), F0 + .02, .025)
 SNAP = ps(8)+.5; put(sfx, BOOM, SNAP, .3); put(sfx, rnd.standard_normal(int(.05*SR))*np.exp(-np.arange(int(.05*SR))/SR*90), SNAP, .25)
 # juice splash
 sp = rnd.standard_normal(int(.5*SR))*np.exp(-np.arange(int(.5*SR))/SR*9); sp = np.convolve(sp, np.ones(6)/6, 'same'); put(sfx, sp, SNAP+.55, .12)
@@ -87,9 +101,11 @@ beeps(.4, ps(1)+.75); beeps(ps(63)-.15, ps(67)-.15+.35*(pe(67)-ps(67)), .05); be
 # snooze presses: plastic click + soft thump
 SNOOZES = [ps(1)+.75, ps(12)+.9, ps(12)+1.9, ps(12)+2.9, ps(85)+.4]
 for x in SNOOZES:
-    c = rnd.standard_normal(int(.03*SR))*np.exp(-np.arange(int(.03*SR))/SR*200); put(sfx, c, x, .25); put(sfx, tone(140, .15, 25), x, .3)
+    c = rnd.standard_normal(int(.03*SR))*np.exp(-np.arange(int(.03*SR))/SR*200); put(sfx, c, x, .4); put(sfx, tone(140, .15, 25), x, .45); put(sfx, tone(900, .05, 60), x, .08)
 # plug pull, wall clock ticks, cheering crowd, bounce, window click, sparkle at zero
-put(sfx, rnd.standard_normal(int(.06*SR))*np.exp(-np.arange(int(.06*SR))/SR*80), ps(67)-.15+.35*(pe(67)+.6-ps(67)), .3)
+PLUG = ps(67)-.15+.35*(pe(67)+.6-ps(67)); put(sfx, rnd.standard_normal(int(.06*SR))*np.exp(-np.arange(int(.06*SR))/SR*80), PLUG, .3)
+for j in range(9): L = int((.004 + rnd.random()*.01)*SR); put(sfx, rnd.standard_normal(L)*np.exp(-np.arange(L)/SR*500), PLUG + .01 + j*.018 + rnd.random()*.01, .22 - j*.02)
+zz = np.arange(int(.25*SR))/SR; put(sfx, np.sign(np.sin(2*np.pi*120*zz))*np.exp(-zz*14), PLUG, .06); put(sfx, tone(60, .5, 6), PLUG + .05, .2)
 for x in np.arange(ps(70), pe(71), 1.0): put(sfx, rnd.standard_normal(int(.015*SR))*np.exp(-np.arange(int(.015*SR))/SR*300), x, .1)
 for x in np.arange(ps(36), pe(36), .33): put(sfx, tone(90, .12, 30), x, .25)
 for j, f in enumerate([523, 659, 784, 1046]): put(sfx, tone(f, .3, 6), ps(80)+.9+j*.1, .08)
@@ -105,7 +121,7 @@ W_ = lambda i: (ps(i)-.15, (T[P[i]+1]['start']-.15) if P[i]+1 < len(T) else END0
 for i in [9, 20, 35, 39, 40, 41, 42, 45, 53, 54, 69, 71, 72, 73, 74, 75, 76]: a, b = W_(i); amb(a, b, 'crowd' if i in [35,41,42,45,53,54,72,73,74,75,76] else 'room', .05 if i in [35,41,42,45,53,54,72,73,74,75,76] else .015)
 a, b = W_(36); amb(a, b, 'crowd', .2); a = ps(37)+1.4; b = W_(37)[1]; amb(a, b, 'crowd', .45)
 for x in np.arange(ps(37)+1.4, W_(37)[1], .9): put(sfx, tone(1200, .1, 20), x, .02)
-bg *= g * (1 - .85*fz)
+bg *= g * (1 - .6*fz)
 mix = voice + mus + sfx + bg
 mix = np.tanh(mix*1.1)/1.1*.9; mix *= np.minimum(1, np.minimum(t/.2, (DUR-t)/.5))
 mix.astype(np.float32).tofile('mix.f32')

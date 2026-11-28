@@ -103,7 +103,7 @@ const kids = ['#2f6fd6', '#f2b33d', '#9b5de5', '#e46b9a', '#4aa3a3', '#ff8c42', 
 const CAST = [nev, jake, teacher, mom, driver, vendor, ...kids];
 const extras = ['#2f6fd6', '#f2b33d', '#9b5de5', '#e46b9a', '#4aa3a3', '#3fae6a', '#ff8c42', '#e23b3b', '#7a8599', '#5ac8e6', '#c98f6a', '#8a4fbf'].map(c => makeExtra(c, town.g));
 const phone = makePhone();
-const stache = (() => { const m = new THREE.Mesh(new THREE.CapsuleGeometry(.012, .07, 4, 10), std('#3a2a22', .8)); nev.head.add(m); nev.onHead(m, -.24, 0, .004); m.rotateZ(Math.PI / 2); return m; })();
+const stache = (() => { const m = new THREE.Mesh(new THREE.CapsuleGeometry(.012, .07, 4, 10), std('#3a2a22', .8)); nev.head.add(m); nev.onHead(m, -.24, 0, .016); m.rotateZ(Math.PI / 2); m.userData.noOutline = true; return m; })();
 const ALL_PROPS = [juice.g, ball, cup.g, trays, cart, hotdog, ketchup, hat, sneeze, bill, guitar, card, cake, ...birds.map(b => b.g)];
 
 // ---------- helpers ----------
@@ -141,8 +141,10 @@ function phoneCU(t, k, draw, o = {}) {
 }
 function faceCU(info, k, o = {}) { const hc = info.hc, f = info.fwd; look(hc.clone().add(f.clone().multiplyScalar(lerp(o.d0 ?? .9, o.d1 ?? .72, ease(k)))).add(info.right.clone().multiplyScalar(o.side ?? .1)).add(V(0, o.dy ?? -.04, 0)), hc.clone().add(V(0, -.03, 0)), o.fov || 30); }
 function headCU(c, k, off, o = {}) { const h = c.head.position; look(h.clone().add(off.clone().multiplyScalar(lerp(1, o.push ?? .85, ease(k)))), h.clone().add(V(0, o.ty ?? -.06, 0)), o.fov || 32); }
-function lieNev(face, o = {}) { const hip = V(o.hipX ?? .35, .62, -.9); poseChar(nev, { hip, fwd: V(0, 0, -1), lean: -Math.PI / 2 + .1, footL: V(hip.x - .07, .6, 0), footR: V(hip.x + .1, .6, 0), handL: o.handL || V(.55, .62, -1.1), handR: o.handR || V(hip.x - .2, .62, -1.1), face, look: o.look || V(hip.x, 2, -1.6), hide: { legs: true } }); nev.root.visible = true; }
-function sitBed(t, face, o = {}) { return sitPose(nev, V(.1, .5, -.4), o.fwd || V(-.3, 0, 1), { t, lean: o.lean ?? .1, face: fb(face, t), handL: o.handL || V(-.15, .72, -.1), handR: o.handR || V(.35, .72, -.1), look: o.look || V(-.6, 1, 1.5) }); }
+const blanket = (() => { const m = new THREE.Mesh(new THREE.CapsuleGeometry(.3, .95, 8, 20), std('#e86f8f', .85)); m.scale.set(1.05, 1, .5); m.castShadow = m.receiveShadow = true; scene.add(m); m.visible = false; return m; })();
+function lieNev(face, o = {}) { const hip = V(o.hipX ?? .35, .62, -.9); poseChar(nev, { elbowPole: (s, sh) => sh.clone().add(V(-.15, .45, .1)), hip, fwd: V(0, 0, -1), lean: -Math.PI / 2 + .1, footL: V(hip.x - .07, .6, 0), footR: V(hip.x + .1, .6, 0), handL: o.handL || V(.55, .62, -1.1), handR: o.handR || V(hip.x - .2, .62, -1.1), face, look: o.look || V(hip.x, 2, -1.6), hide: { legs: true } }); nev.root.visible = true; blanket.visible = true; blanket.quaternion.copy(nev.torso.quaternion); const bu = V(0, 1, 0).applyQuaternion(nev.torso.quaternion); blanket.position.copy(nev.torso.position).sub(bu.multiplyScalar(.42)); }
+function sideHand(seat, fwd, s) { const f = fwd.clone().setY(0).normalize(), r = new THREE.Vector3().crossVectors(f, V(0, 1, 0)).normalize(); return seat.clone().add(r.multiplyScalar(s * .3)).add(f.multiplyScalar(.08)).add(V(0, .06, 0)); }
+function sitBed(t, face, o = {}) { return sitPose(nev, V(.1, .5, -.4), o.fwd || V(-.3, 0, 1), { t, lean: o.lean ?? .1, face: fb(face, t), handL: o.handL || sideHand(V(.1, .5, -.4), o.fwd || V(-.3, 0, 1), -1), handR: o.handR || sideHand(V(.1, .5, -.4), o.fwd || V(-.3, 0, 1), 1), look: o.look || V(-.6, 1, 1.5) }); }
 function app(ph, s) { const g = ph.cv.getContext('2d'); ph.g.visible = true; ph.light.intensity = s.light ?? .06; ph.tex.needsUpdate = true; const rr = (x, y, w, h, r) => { g.beginPath(); g.roundRect(x, y, w, h, r); };
   g.fillStyle = s.bg || '#0f1626'; g.fillRect(0, 0, 600, 1200); g.textBaseline = 'middle'; g.textAlign = 'left'; g.font = '600 30px Inter'; g.fillStyle = '#e8eef7'; g.fillText(s.time || '6:59', 44, 48);
   if (s.kind === 'rules') { g.fillStyle = '#fdf6d8'; g.fillRect(0, 90, 600, 1110); g.font = '900 50px Inter'; g.fillStyle = '#2a2030'; g.fillText('SNOOZE RULES', 44, 170);
@@ -179,7 +181,7 @@ const ringing = (t, s = '6:59') => clockT(s, Math.sin(t * 12) > 0 ? '#ff4d4d' : 
 // HOOK
 S[0] = (t, k) => { LIGHT.dawn(); showSet('bedroom'); ringing(t); lieNev(fb({ brow: .6, mouth: 'wavy', blink: .8 }, t)); look(V(lerp(1.4, .9, ease(k)), lerp(1.5, 1.2, k), lerp(1.7, 1.0, ease(k))), V(-.35, .6, -.7), 38); };
 S[1] = (t, k) => { LIGHT.dawn(); showSet('bedroom'); const hit = t > ps(1) + .75; const top = clock.top(); if (hit) clockT('6:59', '#ff4d4d', { press: t < ps(1) + 1.0 ? 1 : 0 }); else ringing(t);
-  const reach = easeOut(prog(t, ps(1) + .1, ps(1) + .75)); lieNev(fb({ brow: -.4, mouth: 'frown', blink: 1 }, t), { hipX: -.12, handL: V(-.3, .66, -.85).lerp(top.clone().add(V(.02, .06, 0)), reach) });
+  const reach = easeOut(prog(t, ps(1) + .1, ps(1) + .75)); lieNev(fb({ brow: -.4, mouth: 'frown', blink: 1 }, t), { hipX: -.12, handL: V(-.3, .66, -.85).lerp(top.clone().add(V(.02, .11, 0)), reach) });
   look(top.clone().add(V(.55, .25, .75)), top.clone().add(V(.05, -.08, 0)), 34); };
 S[2] = (t, k) => { LIGHT.dawn(); showSet('bedroom'); clockT('6:59'); const i = sitBed(t, { brow: lerp(0, .8, k), mouth: 'flat' }, { look: V(-.7, .7, -.6) }); nev.root.visible = true; look(V(lerp(1.6, 1.4, k), 1.35, lerp(1.6, 1.3, k)), V(-.1, .8, -.4), 40); };
 // mom on the stairs, pouring juice
@@ -203,7 +205,7 @@ S[10] = (t, k) => { LIGHT.morning(); showSet('bedroom'); clockT('7:08'); const i
 const RULES = ['Every snooze =\n9 frozen minutes', 'Press again.\nThe minutes stack.', 'Touch someone =\nthey can move too'];
 S[11] = (t, k) => { LIGHT.morning(); showSet('bedroom'); phoneCU(t, k, ph => app(ph, { kind: 'rules', items: RULES.slice(0, 1), time: '7:09' })); };
 S[12] = (t, k) => { LIGHT.dawn(); showSet('bedroom'); const pr = SNOOZES.slice(1, 4).some(s => t > s - .05 && t < s + .2) ? 1 : 0; clockT('6:59', '#ff4d4d', { press: pr }); const top = clock.top();
-  const ph = Math.min(...SNOOZES.slice(1, 4).map(s => Math.abs(t - s))); lieNev(fb({ brow: -.5, mouth: 'smirk' }, t), { hipX: -.12, handL: top.clone().add(V(.02, .06 + clamp(ph * .5, 0, .18), 0)), look: top });
+  const ph = Math.min(...SNOOZES.slice(1, 4).map(s => Math.abs(t - s))); lieNev(fb({ brow: -.5, mouth: 'smirk' }, t), { hipX: -.12, handL: top.clone().add(V(.02, .11 + clamp(ph * .5, 0, .15), 0)), look: top });
   look(top.clone().add(V(.5, .3, .7)), top.clone().add(V(0, -.05, 0)), 36); };
 S[13] = (t, k) => { LIGHT.morning(); showSet('bedroom'); phoneCU(t, k, ph => app(ph, { kind: 'rules', items: RULES, time: '7:10' })); };
 // bus stop
@@ -234,17 +236,17 @@ S[20] = (t, k) => { classroom(t, false, { tBrow: .9, tMouth: talk(t, 20) || 'o',
 // cafeteria
 const CAF = V(30.2, 0, 3.7);
 function cafeteria(t, o = {}) { LIGHT.school(); showSet('school'); fries.forEach(f => f.visible = true); kids.slice(0, 6).forEach((c, i) => { const tb = school.tables[i % 4], side = i < 4 ? -.65 : .65; sitPose(c, V(tb.x - .5 + (i % 2) * .9, .45, tb.z + side), V(0, 0, -Math.sign(side)), { t: FZ, lean: .25, face: { brow: -.2, mouth: i % 2 ? 'o' : 'smile', blink: 0 }, handL: V(tb.x - .5 + (i % 2) * .9 - .1, .82, tb.z + side * .5), handR: V(tb.x - .5 + (i % 2) * .9 + .1, 1.0 + i * .05, tb.z + side * .4), look: V(tb.x, 1.1, tb.z) }); c.root.visible = true; });
-  const tb = school.tables[1], jb = V(tb.x + .9, .45, tb.z + .65); sitPose(jake, jb, V(0, 0, -1), { t, lean: .25, face: fb(o.jFace || { brow: -.6, mouth: Math.sin(t * 10) > 0 ? 'o' : 'smile' }, t), handR: V(jb.x + .05, o.eat === false ? .85 : lerp(.85, 1.25, Math.abs(Math.sin(t * 5))), jb.z - .25), handL: V(jb.x - .2, .82, jb.z - .4), look: o.jLook || V(jb.x, 1.0, jb.z - 1) }); jake.root.visible = true;
+  const tb = school.tables[1], jb = V(tb.x + .9, .45, tb.z + .65); sitPose(jake, jb, V(0, 0, -1), { t, lean: .25, face: fb(o.jFace || { brow: -.6, mouth: Math.sin(t * 10) > 0 ? 'o' : 'smile' }, t), handR: V(jb.x + .05, o.eat === false ? .85 : lerp(.85, 1.08, Math.abs(Math.sin(t * 5))), jb.z - .25 - .15 * Math.abs(Math.sin(t * 5))), handL: V(jb.x - .2, .82, jb.z - .4), look: o.jLook || V(jb.x, 1.0, jb.z - 1) }); jake.root.visible = true;
   trays.visible = true; trays.position.set(tb.x - 30 + .45, .78, tb.z - .1); trays.scale.y = o.trays ?? 1; return { tb, jb }; }
 S[21] = (t, k) => { const { tb } = cafeteria(t); standPose(nev, V(tb.x + 1.9, 0, tb.z + 1.1), V(-1, 0, -.4), { face: fb(F.smug, t), look: jake.head.position }); nev.root.visible = true; const a = lerp(.3, -.2, k); look(V(tb.x + Math.sin(a) * 4, 2.3, tb.z + Math.cos(a) * 4), V(tb.x + .4, .9, tb.z), 40); };
-S[22] = (t, k) => { cafeteria(t, { jFace: { brow: -.8, mouth: yell(t, 22) || 'smile' }, jLook: V(32.6, 1.3, -2.2) }); headCU(jake, k, V(.45, .02, -.8)); };
+S[22] = (t, k) => { cafeteria(t, { eat: false, jFace: { brow: -.8, mouth: yell(t, 22) || 'smile' }, jLook: V(32.6, 1.3, -2.2) }); headCU(jake, k, V(.45, .02, -.8)); };
 S[23] = (t, k) => { const { tb } = cafeteria(t, { eat: false, trays: lerp(1, .3, k), jFace: { brow: .7, mouth: 'frown' } }); const nb = V(tb.x + 1.6, 0, tb.z + .4); standPose(nev, nb, V(-1, 0, 0), { face: fb({ brow: -.2, mouth: 'flat' }, t), look: jake.head.position, handL: nb.clone().add(V(-.35, .95, -.12)), handR: nb.clone().add(V(-.35, .95, .12)) }); nev.root.visible = true;
   look(V(tb.x + 3.6, 1.6, tb.z + 2.4), V(tb.x + 1, .95, tb.z + .2), 38); };
 S[24] = (t, k) => { LIGHT.night(); showSet('bedroom'); clockT('11:47', '#ff4d4d'); if (k < .45) phoneCU(t, k / .45, ph => app(ph, { kind: 'game', t, time: '11:47', level: 47 + Math.floor(k * 30) })); else { const i = holdSit(t, BED.seat, BED.fwd, { face: { brow: -.5, mouth: 'smile' } }); app(phone, { kind: 'game', t, time: '11:47', light: .4 }); faceCU(i, (k - .45) / .55, { d0: 1.2, d1: 1.0, side: .3 }); } };
 S[25] = (t, k) => { LIGHT.night(); showSet('bedroom'); phoneCU(t, k, ph => app(ph, { kind: 'stats', big: '+21 hours', sub: '140 snoozes this week', bars: [.2, .35, .3, .5, .9, 0, 0, 0], time: '9:14' })); };
 S[26] = (t, k) => { LIGHT.night(); showSet('bedroom'); phoneCU(t, k, ph => app(ph, { kind: 'stats', title: 'Your week', big: '8 days', sub: 'Everyone else: 7', bars: [.5, .5, .5, .5, .5, .5, .5, easeOut(prog(k, .2, .6)) * .5], time: '9:15' })); };
 // SATURDAY downtown
-function townExtras(t, o = {}) { extras.forEach((e, i) => { e.g.visible = true; const x = -9 + i * 1.6 + (i % 2) * .3, z = (i % 3) * .5 - .2 + 1.2; e.g.position.set(x, 0, z); e.g.rotation.y = (o.face ?? 0) + Math.sin(i) * .6; e.set(o.frozen ? FZ + i : t, { up: o.up ?? (o.frozen ? (i % 3 === 0 ? .5 : 0) : 0), bob: 0, talk: o.frozen ? 0 : (o.talk ?? 0), ph: i * 1.3, turn: o.frozen ? Math.sin(i * 2) * .5 : 0 }); }); }
+function townExtras(t, o = {}) { extras.forEach((e, i) => { e.g.visible = true; const x = -9 + i * 1.6 + (i % 2) * .3, z = (i % 3) * .5 - .2 + 1.2; e.g.position.set(x, 0, z); e.g.rotation.y = (o.face ?? 0) + Math.sin(i) * .6; e.set(o.frozen ? FZ + i : t, { up: o.up ?? (o.frozen ? (i % 3 === 0 ? .5 : 0) : 0), bob: 0, talk: o.frozen ? 0 : (o.talk ?? 0), ph: i * 1.3, turn: o.frozen ? Math.sin(i * 2) * .5 : 0 }); if (o.frozen) { const sw = (i % 2 ? 1 : -1) * .55; e.arms[0].rotation.set(sw, 0, -.12); e.arms[1].rotation.set(-sw, 0, .12); if (i % 5 === 2) e.arms[1].rotation.set(-.3, 0, 2.5); } }); }
 S[27] = (t, k) => { LIGHT.town(); showSet('town'); townExtras(t, { frozen: true }); birds[0].set(V(299, 2.6, 2), .8, .3); const x = lerp(296.5, 299.5, k), b = V(x, 0, 2.4); standPose(nev, b, V(1, 0, 0), { phase: t * 4, stride: .16, face: fb(F.happy, t), look: V(x + 3, 1.6, 1) }); nev.root.visible = true;
   look(V(lerp(296, 298, k), 3.2, 9.5), V(lerp(298, 300, k), 1, 1.5), 42); };
 const SNZ = () => extras[6]; // the sneezing guy
@@ -286,12 +288,13 @@ S[37] = (t, k) => { const fz = k < .55; court(t, { frozen: fz, crowd: fz ? FZ : 
 S[38] = (t, k) => { LIGHT.night(); showSet('bedroom'); phoneCU(t, k, ph => app(ph, { kind: 'stats', big: '900 hours', sub: 'Extra time · and counting', bars: [.9, .95, 1, .9, 1, .95, 1, 1], time: '10:02' })); };
 // THE TWIST
 const DOOR = V(118.4, 0, -1.6);
-S[39] = (t, k) => { LIGHT.kitchen(); showSet('house'); const mb = V(119.2, 0, -1.2); standPose(mom, mb, V(-1, 0, -.1), { face: fb({ brow: .5, mouth: 'flat' }, t), look: V(118.4, 1.5, -1.6), handL: mb.clone().add(V(-.35, 1.0, -.25)), handModeL: 'open' }); mom.root.visible = true;
-  const nb = V(lerp(119.2, 118.5, ease(prog(k, 0, .6))), 0, -1.9); standPose(nev, nb, V(-1, 0, -.6), { phase: k < .6 ? t * 4 : 0, stride: k < .6 ? .14 : 0, face: fb(F.calm, t), look: k > .6 ? mom.head.position : V(117, 1.3, -2.4) }); nev.root.visible = true;
-  look(V(lerp(121.6, 121.2, k), 1.5, lerp(1.6, 1.2, k)), V(118.8, 1.2, -1.6), 38); };
-S[40] = (t, k) => { LIGHT.kitchen(); showSet('house'); const mb = V(119.2, 0, -1.2); const nh = V(118.5, 1.42, -1.9); standPose(mom, mb, V(-1, 0, -.4), { face: fb({ brow: .6, mouth: talk(t, 40) || 'o' }, t), look: nh, handR: nh.clone().add(V(.1, .24, 0)), handModeR: 'open' }); mom.root.visible = true;
-  standPose(nev, V(118.5, 0, -1.9), V(1, 0, .4), { face: fb({ brow: .2, mouth: 'flat' }, t), look: mom.head.position }); nev.root.visible = true; if (k < .55) headCU(mom, k / .55, V(-.85, -.03, -.2)); else look(V(118.9, 1.4, .4), V(118.8, 1.25, -1.6), 36); };
-S[41] = (t, k) => { LIGHT.school(14); showSet('school'); const b = V(30, 0, lerp(15, 13.5, k)); standPose(nev, b, V(0, 0, -1), { phase: t * 3.5, stride: .12, face: fb({ brow: .6, mouth: 'wavy' }, t), look: b.clone().add(V(0, 0, -.4)) }); nev.root.visible = true; look(b.clone().add(V(.7, .45, -1.6)), b.clone().add(V(0, .3, 0)), 36); };
+S[39] = (t, k) => { LIGHT.kitchen(); showSet('house'); const mb = V(119.85, 0, -1.4); const nb = V(lerp(119.6, 118.75, ease(prog(k, 0, .6))), 0, lerp(-.3, -1.4, ease(prog(k, 0, .6))));
+  standPose(nev, nb, k < .6 ? V(-.8, 0, -1) : V(1, 0, .45), { phase: k < .6 ? t * 4 : 0, stride: k < .6 ? .14 : 0, face: fb(F.calm, t), look: k > .6 ? V(119.85, 1.5, -1.4) : V(117, 1.3, -2.4) }); nev.root.visible = true;
+  standPose(mom, mb, V(-1, 0, .45), { face: fb({ brow: .5, mouth: 'flat' }, t), look: nev.head.position, handL: k > .5 ? mb.clone().add(V(-.38, 1.0, .1)) : undefined, handModeL: 'open' }); mom.root.visible = true;
+  look(V(lerp(119.5, 119.3, k), 1.45, lerp(1.7, 1.3, k)), V(119.3, 1.15, -1.4), 40); };
+S[40] = (t, k) => { LIGHT.kitchen(); showSet('house'); const mb = V(119.85, 0, -1.4); const nh = V(118.75, 1.42, -1.4); standPose(mom, mb, V(-1, 0, .45), { face: fb({ brow: .6, mouth: talk(t, 40) || 'o' }, t), look: nh, handR: nh.clone().add(V(.1, .24, 0)), handModeR: 'open' }); mom.root.visible = true;
+  standPose(nev, V(118.75, 0, -1.4), V(1, 0, .45), { face: fb({ brow: .2, mouth: 'flat' }, t), look: mom.head.position }); nev.root.visible = true; if (k < .55) headCU(mom, k / .55, V(-.6, -.03, .55)); else look(V(119.3, 1.4, .45), V(119.3, 1.25, -1.4), 38); };
+S[41] = (t, k) => { LIGHT.school(14); showSet('school'); const b = V(30, 0, lerp(15, 13.5, k)); standPose(nev, b, V(0, 0, -1), { phase: t * 3.5, stride: .12, face: fb({ brow: .6, mouth: 'wavy' }, t), look: b.clone().add(V(0, 0, -.4)) }); nev.root.visible = true; look(b.clone().add(V(.8, 1.05, -2.7)), b.clone().add(V(0, .72, 0)), 40); };
 S[42] = (t, k) => { LIGHT.school(14); showSet('school'); const b = V(30.6, 0, 12.8); standPose(nev, b, V(-1, 0, -.1), { face: fb(F.worried, t), handR: nev.head.position.clone().add(V(0, .16, .05)), handModeR: 'open', look: V(29, 1.4, 13) }); nev.root.visible = true; headCU(nev, k, V(-.75, .05, .5)); };
 S[43] = (t, k) => { LIGHT.kitchen(); showSet('house'); marks.f(false); standPose(nev, V(118.65, 0, -2.2), V(1, 0, .1), { face: fb(F.calm, t), look: V(120, 1.3, -2.0) }); nev.root.visible = true; look(V(lerp(119.9, 119.6, k), 1.35, lerp(.2, -.2, k)), V(118.4, 1.15, -2.4), 40); };
 S[44] = (t, k) => { LIGHT.kitchen(); showSet('house'); marks.f(k > .3); standPose(nev, V(119.05, 0, -2.15), V(-.3, 0, 1), { face: fb(k > .4 ? F.shock : F.calm, t), look: V(118.4, 1.4, -2.4) }); nev.root.visible = true; look(V(118.2, 1.45, -1.3), V(118.4, 1.35, -2.4), 34); };
@@ -322,7 +325,7 @@ S[61] = (t, k) => { LIGHT.kitchen(); showSet('house'); momFrozen(); standPose(ne
 S[62] = (t, k) => { LIGHT.night(); showSet('bedroom'); clockT('11:58'); const i = sitBed(t, { brow: .3, mouth: 'flat' }, { look: clock.front() }); look(V(lerp(.9, .7, k), 1.1, lerp(1.3, 1.1, k)), V(-.3, .75, -.5), 38); };
 S[63] = (t, k) => { LIGHT.dawn(); showSet('bedroom'); ringing(t); lieNev(fb({ brow: .7, mouth: 'wavy', blink: .3 }, t)); look(V(lerp(1.2, .9, k), 1.5, lerp(1.3, 1.0, k)), V(-.35, .6, -.7), 38); };
 S[64] = (t, k) => { LIGHT.dawn(); showSet('bedroom'); ringing(t); const top = clock.top(); lieNev(fb({ brow: .7, mouth: 'wavy' }, t), { hipX: -.12, handL: V(-.3, .66, -.85).lerp(top.clone().add(V(.02, .14, 0)), ease(k) * .85).add(V(Math.sin(t * 30) * .006, 0, 0)), look: top }); look(top.clone().add(V(.55, .25, .75)), top.clone().add(V(.05, -.04, 0)), 34); };
-S[65] = (t, k) => { LIGHT.dawn(); showSet('bedroom'); ringing(t); const top = clock.top(); lieNev(fb({ brow: .9, mouth: 'frown' }, t), { hipX: -.12, handL: top.clone().add(V(.02, .14 - .05 * ease(k), 0)).add(V(Math.sin(t * 34) * .008, 0, 0)), look: top }); look(top.clone().add(V(.45, .2, .62)), top.clone().add(V(.02, .0, 0)), 32); };
+S[65] = (t, k) => { LIGHT.dawn(); showSet('bedroom'); ringing(t); const top = clock.top(); lieNev(fb({ brow: .9, mouth: 'frown' }, t), { hipX: -.12, handL: top.clone().add(V(.02, .14 - .03 * ease(k), 0)).add(V(Math.sin(t * 34) * .008, 0, 0)), look: top }); look(top.clone().add(V(.45, .2, .62)), top.clone().add(V(.02, .0, 0)), 32); };
 S[66] = (t, k) => { LIGHT.dawn(); showSet('bedroom'); ringing(t); const f = clock.front(); look(f.clone().add(V(-.1, .2, lerp(.6, .45, k))), f.clone().add(V(0, .05, 0)), 32); };
 S[67] = (t, k) => { LIGHT.dawn(); showSet('bedroom'); const pull = easeOut(prog(k, .25, .45)); if (pull < .5) ringing(t); else clockT('', '#000', { on: 0 }); clock.set(pull < .5 ? '6:59' : '', '#ff4d4d', pull < .5 ? 1 : 0, 0, 0, 1 - pull);
   const pp = clock.plug.position; standPose(nev, V(-1.75, 0, .35), V(-.6, 0, -1), { hipDY: -.3, lean: .5, face: fb({ brow: -.6, mouth: 'frown' }, t), look: pp, handR: pp.clone().add(V(.05, .03, 0)) }); nev.root.visible = true; look(V(-1.0, 1.5, 1.5), V(-1.95, .45, -.25), 44); };
@@ -411,7 +414,7 @@ function overlay(t) {
   for (const o of meshes) {
     const m = o.material; if (!m || Array.isArray(m) || !m.color) continue;
     if (isChar(o)) { // outline
-      if (m === OL || m.color.getHexString() === '0b0d14' || m.isMeshBasicMaterial) continue;
+      if (m === OL || o.userData.noOutline || m.color.getHexString() === '0b0d14' || m.isMeshBasicMaterial) continue;
       const g = o.geometry; if (!g.boundingSphere) g.computeBoundingSphere(); const r = g.boundingSphere.radius; if (r < .03) continue;
       const ol = new THREE.Mesh(g, OL); ol.castShadow = ol.receiveShadow = false; ol.raycast = () => {};
       if (g.type === 'CylinderGeometry' && g.parameters.height === 1) { const k = 1 + .011 / g.parameters.radiusTop; ol.scale.set(k, 1, k); }
@@ -427,7 +430,7 @@ function overlay(t) {
 })();
 
 window.frame = (t, q = .92) => {
-  for (const c of CAST) c.root.visible = false; for (const e of extras) e.g.visible = false; for (const p of ALL_PROPS) p.visible = false; fries.forEach(f => f.visible = false);
+  for (const c of CAST) c.root.visible = false; for (const e of extras) e.g.visible = false; for (const p of ALL_PROPS) p.visible = false; fries.forEach(f => f.visible = false); blanket.visible = false;
   phone.g.visible = false; school.paper.visible = false; street.umb.visible = false; school.tray.position.set(0, -5, 0); gym.spot.intensity = 0; bloom.strength = .28;
   clock.plug.visible = false; winLight.visible = false; library.pile.forEach(b => b.visible = true); extras.forEach(e => e.head.rotation.x = 0);
   stache.visible = t >= ps(45) - .15 && t < ps(72) - .15; marks.f(false); clock.set('6:59', '#ff4d4d', 1, 0, 0, 1);
