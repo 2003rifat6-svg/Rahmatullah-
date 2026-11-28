@@ -57,7 +57,9 @@ what if your snooze button could freeze time, brevane, what if, what if scenario
 Be honest: how many times would YOU have pressed snooze? ⏸️
 ```
 
-## থাম্বনেইল আইডিয়া (তুমি বানাবে)
+## থাম্বনেইল (তৈরি করা আছে, চাইলে নিজে বানাতে পারো)
+ফাইল: `thumbnail_A_900_HOURS.jpg` (প্রধান), `thumbnail_B_TIME_FROZEN.jpg`, `thumbnail_C_OLDER.jpg`
+
 | | লেখা (বড়, ২–৪ শব্দ) | ছবি |
 |---|---|---|
 | **A (প্রধান)** | **+900 HOURS** | Nev-এর হাত স্নুজ বাটনে, ঘড়িতে 6:59, পেছনের সবকিছু নীলচে আর জমে থাকা |
