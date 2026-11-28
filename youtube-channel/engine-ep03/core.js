@@ -85,7 +85,7 @@ function orientHand(g, el, hp, target, mode, pointDir, side) {
 }
 
 export function makeChar(o = {}) {
-  const root = new THREE.Group(); scene.add(root);
+  const root = new THREE.Group(); scene.add(root); root.userData.char = true;
   const hoodie = std(o.hoodie || '#D2512E', .75), pants = std(o.pants || '#1a1f2b', .85), shoe = std(o.shoe || '#e8ecf3', .6);
   const c = { root, hoodie, o };
   c.torso = mesh(root, new THREE.CapsuleGeometry(.14, .26, 8, 24), hoodie);

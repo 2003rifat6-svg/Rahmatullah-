@@ -7,7 +7,7 @@ const sign = (w, h, txt, bg, fg, font = '900 120px Inter') => new THREE.MeshBasi
 // ---------- cheap crowd extra ----------
 const HEAD = std('#f3f6fb', .45), EYE = std('#0b0d14', .3);
 export function makeExtra(col, parent) {
-  const g = new THREE.Group(); (parent || scene).add(g); const m = std(col, .75);
+  const g = new THREE.Group(); (parent || scene).add(g); g.userData.char = true; const m = std(col, .75);
   const body = mesh(g, new THREE.CapsuleGeometry(.15, .35, 6, 14), m, 0, .62, 0);
   mesh(g, new THREE.CapsuleGeometry(.06, .3, 4, 8), std('#1a1f2b', .8), -.07, .2, 0); mesh(g, new THREE.CapsuleGeometry(.06, .3, 4, 8), std('#1a1f2b', .8), .07, .2, 0);
   const head = new THREE.Group(); g.add(head); head.position.y = 1.08; mesh(head, new THREE.SphereGeometry(.2, 20, 14), HEAD);

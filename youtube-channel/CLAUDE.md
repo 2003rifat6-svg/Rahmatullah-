@@ -68,3 +68,11 @@ Use `episodes/ep01-phone-hidden-mode.md` as the template: summary table, TTS nar
 - Hide leftover set props that overlap new props (Ep3: the old bedroom clock covered the new alarm clock).
 - Never use real time (performance.now) in shot code; every frame must be a pure function of t.
 - Frozen-time look: desaturate + cyan soft-light wash, "TIME FROZEN" tag, music ducked 70%, ambience off, faint shimmer.
+
+## Contrast rule (Ep3 user review — MUST apply every episode)
+User complaint: "everything is white" — white heads vanished on white/cream walls, chairs, backgrounds.
+- Every character gets a dark ink outline (inverted hull, `#2a2342`, ~1.1 cm). Char roots are tagged `userData.char = true` in core.js makeChar and sets2.js makeExtra.
+- Contrast pass (`engine-ep03/contrast.js`, inserted before `window.frame`): any set surface with lightness ≥ .7 (or ≥ .58 and low saturation) becomes a mid-tone pastel (L ≈ .55–.6, S ≥ .4; grey/white gets a hue per 30 m set zone). Skip mapped, transparent, emissive, circle, cone and small road-paint planes.
+- Set backgrounds (`bg` in lightRig) must be mid-tone, never near-white: school #7cb8a6, gym #8798c8, kitchen #d8a06a, library #c4946a, morning #9f88d6.
+- Frozen-time filter: saturate(0.78), not 0.55 (0.55 greyed everything out).
+- QA check: in every contact-sheet frame, the white head must clearly separate from what's behind it.

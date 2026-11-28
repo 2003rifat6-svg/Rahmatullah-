@@ -4,6 +4,7 @@ import { THREE, W, H, clamp, lerp, ease, easeOut, prog, V, rng, renderer, scene,
 import { bedroom, school, street, house, highway, showSet as showSet0 } from './sets.js';
 import { town, gym, makeExtra } from './sets2.js';
 
+window.__scene = scene; window.__THREE = THREE;
 const TL = await (await fetch('/timing.json')).json();
 const P = {}; TL.forEach((l, i) => P[l.id] = i);
 const ps = i => TL[P[i]].start, pe = i => TL[P[i]].end;
@@ -113,16 +114,16 @@ const F = { calm: { brow: .3, mouth: 'flat' }, happy: { brow: -.2, mouth: 'smile
 const fb = (f, t) => ({ ...f, blink: f.blink ?? blink(t) });
 const FZ = 4.37; // the frozen instant used for anyone who is frozen
 const LIGHT = {
-  morning: () => { lightRig(V(0, 1, 0), { key: 2.6, keyCol: '#ffe9cf', hemi: 2.6, sky: '#fff1e2', ground: '#8a7a90', bg: '#c9b8e6', exposure: 1.35, fill: 1.4, fillCol: '#d9ccff' }); bedroom.day(true); bedroom.lamp.intensity = 0; },
+  morning: () => { lightRig(V(0, 1, 0), { key: 2.6, keyCol: '#ffe9cf', hemi: 2.6, sky: '#fff1e2', ground: '#8a7a90', bg: '#9f88d6', exposure: 1.35, fill: 1.4, fillCol: '#d9ccff' }); bedroom.day(true); bedroom.lamp.intensity = 0; },
   dawn: () => { lightRig(V(0, 1, 0), { key: 1.6, keyCol: '#ffd2b0', hemi: 2.0, sky: '#e8d0ff', ground: '#5a4a70', bg: '#7a6aa6', exposure: 1.4, fill: 1.2, fillCol: '#c8b8ff' }); bedroom.day(true); bedroom.lamp.intensity = .4; },
   night: () => { lightRig(V(0, 1, 0), { key: 2.0, keyCol: '#d9d6ff', hemi: 2.2, sky: '#c9c0f0', ground: '#4a4060', bg: '#3b3566', exposure: 1.45, fill: 1.4, fillCol: '#c8b8ff' }); bedroom.day(false); bedroom.lamp.intensity = .9; },
   dark: () => { lightRig(V(0, 1, 0), { key: 1.1, keyCol: '#a9a3e6', hemi: 1.5, sky: '#9d93d6', ground: '#2a2440', bg: '#241f42', exposure: 1.45 }); bedroom.day(false); bedroom.lamp.intensity = 0; },
-  kitchen: () => { lightRig(V(120, 1, 0), { key: 2.5, keyCol: '#fff0dc', hemi: 2.5, sky: '#fff0dc', ground: '#7a6050', bg: '#f0d6b0', exposure: 1.3 }); house.day(true); house.lamp.intensity = 0; },
-  school: (z = 0) => lightRig(V(30, 1, z), { key: 2.2, keyCol: '#fff4e4', hemi: 2.3, sky: '#fff6ea', ground: '#7a8a80', bg: '#cfe6df', exposure: 1.15, fill: 1.3 }),
+  kitchen: () => { lightRig(V(120, 1, 0), { key: 2.5, keyCol: '#fff0dc', hemi: 2.5, sky: '#fff0dc', ground: '#7a6050', bg: '#d8a06a', exposure: 1.3 }); house.day(true); house.lamp.intensity = 0; },
+  school: (z = 0) => lightRig(V(30, 1, z), { key: 2.2, keyCol: '#fff4e4', hemi: 2.3, sky: '#fff6ea', ground: '#7a8a80', bg: '#7cb8a6', exposure: 1.15, fill: 1.3 }),
   town: (x = 300) => lightRig(V(x, 1, 0), { key: 2.8, keyCol: '#fff4e0', hemi: 2.6, sky: '#cfe6ff', ground: '#7a9a60', bg: '#9fd0f5', exposure: 1.2, keyOff: V(12, 20, 16) }),
-  gym: () => { lightRig(V(360, 1, 0), { key: 1.8, keyCol: '#fff4e0', hemi: 2.2, sky: '#fff6ea', ground: '#8a7050', bg: '#cfd8ea', exposure: 1.2 }); gym.spot.intensity = 0; },
+  gym: () => { lightRig(V(360, 1, 0), { key: 1.8, keyCol: '#fff4e0', hemi: 2.2, sky: '#fff6ea', ground: '#8a7050', bg: '#8798c8', exposure: 1.2 }); gym.spot.intensity = 0; },
   highway: () => lightRig(V(220, 1, 10), { key: 2.6, hemi: 2.4, sky: '#d8ecff', ground: '#6a8a5a', bg: '#a9cfff', exposure: 1.2, keyOff: V(30, 60, 40) }),
-  library: () => lightRig(V(540, 1, 0), { key: 2.2, keyCol: '#fff0d8', hemi: 2.3, sky: '#fff0dc', ground: '#7a6050', bg: '#e9dcc4', exposure: 1.25 }),
+  library: () => lightRig(V(540, 1, 0), { key: 2.2, keyCol: '#fff0d8', hemi: 2.3, sky: '#fff0dc', ground: '#7a6050', bg: '#c4946a', exposure: 1.25 }),
   rain: () => lightRig(V(60, 1, 0), { key: .9, keyCol: '#9fb0ff', hemi: 1.4, sky: '#8a90d0', ground: '#20243a', bg: '#1e2140', exposure: 1.5 }),
 };
 const BED = { seat: V(0, .5, -.05), fwd: V(0, 0, 1) };
@@ -367,7 +368,7 @@ function goldTitle(lines, y0, size, a) { og.save(); og.globalAlpha = a; og.trans
   lines.forEach((s, i) => { const y = i * size * 1.18; og.font = `900 ${size}px Inter`; og.textAlign = 'center'; og.textBaseline = 'middle'; og.lineJoin = 'round'; og.lineWidth = size * .18; og.strokeStyle = '#06202a'; og.strokeText(s, 0, y);
     const gr = og.createLinearGradient(0, y - size / 2, 0, y + size / 2); gr.addColorStop(0, '#e8feff'); gr.addColorStop(.55, '#7ff3ff'); gr.addColorStop(1, '#2bb6d6'); og.fillStyle = gr; og.shadowColor = 'rgba(80,220,255,.6)'; og.shadowBlur = 30; og.fillText(s, 0, y); og.shadowBlur = 0; }); og.restore(); }
 function overlay(t) {
-  const fzA = frozenAt(t) ? 1 : 0; og.filter = fzA ? 'saturate(0.55) brightness(1.04)' : 'none'; og.drawImage(renderer.domElement, 0, 0); og.filter = 'none';
+  const fzA = frozenAt(t) ? 1 : 0; og.filter = fzA ? 'saturate(0.78) brightness(1.02)' : 'none'; og.drawImage(renderer.domElement, 0, 0); og.filter = 'none';
   if (fzA) { og.save(); og.globalCompositeOperation = 'soft-light'; og.fillStyle = 'rgba(90,200,255,.55)'; og.fillRect(0, 0, W, H); og.restore(); }
   const v = og.createRadialGradient(W / 2, H / 2, H * .5, W / 2, H / 2, H * 1.05); v.addColorStop(0, 'rgba(0,0,0,0)'); v.addColorStop(1, fzA ? 'rgba(10,40,70,.4)' : 'rgba(0,0,0,.25)'); og.fillStyle = v; og.fillRect(0, 0, W, H);
   const w = WINDOWS.find(w => t >= w.start && t < w.end); const li = w ? w.i : -1;
@@ -398,6 +399,32 @@ function overlay(t) {
     if (t > DURATION - .6) { og.fillStyle = `rgba(0,0,0,${prog(t, DURATION - .6, DURATION)})`; og.fillRect(0, 0, W, H); } }
   return out;
 }
+
+// ---------- CONTRAST PASS (Ep3 review: white heads vanished on white walls/chairs) ----------
+// 1) set surfaces that are near-white/pale-grey -> clear mid-tone pastel (hue per set area)  2) every character gets a dark ink outline
+(() => {
+  const isChar = o => { for (let p = o; p; p = p.parent) if (p.userData && p.userData.char) return true; return false; };
+  const SET_HUE = x => [.74, .45, .08, .56, .95, .13, .62, .33][Math.abs(Math.floor((x + 15) / 30)) % 8];
+  const hsl = {}, wp = new THREE.Vector3(), bb = new THREE.Box3(), sz = new THREE.Vector3(), done = new Map();
+  const OL = new THREE.MeshBasicMaterial({ color: '#2a2342', side: THREE.BackSide });
+  const meshes = []; scene.traverse(o => { if (o.isMesh) meshes.push(o); });
+  for (const o of meshes) {
+    const m = o.material; if (!m || Array.isArray(m) || !m.color) continue;
+    if (isChar(o)) { // outline
+      if (m === OL || m.color.getHexString() === '0b0d14' || m.isMeshBasicMaterial) continue;
+      const g = o.geometry; if (!g.boundingSphere) g.computeBoundingSphere(); const r = g.boundingSphere.radius; if (r < .03) continue;
+      const ol = new THREE.Mesh(g, OL); ol.castShadow = ol.receiveShadow = false; ol.raycast = () => {};
+      if (g.type === 'CylinderGeometry' && g.parameters.height === 1) { const k = 1 + .011 / g.parameters.radiusTop; ol.scale.set(k, 1, k); }
+      else if (g.type === 'TorusGeometry') { const k = 1 + .011 / g.parameters.tube * .35; ol.scale.set(k, k, k); }
+      else ol.scale.setScalar(1 + .011 / Math.min(r, .25)); o.add(ol); continue; }
+    if (m.map || m.transparent || !m.isMeshStandardMaterial || (m.emissive && m.emissiveIntensity > .2 && m.emissive.getHex() !== 0)) continue;
+    const gt = o.geometry.type; if (gt === 'CircleGeometry' || gt === 'ConeGeometry') continue;
+    o.getWorldPosition(wp); bb.setFromObject(o); bb.getSize(sz); if (gt === 'PlaneGeometry' && Math.max(sz.x, sz.y, sz.z) < 2) continue; // road paint
+    m.color.getHSL(hsl); if (hsl.l < .7 && !(hsl.l >= .58 && hsl.s < .3)) continue;
+    let nm = done.get(m); if (!nm) { nm = m.clone(); const h = hsl.s < .12 ? SET_HUE(wp.x) : hsl.h; nm.color.setHSL(h, Math.max(hsl.s, .4), .55 + Math.max(0, hsl.l - .6) * .25); done.set(m, nm); }
+    o.material = nm;
+  }
+})();
 
 window.frame = (t, q = .92) => {
   for (const c of CAST) c.root.visible = false; for (const e of extras) e.g.visible = false; for (const p of ALL_PROPS) p.visible = false; fries.forEach(f => f.visible = false);
