@@ -61,3 +61,10 @@ Use `episodes/ep01-phone-hidden-mode.md` as the template: summary table, TTS nar
 ## Subtitle rule (user feedback: Ep2 SRT had problems)
 - Build the SRT with `engine-ep02/make_srt.py timing.json <draft.srt> <out.srt>`: caption standard, at most 2 lines × 42 chars per cue, long lines split into several cues at the real word times (pocketsphinx), line breaks at punctuation, speaker label (JAKE:, MOM:) only on the first cue of a line, cue ends ≤ next line start.
 - Never deliver one-line cues longer than 42 chars.
+
+## Ep3 lessons (shot QA)
+- Preview every shot at 3 points (`FR=.12,.5,.9 node preview3.js <ids>`, files named by shot id) and look at the contact sheets before the full render. Ep3 needed ~20 camera fixes this way.
+- `headCU(char, k, offset)`: the offset must point to where the character's face is looking (the `look` target turns the head). Most "back of head" shots came from this.
+- Hide leftover set props that overlap new props (Ep3: the old bedroom clock covered the new alarm clock).
+- Never use real time (performance.now) in shot code; every frame must be a pure function of t.
+- Frozen-time look: desaturate + cyan soft-light wash, "TIME FROZEN" tag, music ducked 70%, ambience off, faint shimmer.

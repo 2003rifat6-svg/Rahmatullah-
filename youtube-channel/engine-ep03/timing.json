@@ -1,0 +1,722 @@
+[
+{
+"id": 0,
+"start": 0.5,
+"end": 3.33,
+"who": "N",
+"text": "Six fifty-nine a.m. Your alarm goes off.",
+"file": "lines/L00.wav"
+},
+{
+"id": 1,
+"start": 3.97,
+"end": 6.558,
+"who": "N",
+"text": "You slap the snooze button. Same as every morning.",
+"file": "lines/L01.wav"
+},
+{
+"id": 2,
+"start": 8.398,
+"end": 12.947,
+"who": "N",
+"text": "But this time... the beeping stops. And so does everything else.",
+"file": "lines/L02.wav"
+},
+{
+"id": 3,
+"start": 13.887,
+"end": 15.914,
+"who": "MOM",
+"text": "Nev! You're gonna be late for\u2014",
+"file": "lines/L03.wav"
+},
+{
+"id": 4,
+"start": 17.414,
+"end": 20.722,
+"who": "N",
+"text": "Your mom is frozen on the stairs. Mid-word. Mid-step.",
+"file": "lines/L04.wav"
+},
+{
+"id": 5,
+"start": 22.162,
+"end": 25.392,
+"who": "N",
+"text": "The orange juice she was pouring is hanging in the air. Like glass.",
+"file": "lines/L05.wav"
+},
+{
+"id": 6,
+"start": 27.032,
+"end": 30.317,
+"who": "N",
+"text": "The clock says six fifty-nine. And it stays six fifty-nine.",
+"file": "lines/L06.wav"
+},
+{
+"id": 7,
+"start": 31.557,
+"end": 39.245,
+"who": "N",
+"text": "What if your snooze button didn't give you nine more minutes of sleep... but nine minutes of frozen time? For everyone... except you.",
+"file": "lines/L07.wav"
+},
+{
+"id": 8,
+"start": 40.885,
+"end": 42.672,
+"who": "N",
+"text": "Nine minutes later, everything snaps back.",
+"file": "lines/L08.wav"
+},
+{
+"id": 9,
+"start": 43.312,
+"end": 47.114,
+"who": "MOM",
+"text": "School! Wait... why is the juice all over the floor?",
+"file": "lines/L09.wav"
+},
+{
+"id": 10,
+"start": 48.214,
+"end": 49.06,
+"who": "N",
+"text": "So you run some tests.",
+"file": "lines/L10.wav"
+},
+{
+"id": 11,
+"start": 49.7,
+"end": 54.444,
+"who": "N",
+"text": "Rule one: every snooze gives you exactly nine minutes. Nobody else moves.",
+"file": "lines/L11.wav"
+},
+{
+"id": 12,
+"start": 55.084,
+"end": 59.305,
+"who": "N",
+"text": "Rule two: you can press it again. And again. The minutes stack.",
+"file": "lines/L12.wav"
+},
+{
+"id": 13,
+"start": 59.945,
+"end": 63.437,
+"who": "N",
+"text": "Rule three: if you touch someone... they can move too.",
+"file": "lines/L13.wav"
+},
+{
+"id": 14,
+"start": 64.077,
+"end": 65.924,
+"who": "N",
+"text": "You find that one out at the bus stop.",
+"file": "lines/L14.wav"
+},
+{
+"id": 15,
+"start": 66.564,
+"end": 73.211,
+"who": "JAKE",
+"text": "Bro. Bro! Why is the bus driver a statue? Why is that bird just... floating?",
+"file": "lines/L15.wav"
+},
+{
+"id": 16,
+"start": 73.711,
+"end": 75.174,
+"who": "N",
+"text": "Jake's hand is still on your shoulder.",
+"file": "lines/L16.wav"
+},
+{
+"id": 17,
+"start": 75.814,
+"end": 80.336,
+"who": "JAKE",
+"text": "Okay. Okay. This is the best day of my life. Hahaha!",
+"file": "lines/L17.wav"
+},
+{
+"id": 18,
+"start": 81.636,
+"end": 83.154,
+"who": "N",
+"text": "Day one, you go wild.",
+"file": "lines/L18.wav"
+},
+{
+"id": 19,
+"start": 83.794,
+"end": 89.991,
+"who": "N",
+"text": "Five snoozes before a math test. Forty-five extra minutes to study. You get an A for the first time since fourth grade.",
+"file": "lines/L19.wav"
+},
+{
+"id": 20,
+"start": 90.631,
+"end": 96.134,
+"who": "TEACH",
+"text": "Nev... an A? Did you... study?",
+"file": "lines/L20.wav"
+},
+{
+"id": 21,
+"start": 96.634,
+"end": 101.171,
+"who": "N",
+"text": "Ten snoozes at lunch. Jake eats everyone's fries. Every single tray.",
+"file": "lines/L21.wav"
+},
+{
+"id": 22,
+"start": 101.811,
+"end": 105.964,
+"who": "JAKE",
+"text": "It's not stealing if time is frozen. The law is frozen, bro. Hahaha!",
+"file": "lines/L22.wav"
+},
+{
+"id": 23,
+"start": 106.464,
+"end": 108.276,
+"who": "N",
+"text": "You make him put them back. Mostly.",
+"file": "lines/L23.wav"
+},
+{
+"id": 24,
+"start": 108.916,
+"end": 113.0,
+"who": "N",
+"text": "Twenty snoozes at night. Three hours of video games while the whole world waits.",
+"file": "lines/L24.wav"
+},
+{
+"id": 25,
+"start": 113.64,
+"end": 118.085,
+"who": "N",
+"text": "By Friday, you've stacked a hundred and forty snoozes. Twenty-one extra hours.",
+"file": "lines/L25.wav"
+},
+{
+"id": 26,
+"start": 118.725,
+"end": 121.445,
+"who": "N",
+"text": "Your week has eight days in it. And nobody notices.",
+"file": "lines/L26.wav"
+},
+{
+"id": 27,
+"start": 122.885,
+"end": 128.614,
+"who": "N",
+"text": "Saturday, you try the big one. A hundred snoozes in a row. Fifteen hours of frozen time.",
+"file": "lines/L27.wav"
+},
+{
+"id": 28,
+"start": 129.254,
+"end": 135.614,
+"who": "N",
+"text": "You walk downtown. A pigeon is frozen mid-flap. A guy is frozen mid-sneeze. You put your hat on him.",
+"file": "lines/L28.wav"
+},
+{
+"id": 29,
+"start": 136.854,
+"end": 140.807,
+"who": "N",
+"text": "A hot dog guy is frozen mid-squeeze. The ketchup just hangs there in the air.",
+"file": "lines/L29.wav"
+},
+{
+"id": 30,
+"start": 142.047,
+"end": 144.95,
+"who": "N",
+"text": "You eat the hot dog. You leave five dollars. You're not a monster.",
+"file": "lines/L30.wav"
+},
+{
+"id": 31,
+"start": 146.39,
+"end": 147.882,
+"who": "N",
+"text": "Day ten, you stop counting.",
+"file": "lines/L31.wav"
+},
+{
+"id": 32,
+"start": 148.522,
+"end": 153.077,
+"who": "N",
+"text": "You sleep in frozen time. Twelve hours of perfect sleep, and you're still early to school.",
+"file": "lines/L32.wav"
+},
+{
+"id": 33,
+"start": 153.717,
+"end": 158.309,
+"who": "N",
+"text": "You read every book in the library. You learn guitar. You learn Spanish. Kind of.",
+"file": "lines/L33.wav"
+},
+{
+"id": 34,
+"start": 158.949,
+"end": 164.999,
+"who": "NEV",
+"text": "Hola. Me llamo Nev. Son las... six fifty-nine.",
+"file": "lines/L34.wav"
+},
+{
+"id": 35,
+"start": 165.499,
+"end": 166.706,
+"who": "N",
+"text": "Jake wants to use it for everything.",
+"file": "lines/L35.wav"
+},
+{
+"id": 36,
+"start": 167.346,
+"end": 171.188,
+"who": "JAKE",
+"text": "Dude, freeze the game! Right before the buzzer! We walk the ball into the hoop!",
+"file": "lines/L36.wav"
+},
+{
+"id": 37,
+"start": 172.488,
+"end": 174.891,
+"who": "N",
+"text": "You do. The whole gym goes crazy.",
+"file": "lines/L37.wav"
+},
+{
+"id": 38,
+"start": 176.531,
+"end": 179.852,
+"who": "N",
+"text": "Extra time: nine hundred hours. And counting.",
+"file": "lines/L38.wav"
+},
+{
+"id": 39,
+"start": 181.692,
+"end": 185.281,
+"who": "N",
+"text": "Then, on day nineteen, your mom stops you at the door.",
+"file": "lines/L39.wav"
+},
+{
+"id": 40,
+"start": 185.921,
+"end": 190.07,
+"who": "MOM",
+"text": "Honey... did you get taller? Like... since Monday?",
+"file": "lines/L40.wav"
+},
+{
+"id": 41,
+"start": 190.57,
+"end": 194.62,
+"who": "N",
+"text": "You laugh. But at school, your jeans are too short.",
+"file": "lines/L41.wav"
+},
+{
+"id": 42,
+"start": 195.26,
+"end": 199.038,
+"who": "N",
+"text": "Your hair is longer than Jake's. You got a haircut two weeks ago.",
+"file": "lines/L42.wav"
+},
+{
+"id": 43,
+"start": 199.678,
+"end": 203.525,
+"who": "N",
+"text": "In the kitchen, there's a door where your mom marks your height every birthday.",
+"file": "lines/L43.wav"
+},
+{
+"id": 44,
+"start": 204.765,
+"end": 209.303,
+"who": "N",
+"text": "Last mark: September. Today you're two inches above it.",
+"file": "lines/L44.wav"
+},
+{
+"id": 45,
+"start": 209.943,
+"end": 213.987,
+"who": "JAKE",
+"text": "Bro... is that a mustache? Since when do you have a mustache?",
+"file": "lines/L45.wav"
+},
+{
+"id": 46,
+"start": 215.287,
+"end": 216.825,
+"who": "N",
+"text": "That night, you do the math.",
+"file": "lines/L46.wav"
+},
+{
+"id": 47,
+"start": 217.465,
+"end": 222.332,
+"who": "N",
+"text": "Nine hundred hours of frozen time. That's thirty-seven days.",
+"file": "lines/L47.wav"
+},
+{
+"id": 48,
+"start": 222.972,
+"end": 225.282,
+"who": "N",
+"text": "Thirty-seven days that only you lived through.",
+"file": "lines/L48.wav"
+},
+{
+"id": 49,
+"start": 225.922,
+"end": 230.515,
+"who": "N",
+"text": "The calendar says three weeks have passed. Your body says two months.",
+"file": "lines/L49.wav"
+},
+{
+"id": 50,
+"start": 231.755,
+"end": 235.538,
+"who": "N",
+"text": "Every snooze doesn't just freeze the world. It moves you forward.",
+"file": "lines/L50.wav"
+},
+{
+"id": 51,
+"start": 237.178,
+"end": 240.992,
+"who": "N",
+"text": "You're getting older... while everyone you love is standing still.",
+"file": "lines/L51.wav"
+},
+{
+"id": 52,
+"start": 241.632,
+"end": 242.814,
+"who": "N",
+"text": "And it's not just the haircut.",
+"file": "lines/L52.wav"
+},
+{
+"id": 53,
+"start": 243.454,
+"end": 249.909,
+"who": "N",
+"text": "Jake tells you a joke at lunch. You heard it forty frozen hours ago. You forget to laugh.",
+"file": "lines/L53.wav"
+},
+{
+"id": 54,
+"start": 250.549,
+"end": 252.934,
+"who": "JAKE",
+"text": "Okay... you used to love that one.",
+"file": "lines/L54.wav"
+},
+{
+"id": 55,
+"start": 253.434,
+"end": 260.399,
+"who": "N",
+"text": "Your mom's birthday is Saturday. For her, it's two days away. For you, it's two lonely weeks.",
+"file": "lines/L55.wav"
+},
+{
+"id": 56,
+"start": 261.839,
+"end": 263.898,
+"who": "N",
+"text": "And then you notice something worse.",
+"file": "lines/L56.wav"
+},
+{
+"id": 57,
+"start": 264.538,
+"end": 270.703,
+"who": "N",
+"text": "In frozen time, it's quiet. No birds. No cars. No voices.",
+"file": "lines/L57.wav"
+},
+{
+"id": 58,
+"start": 272.543,
+"end": 275.469,
+"who": "N",
+"text": "Just you... and a clock that never moves.",
+"file": "lines/L58.wav"
+},
+{
+"id": 59,
+"start": 276.909,
+"end": 280.002,
+"who": "N",
+"text": "You've spent more time alone this month than with anyone you know.",
+"file": "lines/L59.wav"
+},
+{
+"id": 60,
+"start": 281.242,
+"end": 284.066,
+"who": "NEV",
+"text": "Mom? Mom... can you hear me?",
+"file": "lines/L60.wav"
+},
+{
+"id": 61,
+"start": 285.366,
+"end": 290.755,
+"who": "N",
+"text": "She can't. She's frozen in the kitchen, smiling at something you said... thirty hours ago.",
+"file": "lines/L61.wav"
+},
+{
+"id": 62,
+"start": 292.395,
+"end": 293.73,
+"who": "N",
+"text": "So you try to stop.",
+"file": "lines/L62.wav"
+},
+{
+"id": 63,
+"start": 294.37,
+"end": 297.859,
+"who": "N",
+"text": "Monday morning. Six fifty-nine. The alarm rings.",
+"file": "lines/L63.wav"
+},
+{
+"id": 64,
+"start": 298.499,
+"end": 302.339,
+"who": "N",
+"text": "Your hand moves to the snooze button by itself. Like a habit.",
+"file": "lines/L64.wav"
+},
+{
+"id": 65,
+"start": 303.779,
+"end": 307.789,
+"who": "N",
+"text": "One more. Just nine minutes. What's nine minutes?",
+"file": "lines/L65.wav"
+},
+{
+"id": 66,
+"start": 309.229,
+"end": 310.789,
+"who": "N",
+"text": "You've pressed it four thousand times.",
+"file": "lines/L66.wav"
+},
+{
+"id": 67,
+"start": 312.029,
+"end": 314.315,
+"who": "N",
+"text": "You pull the plug. The clock goes dark.",
+"file": "lines/L67.wav"
+},
+{
+"id": 68,
+"start": 315.855,
+"end": 318.348,
+"who": "N",
+"text": "And for the first time in two months... you're late.",
+"file": "lines/L68.wav"
+},
+{
+"id": 69,
+"start": 318.988,
+"end": 321.16,
+"who": "TEACH",
+"text": "Nev. You're late. That's detention.",
+"file": "lines/L69.wav"
+},
+{
+"id": 70,
+"start": 322.46,
+"end": 326.468,
+"who": "N",
+"text": "It's the best detention of your life. Because the clock on the wall is moving.",
+"file": "lines/L70.wav"
+},
+{
+"id": 71,
+"start": 327.708,
+"end": 332.397,
+"who": "N",
+"text": "Slowly. Normally. For everyone. Including you.",
+"file": "lines/L71.wav"
+},
+{
+"id": 72,
+"start": 334.237,
+"end": 335.433,
+"who": "N",
+"text": "You tell Jake everything.",
+"file": "lines/L72.wav"
+},
+{
+"id": 73,
+"start": 336.073,
+"end": 342.898,
+"who": "JAKE",
+"text": "Wait. So you're two months older than me now? So I'm the baby? Hahaha... no way.",
+"file": "lines/L73.wav"
+},
+{
+"id": 74,
+"start": 343.398,
+"end": 345.846,
+"who": "N",
+"text": "You laugh. At the right time.",
+"file": "lines/L74.wav"
+},
+{
+"id": 75,
+"start": 346.486,
+"end": 351.108,
+"who": "JAKE",
+"text": "But promise me one thing. If you ever freeze time again... you take me with you.",
+"file": "lines/L75.wav"
+},
+{
+"id": 76,
+"start": 351.608,
+"end": 352.295,
+"who": "N",
+"text": "You promise.",
+"file": "lines/L76.wav"
+},
+{
+"id": 77,
+"start": 352.935,
+"end": 359.377,
+"who": "N",
+"text": "Saturday, you give your mom a birthday card. You wrote it on day twelve... of frozen time.",
+"file": "lines/L77.wav"
+},
+{
+"id": 78,
+"start": 360.017,
+"end": 365.972,
+"who": "MOM",
+"text": "Oh, sweetie... it's beautiful. When did you find the time to write all this?",
+"file": "lines/L78.wav"
+},
+{
+"id": 79,
+"start": 367.072,
+"end": 369.834,
+"who": "N",
+"text": "You smile. Some secrets are worth keeping.",
+"file": "lines/L79.wav"
+},
+{
+"id": 80,
+"start": 371.474,
+"end": 376.955,
+"who": "N",
+"text": "Extra time: zero. And for the first time, that number feels good.",
+"file": "lines/L80.wav"
+},
+{
+"id": 81,
+"start": 378.595,
+"end": 380.608,
+"who": "N",
+"text": "That night, you sleep with no alarm.",
+"file": "lines/L81.wav"
+},
+{
+"id": 82,
+"start": 382.048,
+"end": 383.618,
+"who": "N",
+"text": "Until three thirty-three a.m.",
+"file": "lines/L82.wav"
+},
+{
+"id": 83,
+"start": 384.658,
+"end": 387.335,
+"who": "N",
+"text": "Beep. Beep. Beep.",
+"file": "lines/L83.wav"
+},
+{
+"id": 84,
+"start": 388.775,
+"end": 390.943,
+"who": "N",
+"text": "The clock you unplugged... is ringing.",
+"file": "lines/L84.wav"
+},
+{
+"id": 85,
+"start": 392.183,
+"end": 395.517,
+"who": "N",
+"text": "On the screen, one word. Snoozed.",
+"file": "lines/L85.wav"
+},
+{
+"id": 86,
+"start": 396.757,
+"end": 397.438,
+"who": "N",
+"text": "You didn't press it.",
+"file": "lines/L86.wav"
+},
+{
+"id": 87,
+"start": 398.878,
+"end": 402.48,
+"who": "N",
+"text": "Outside, the rain is frozen in the air. The whole street is still.",
+"file": "lines/L87.wav"
+},
+{
+"id": 88,
+"start": 404.32,
+"end": 409.117,
+"who": "N",
+"text": "Except for one window across the street... where somebody just turned on a light.",
+"file": "lines/L88.wav"
+},
+{
+"id": 89,
+"start": 410.757,
+"end": 413.904,
+"who": "N",
+"text": "What would you do with nine frozen minutes? Tell us in the comments.",
+"file": "lines/L89.wav"
+}
+]
